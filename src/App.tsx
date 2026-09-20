@@ -11,6 +11,7 @@ import { AutoAtendimentoModal } from './components/AutoAtendimentoModal';
 import { GeminiChatbot } from './components/GeminiChatbot';
 import { FollowUpSystem } from './components/FollowUpSystem';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
+import { UserReservationsModal } from './components/UserReservationsModal';
 import { Footer } from './components/Footer';
 import { Sparkles, MessageCircle, Users } from 'lucide-react';
 
@@ -24,6 +25,7 @@ export function App() {
   const [isAutoAtendimentoOpen, setIsAutoAtendimentoOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isCrmOpen, setIsCrmOpen] = useState(false);
+  const [isReservationsOpen, setIsReservationsOpen] = useState(false);
 
   const handleOpenBooking = (tourId?: string) => {
     if (tourId) setSelectedTourId(tourId);
@@ -65,6 +67,7 @@ export function App() {
         onOpenCalendar={scrollToCalendar}
         onOpenAutoAtendimento={() => setIsAutoAtendimentoOpen(true)}
         onOpenChat={() => setIsChatOpen(true)}
+        onOpenMyReservations={() => setIsReservationsOpen(true)}
         onNavigateSection={handleNavigateSection}
       />
 
@@ -177,6 +180,13 @@ export function App() {
 
       {/* Banner de Consentimento de Cookies & LGPD para Rastreamento e Marketing */}
       <CookieConsentBanner />
+
+      {/* Modal Minhas Reservas sincronizado com Firebase */}
+      <UserReservationsModal
+        isOpen={isReservationsOpen}
+        onClose={() => setIsReservationsOpen(false)}
+        onOpenBooking={() => handleOpenBooking()}
+      />
     </div>
   );
 }

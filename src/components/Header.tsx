@@ -10,13 +10,20 @@ import {
   X,
   ShieldCheck,
   Flame,
+  User,
+  Ticket,
+  LogOut,
+  LogIn,
 } from 'lucide-react';
+import { auth, loginWithGoogle, logoutUser } from '../lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 interface HeaderProps {
   onOpenBooking: (tourId?: string) => void;
   onOpenCalendar: () => void;
   onOpenAutoAtendimento: () => void;
   onOpenChat: () => void;
+  onOpenMyReservations: () => void;
   onNavigateSection: (sectionId: string) => void;
 }
 
@@ -25,10 +32,19 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCalendar,
   onOpenAutoAtendimento,
   onOpenChat,
+  onOpenMyReservations,
   onNavigateSection,
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(auth.currentUser);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -140,7 +156,47 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
 
           {/* Action CTAs */}
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2.5">
+            {/* User Reservations / Auth button */}
+            {currentUser ? (
+              <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs">
+                {currentUser.photoURL ? (
+                  <img
+                    src={currentUser.photoURL}
+                    alt={currentUser.displayName || 'Usuário'}
+                    className="w-6 h-6 rounded-full object-cover border border-amber-400/50"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <User className="w-4 h-4 text-amber-300" />
+                )}
+                <button
+                  onClick={onOpenMyReservations}
+                  className="font-bold text-amber-300 hover:text-amber-200 transition-colors flex items-center gap-1"
+                  title="Ver meus vouchers e reservas VIP"
+                >
+                  <Ticket className="w-3.5 h-3.5" />
+                  <span>Minhas Reservas</span>
+                </button>
+                <button
+                  onClick={logoutUser}
+                  className="text-slate-400 hover:text-rose-400 transition-colors p-1"
+                  title="Sair da conta"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={loginWithGoogle}
+                className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-400/50 text-slate-200 hover:text-white transition-all flex items-center gap-1.5"
+                title="Entrar com Google para sincronizar suas reservas"
+              >
+                <LogIn className="w-3.5 h-3.5 text-amber-400" />
+                <span>Entrar</span>
+              </button>
+            )}
+
             {/* Gemini AI Bot trigger */}
             <button
               id="header-chat-btn"
@@ -238,6 +294,58 @@ export const Header: React.FC<HeaderProps> = ({
               <Headphones className="w-4 h-4 text-sky-400" />
               Autoatendimento & Consultar Reserva
             </button>
+
+            <button
+              onClick={() => {
+                onOpenMyReservations();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-900 text-amber-300 font-semibold flex items-center gap-2"
+            >
+              <Ticket className="w-4 h-4 text-amber-400" />
+              Minhas Reservas VIP
+            </button>
+
+            {currentUser ? (
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+                <div className="flex items-center gap-2 text-slate-200">
+                  {currentUser.photoURL ? (
+                    <img
+                      src={currentUser.photoURL}
+                      alt={currentUser.displayName || ''}
+                      className="w-6 h-6 rounded-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <User className="w-4 h-4 text-amber-400" />
+                  )}
+                  <span className="font-semibold truncate max-w-[160px]">
+                    {currentUser.displayName || currentUser.email}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    logoutUser();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1 text-xs"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Sair
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  loginWithGoogle();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 flex items-center justify-center gap-2 text-xs font-semibold"
+              >
+                <LogIn className="w-4 h-4 text-amber-400" />
+                Entrar com Google
+              </button>
+            )}
 
             <div className="pt-2 flex flex-col gap-2">
               <button

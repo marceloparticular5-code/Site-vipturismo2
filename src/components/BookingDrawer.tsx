@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AVAILABLE_ADDONS, VIP_TOURS } from '../data/toursData';
 import { BookingState, VoucherData } from '../types';
+import { auth, saveBookingToFirestore } from '../lib/firebase';
 import {
   X,
   Calendar,
@@ -177,6 +178,31 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       localStorage.setItem('natal_vip_leads', JSON.stringify(updatedLeads));
     } catch {
       // ignore
+    }
+
+    // Persist to Cloud Firestore
+    try {
+      const activeUid = auth.currentUser?.uid || `guest_${Date.now()}`;
+      saveBookingToFirestore({
+        userId: activeUid,
+        tourId: currentTour.id,
+        tourName: currentTour.title,
+        date: bookingDate,
+        timeWindow: bookingTimeWindow,
+        participants: adults + children,
+        totalAmount: finalTotal,
+        paymentMethod: paymentTab,
+        status: 'confirmed',
+        voucherCode: bookingCode,
+        passengerName: customerName,
+        passengerEmail: customerEmail,
+        passengerPhone: customerPhone,
+        createdAt: new Date().toISOString(),
+      }).catch((err) => {
+        console.warn('Firestore reservation save warning:', err);
+      });
+    } catch (err) {
+      console.warn('Firestore sync error:', err);
     }
 
     // Try sending voucher email via API endpoint (with graceful fallback)
@@ -744,7 +770,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 <div className="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
                   <div className="flex items-center gap-3">
                     <img
-                      src="/logo.png"
+                      src="/imagens/logo01.png"
                       alt="Natal Vip Turismo"
                       className="w-10 h-10 rounded-full object-contain drop-shadow-[0_2px_8px_rgba(212,175,55,0.4)] shrink-0"
                       referrerPolicy="no-referrer"

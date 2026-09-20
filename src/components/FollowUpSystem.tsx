@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LeadFollowUp } from '../types';
+import { saveLeadToFirestore } from '../lib/firebase';
 import {
   Sparkles,
   Gift,
@@ -172,6 +173,23 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
       localStorage.setItem('natal_vip_leads', JSON.stringify(updated));
     } catch {
       // ignore
+    }
+
+    // Persist to Cloud Firestore leads collection
+    try {
+      saveLeadToFirestore({
+        name: newLead.name,
+        phone: newLead.phone,
+        tourInterest: newLead.tourInterest || 'Passeio VIP',
+        travelMonth: newLead.travelMonth || '2026',
+        couponCode: newLead.couponCode || 'VIPNATAL30',
+        status: 'new',
+        createdAt: new Date().toISOString(),
+      }).catch((err) => {
+        console.warn('Firestore lead save warning:', err);
+      });
+    } catch (err) {
+      console.warn('Firestore lead error:', err);
     }
 
     setIsSuccess(true);

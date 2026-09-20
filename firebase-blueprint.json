@@ -1,0 +1,186 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Authenticated user profile",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique user ID matching Firebase Auth uid",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name",
+          "maxLength": 120
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL to user profile picture",
+          "maxLength": 1024
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of account creation",
+          "maxLength": 64
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "VIP tour reservation made by an authenticated user or guest",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Booking document ID",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user UID or guest id",
+          "maxLength": 128
+        },
+        "tourId": {
+          "type": "string",
+          "description": "ID of the booked tour",
+          "maxLength": 64
+        },
+        "tourName": {
+          "type": "string",
+          "description": "Title of the tour",
+          "maxLength": 160
+        },
+        "date": {
+          "type": "string",
+          "description": "Selected tour date",
+          "maxLength": 32
+        },
+        "timeWindow": {
+          "type": "string",
+          "description": "Tide time window for tour departure",
+          "maxLength": 64
+        },
+        "participants": {
+          "type": "number",
+          "description": "Number of booked passengers"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Total reservation price in BRL"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Chosen payment method (pix, credit_card)",
+          "maxLength": 32
+        },
+        "status": {
+          "type": "string",
+          "description": "Reservation status (confirmed, pending, cancelled)",
+          "maxLength": 32
+        },
+        "voucherCode": {
+          "type": "string",
+          "description": "Unique VIP voucher code",
+          "maxLength": 64
+        },
+        "passengerName": {
+          "type": "string",
+          "description": "Primary passenger contact name",
+          "maxLength": 120
+        },
+        "passengerEmail": {
+          "type": "string",
+          "description": "Primary passenger email",
+          "maxLength": 256
+        },
+        "passengerPhone": {
+          "type": "string",
+          "description": "Primary passenger phone number",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp",
+          "maxLength": 64
+        }
+      },
+      "required": ["tourId", "tourName", "date", "participants", "totalAmount", "status", "voucherCode"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "Prospective tourist lead captured via VIP discount coupon or concierge",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Lead document ID",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "description": "Lead name",
+          "maxLength": 120
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone or WhatsApp",
+          "maxLength": 32
+        },
+        "tourInterest": {
+          "type": "string",
+          "description": "Tour of interest",
+          "maxLength": 160
+        },
+        "travelMonth": {
+          "type": "string",
+          "description": "Month of travel",
+          "maxLength": 64
+        },
+        "couponCode": {
+          "type": "string",
+          "description": "Activated discount coupon code",
+          "maxLength": 64
+        },
+        "status": {
+          "type": "string",
+          "description": "Lead status (new, contacted, booked)",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when lead was created",
+          "maxLength": 64
+        }
+      },
+      "required": ["name", "phone", "couponCode", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Authenticated user profile records"
+    },
+    "/bookings/{bookingId}": {
+      "schema": {
+        "$ref": "#/entities/Booking"
+      },
+      "description": "Customer tour reservations and VIP vouchers"
+    },
+    "/leads/{leadId}": {
+      "schema": {
+        "$ref": "#/entities/Lead"
+      },
+      "description": "VIP Concierge leads and promotional coupons"
+    }
+  }
+}
