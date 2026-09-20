@@ -131,7 +131,7 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
                     <div className="flex items-center gap-2">
                       <img
-                        src="/imagens/logo01.png"
+                        src="/imagens/logovip.jpg"
                         alt="Natal VIP"
                         className="w-7 h-7 rounded-full object-contain"
                         referrerPolicy="no-referrer"

@@ -770,7 +770,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 <div className="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
                   <div className="flex items-center gap-3">
                     <img
-                      src="/imagens/logo01.png"
+                      src="/imagens/logovip.jpg"
                       alt="Natal Vip Turismo"
                       className="w-10 h-10 rounded-full object-contain drop-shadow-[0_2px_8px_rgba(212,175,55,0.4)] shrink-0"
                       referrerPolicy="no-referrer"
