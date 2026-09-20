@@ -38,7 +38,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Top Proof Pill */}
         <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-lg">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-lg">
+            <img
+              src="/logo.png"
+              alt="Selo Oficial Natal VIP"
+              className="w-5 h-5 rounded-full object-contain drop-shadow"
+              referrerPolicy="no-referrer"
+            />
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
             Empresa Nº 1 em Satisfação no RN · Mais de 12.000 Turistas VIP
           </div>

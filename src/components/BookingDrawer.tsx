@@ -742,13 +742,21 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               {/* Digital Voucher Ticket */}
               <div className="bg-gradient-to-b from-[#0C1A30] to-[#071220] border-2 border-amber-400/50 rounded-3xl p-6 text-left shadow-2xl relative overflow-hidden">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-amber-400 block">
-                      Localizador
-                    </span>
-                    <span className="text-lg font-black text-white tracking-wider">
-                      {generatedVoucher.voucherCode}
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="/logo.png"
+                      alt="Natal Vip Turismo"
+                      className="w-10 h-10 rounded-full object-contain drop-shadow-[0_2px_8px_rgba(212,175,55,0.4)] shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-amber-400 block">
+                        Localizador
+                      </span>
+                      <span className="text-lg font-black text-white tracking-wider">
+                        {generatedVoucher.voucherCode}
+                      </span>
+                    </div>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">
