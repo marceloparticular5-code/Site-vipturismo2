@@ -1,0 +1,6 @@
+{
+  "name": "Natal Vip Turismo - Agência de Passeios & Mergulho",
+  "description": "Sistema moderno de reservas com autoatendimento, chatbot Gemini, tábua de maré inteligente para Maracajaú e Rio do Fogo, pacotes VIP e dicas de Natal/RN.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
