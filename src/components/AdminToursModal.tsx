@@ -5,10 +5,7 @@ import {
   logoutUser,
   isUserAdmin,
   ADMIN_EMAIL,
-  ADMIN_MASTER_PIN,
-  verifyAdminPin,
   isRunningInIframe,
-  getSavedAdminSession,
   subscribeToTours,
   saveTourToFirestore,
   deleteTourFromFirestore,
@@ -46,7 +43,6 @@ import {
   Layers,
   Users,
   Calendar,
-  Key,
   ExternalLink,
   Copy,
   Info,
@@ -62,9 +58,6 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
   const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
   const [isAdmin, setIsAdmin] = useState<boolean>(() => isUserAdmin(auth.currentUser));
   const [authLoading, setAuthLoading] = useState<boolean>(false);
-  const [authMethod, setAuthMethod] = useState<'google' | 'pin'>('google');
-  const [adminPin, setAdminPin] = useState('');
-  const [pinError, setPinError] = useState('');
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleErrorCode, setGoogleErrorCode] = useState<string | null>(null);
   const [copiedDomain, setCopiedDomain] = useState(false);
@@ -108,9 +101,6 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
   // Monitor Auth State & Iframe detection
   useEffect(() => {
     setIsInIframe(isRunningInIframe());
-    if (getSavedAdminSession()) {
-      setIsAdmin(true);
-    }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setIsAdmin(isUserAdmin(user));
@@ -164,28 +154,10 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
     }
   };
 
-  const handlePinLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPinError('');
-    if (!adminPin.trim()) {
-      setPinError('Digite o código de acesso de administrador.');
-      return;
-    }
-    const valid = verifyAdminPin(adminPin);
-    if (valid) {
-      setIsAdmin(true);
-      setPinError('');
-    } else {
-      setPinError('Código de segurança incorreto. Dica: use VIP2026.');
-    }
-  };
-
   const handleLogout = async () => {
     await logoutUser();
     setCurrentUser(null);
     setIsAdmin(false);
-    setAdminPin('');
-    setPinError('');
     setGoogleError(null);
     setGoogleErrorCode(null);
   };
@@ -445,26 +417,18 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                   <div className="font-bold text-amber-300 mt-1 text-sm">{ADMIN_EMAIL}</div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <div className="pt-2">
                   <button
                     onClick={handleLogout}
-                    className="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-colors"
+                    className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-colors"
                   >
                     Trocar de Conta Google
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAuthMethod('pin');
-                    }}
-                    className="flex-1 py-3 px-4 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs hover:bg-amber-300 transition-colors"
-                  >
-                    Entrar com Chave Admin
                   </button>
                 </div>
               </div>
             ) : (
-              /* Main Admin Login Screen with Tabs */
-              <div className="max-w-lg mx-auto py-4 sm:py-8 space-y-6">
+              /* Main Admin Login Screen (Strictly Google Login) */
+              <div className="max-w-lg mx-auto py-6 sm:py-10 space-y-6">
                 <div className="text-center space-y-2">
                   <div className="w-16 h-16 mx-auto rounded-3xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center p-3 shadow-inner">
                     <Shield className="w-8 h-8 text-amber-400" />
@@ -482,243 +446,124 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
 
                 {/* Iframe Notice & New Tab Button */}
                 {isInIframe && (
-                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 space-y-2 text-left">
+                  <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 space-y-2 text-left">
                     <div className="flex items-start gap-2.5">
                       <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                       <div className="space-y-1">
                         <strong className="block text-amber-300 font-semibold">
-                          Por que a janela do Google abriu e fechou?
+                          Login via Conta Google
                         </strong>
-                        <p className="text-amber-200/90 leading-relaxed text-[11px]">
-                          O navegador bloqueia a troca de cookies de login dentro de janelas incorporadas (iFrames do preview). Você pode entrar rapidamente usando a <strong>Chave de Acesso Admin</strong> logo abaixo ou abrindo o site em uma nova aba.
+                        <p className="text-slate-400 leading-relaxed text-[11px]">
+                          Caso a janela de login do Google feche automaticamente ao abrir, abra o site em uma nova aba do navegador para permitir que os cookies de autenticação sejam validados pelo Google.
                         </p>
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 pt-1 pl-6">
+                    <div className="pt-1 pl-6">
                       <a
                         href={window.location.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-[11px] hover:bg-amber-300 transition-colors shadow-sm"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-amber-300 font-semibold text-[11px] hover:bg-slate-700 transition-colors shadow-sm"
                       >
                         <span>Abrir Site em Nova Aba</span>
                         <ExternalLink className="w-3 h-3" />
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAuthMethod('pin');
-                          setAdminPin(ADMIN_MASTER_PIN);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-amber-400/40 text-amber-300 font-semibold text-[11px] hover:bg-slate-800 transition-colors"
-                      >
-                        <Key className="w-3 h-3 text-amber-400" />
-                        <span>Entrar Imediato com Chave VIP</span>
-                      </button>
                     </div>
                   </div>
                 )}
 
-                {/* Tabs Selector: Google vs Master PIN */}
-                <div className="flex p-1 rounded-2xl bg-slate-900 border border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMethod('google');
-                      setGoogleError(null);
-                    }}
-                    className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      authMethod === 'google'
-                        ? 'bg-amber-400 text-slate-950 shadow-md'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <LogIn className="w-4 h-4" />
-                    <span>Conta Google</span>
-                  </button>
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400 flex items-center justify-center gap-2">
+                    <Shield className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>E-mail credenciado: <strong className="text-amber-300">{ADMIN_EMAIL}</strong></span>
+                  </div>
+
+                  {/* Google Error Box */}
+                  {googleError && (
+                    <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-200 space-y-2 text-left animate-fadeIn">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <div className="leading-relaxed">
+                          <strong className="block text-rose-300 font-semibold mb-1">
+                            Informação sobre o Login Google:
+                          </strong>
+                          {googleError}
+                        </div>
+                      </div>
+
+                      {googleErrorCode === 'auth/unauthorized-domain' && (
+                        <div className="mt-2 p-2.5 rounded-xl bg-slate-950 border border-rose-900/60 space-y-2">
+                          <div className="text-[11px] text-slate-300">
+                            Domínio atual:
+                          </div>
+                          <div className="flex items-center justify-between gap-2 bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800 font-mono text-xs text-amber-300">
+                            <span className="truncate">{window.location.hostname}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard?.writeText(window.location.hostname);
+                                setCopiedDomain(true);
+                                setTimeout(() => setCopiedDomain(false), 2000);
+                              }}
+                              className="text-xs text-slate-400 hover:text-white flex items-center gap-1 shrink-0"
+                            >
+                              {copiedDomain ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                              <span>{copiedDomain ? 'Copiado' : 'Copiar'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="pt-2 flex flex-wrap gap-2">
+                        <a
+                          href={window.location.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-xl bg-slate-900 border border-rose-400/40 text-rose-200 hover:text-white font-semibold text-[11px] flex items-center gap-1.5"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Abrir em Nova Aba</span>
+                        </a>
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setAuthMethod('pin');
-                      setPinError('');
-                    }}
-                    className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      authMethod === 'pin'
-                        ? 'bg-amber-400 text-slate-950 shadow-md'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
+                    onClick={handleGoogleLogin}
+                    disabled={authLoading}
+                    className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 transition-all flex items-center justify-center gap-3 shadow-[0_0_25px_rgba(245,158,11,0.35)] disabled:opacity-50 cursor-pointer"
                   >
-                    <Key className="w-4 h-4" />
-                    <span>Chave Admin (Direto)</span>
+                    {authLoading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                        Aguardando Conta Google...
+                      </span>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                          <path
+                            fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                          />
+                        </svg>
+                        <span>Entrar com Conta Google</span>
+                      </>
+                    )}
                   </button>
                 </div>
-
-                {/* METHOD 1: GOOGLE LOGIN */}
-                {authMethod === 'google' && (
-                  <div className="space-y-4">
-                    <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400 flex items-center justify-center gap-2">
-                      <Shield className="w-4 h-4 text-amber-400 shrink-0" />
-                      <span>E-mail credenciado: <strong className="text-amber-300">{ADMIN_EMAIL}</strong></span>
-                    </div>
-
-                    {/* Google Error Box */}
-                    {googleError && (
-                      <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-200 space-y-2 text-left animate-fadeIn">
-                        <div className="flex items-start gap-2">
-                          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                          <div className="leading-relaxed">
-                            <strong className="block text-rose-300 font-semibold mb-1">
-                              Informação sobre o Login Google:
-                            </strong>
-                            {googleError}
-                          </div>
-                        </div>
-
-                        {googleErrorCode === 'auth/unauthorized-domain' && (
-                          <div className="mt-2 p-2.5 rounded-xl bg-slate-950 border border-rose-900/60 space-y-2">
-                            <div className="text-[11px] text-slate-300">
-                              Domínio detectado desta janela:
-                            </div>
-                            <div className="flex items-center justify-between gap-2 bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800 font-mono text-xs text-amber-300">
-                              <span className="truncate">{window.location.hostname}</span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard?.writeText(window.location.hostname);
-                                  setCopiedDomain(true);
-                                  setTimeout(() => setCopiedDomain(false), 2000);
-                                }}
-                                className="text-xs text-slate-400 hover:text-white flex items-center gap-1 shrink-0"
-                              >
-                                {copiedDomain ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                                <span>{copiedDomain ? 'Copiado' : 'Copiar'}</span>
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="pt-2 flex flex-wrap gap-2">
-                          <a
-                            href={window.location.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3 py-1.5 rounded-xl bg-slate-900 border border-rose-400/40 text-rose-200 hover:text-white font-semibold text-[11px] flex items-center gap-1.5"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Abrir em Nova Aba</span>
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setAuthMethod('pin');
-                              setAdminPin(ADMIN_MASTER_PIN);
-                            }}
-                            className="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-[11px] hover:bg-amber-300"
-                          >
-                            Usar Chave Direta VIP2026
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={handleGoogleLogin}
-                      disabled={authLoading}
-                      className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 transition-all flex items-center justify-center gap-3 shadow-[0_0_25px_rgba(245,158,11,0.35)] disabled:opacity-50 cursor-pointer"
-                    >
-                      {authLoading ? (
-                        <span className="flex items-center gap-2">
-                          <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                          Aguardando Conta Google...
-                        </span>
-                      ) : (
-                        <>
-                          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                            <path
-                              fill="#4285F4"
-                              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                            />
-                            <path
-                              fill="#34A853"
-                              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                            />
-                            <path
-                              fill="#FBBC05"
-                              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                            />
-                            <path
-                              fill="#EA4335"
-                              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                            />
-                          </svg>
-                          <span>Entrar com Conta Google</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                {/* METHOD 2: MASTER PIN / ACCESS KEY (Direct & 100% Reliable) */}
-                {authMethod === 'pin' && (
-                  <form onSubmit={handlePinLogin} className="space-y-4">
-                    <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2 text-left">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-200">
-                        <Key className="w-4 h-4 text-amber-400" />
-                        <span>Acesso Instantâneo Sem Depender de Pop-up</span>
-                      </div>
-                      <p className="text-xs text-slate-400 leading-relaxed">
-                        Ideal para gerenciar a agência mesmo em janelas embutidas ou navegadores com bloqueadores ativados.
-                      </p>
-                    </div>
-
-                    <div className="space-y-1.5 text-left">
-                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                        Código de Segurança / Chave Master
-                      </label>
-                      <div className="relative">
-                        <Key className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          type="password"
-                          value={adminPin}
-                          onChange={(e) => {
-                            setAdminPin(e.target.value);
-                            if (pinError) setPinError('');
-                          }}
-                          placeholder="Digite a chave..."
-                          autoFocus
-                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 transition-colors uppercase font-mono tracking-widest"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 pt-1">
-                        <span>Chave mestre da agência:</span>
-                        <button
-                          type="button"
-                          onClick={() => setAdminPin(ADMIN_MASTER_PIN)}
-                          className="text-amber-400 hover:text-amber-300 font-mono font-bold underline cursor-pointer"
-                        >
-                          Preencher VIP2026
-                        </button>
-                      </div>
-                    </div>
-
-                    {pinError && (
-                      <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-300 flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                        <span>{pinError}</span>
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(245,158,11,0.35)] cursor-pointer"
-                    >
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>Liberar Acesso Administrativo</span>
-                    </button>
-                  </form>
-                )}
               </div>
             )
           ) : (

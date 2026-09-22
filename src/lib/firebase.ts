@@ -42,10 +42,7 @@ googleProvider.setCustomParameters({
   prompt: 'select_account',
 });
 
-// Master Admin Access Keys for direct agency management
-export const ADMIN_MASTER_PIN = 'VIP2026';
-export const ADMIN_ALTERNATIVE_PIN = 'NATALVIP2026';
-const LOCAL_ADMIN_KEY = 'natal_vip_admin_auth_session';
+// Local storage key for tours caching
 const LOCAL_TOURS_KEY = 'natal_vip_admin_local_tours';
 
 // Check if app is inside an iframe
@@ -54,32 +51,6 @@ export function isRunningInIframe(): boolean {
     return window.self !== window.top;
   } catch {
     return true;
-  }
-}
-
-// Session-based Admin verification
-export function getSavedAdminSession(): boolean {
-  try {
-    return (
-      sessionStorage.getItem(LOCAL_ADMIN_KEY) === 'true' ||
-      localStorage.getItem(LOCAL_ADMIN_KEY) === 'true'
-    );
-  } catch {
-    return false;
-  }
-}
-
-export function setSavedAdminSession(active: boolean): void {
-  try {
-    if (active) {
-      sessionStorage.setItem(LOCAL_ADMIN_KEY, 'true');
-      localStorage.setItem(LOCAL_ADMIN_KEY, 'true');
-    } else {
-      sessionStorage.removeItem(LOCAL_ADMIN_KEY);
-      localStorage.removeItem(LOCAL_ADMIN_KEY);
-    }
-  } catch {
-    // ignore
   }
 }
 
@@ -271,12 +242,12 @@ export async function loginWithGoogleDetailed(): Promise<GoogleLoginResult> {
 
     if (errorCode === 'auth/popup-closed-by-user') {
       errorMessage =
-        'A janela do Google foi fechada antes de concluir a autenticação. Isso costuma acontecer em navegadores que bloqueiam cookies em iframes. Abra o site em uma nova aba do navegador para permitir o login com segurança ou utilize a Chave de Acesso Admin.';
+        'A janela do Google foi fechada antes de concluir o login. Se estiver no preview incorporado, abra o site em uma nova aba para permitir o pop-up da sua conta Google marceloparticular5@gmail.com.';
     } else if (errorCode === 'auth/unauthorized-domain') {
-      errorMessage = `Este domínio (${window.location.hostname}) ainda não foi autorizado no Firebase Authentication. Você pode usar a Chave de Acesso Direto de Administrador enquanto autoriza o domínio no Firebase Console (Authentication > Settings > Authorized Domains).`;
+      errorMessage = `O domínio ${window.location.hostname} precisa ser adicionado à lista de domínios autorizados no Firebase Authentication (Console > Authentication > Settings > Authorized Domains). Adicione natalvipturismo.com.br e www.natalvipturismo.com.br.`;
     } else if (errorCode === 'auth/popup-blocked') {
       errorMessage =
-        'O navegador bloqueou a janela pop-up do Google. Por favor, habilite pop-ups para esta página ou abra o site diretamente em uma nova aba.';
+        'O navegador bloqueou a janela pop-up do Google. Por favor, habilite pop-ups para este site ou abra o site diretamente em uma nova aba.';
     } else if (errorCode === 'auth/cancelled-popup-request') {
       errorMessage = 'A requisição de login foi cancelada por outra tentativa em andamento.';
     }
@@ -292,21 +263,10 @@ export async function loginWithGoogle(): Promise<User | null> {
 
 export async function logoutUser(): Promise<void> {
   try {
-    setSavedAdminSession(false);
     await signOut(auth);
   } catch (error) {
     console.error('Error signing out:', error);
   }
-}
-
-// Master Admin validation
-export function verifyAdminPin(pin: string): boolean {
-  const cleanPin = pin.trim().toUpperCase();
-  if (cleanPin === ADMIN_MASTER_PIN || cleanPin === ADMIN_ALTERNATIVE_PIN) {
-    setSavedAdminSession(true);
-    return true;
-  }
-  return false;
 }
 
 // Data persistence helpers with full error handling
@@ -365,11 +325,10 @@ export function subscribeUserBookings(
   }
 }
 
-// Check if a user is an authorized admin (either via Google or session PIN)
+// Check if a user is an authorized admin strictly via verified Google Account
 export function isUserAdmin(user: User | null): boolean {
-  if (getSavedAdminSession()) return true;
   if (!user || !user.email) return false;
-  return user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  return user.email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
 }
 
 // Real-time listener for tours collection in Firestore, merged with default VIP_TOURS and local edits

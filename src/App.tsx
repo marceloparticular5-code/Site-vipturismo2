@@ -167,7 +167,6 @@ export function App() {
         onOpenCalendar={scrollToCalendar}
         onOpenAutoAtendimento={() => setIsAutoAtendimentoOpen(true)}
         onOpenCrm={() => setIsCrmOpen(true)}
-        onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenCookies={() => {
           localStorage.removeItem('natal_vip_cookie_consent');
           window.location.reload();
