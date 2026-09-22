@@ -14,8 +14,9 @@ import {
   Ticket,
   LogOut,
   LogIn,
+  Shield,
 } from 'lucide-react';
-import { auth, loginWithGoogle, logoutUser } from '../lib/firebase';
+import { auth, loginWithGoogle, logoutUser, isUserAdmin } from '../lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 interface HeaderProps {
@@ -25,6 +26,7 @@ interface HeaderProps {
   onOpenChat: () => void;
   onOpenMyReservations: () => void;
   onNavigateSection: (sectionId: string) => void;
+  onOpenAdmin?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -34,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenChat,
   onOpenMyReservations,
   onNavigateSection,
+  onOpenAdmin,
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -216,6 +219,17 @@ export const Header: React.FC<HeaderProps> = ({
             >
               Reservar Agora
             </button>
+
+            {/* Admin Quick Access Button */}
+            {onOpenAdmin && (
+              <button
+                onClick={onOpenAdmin}
+                className="p-2 rounded-xl text-xs font-medium bg-slate-900/60 hover:bg-slate-800 border border-slate-700/60 text-slate-400 hover:text-amber-300 hover:border-amber-400/40 transition-all flex items-center justify-center"
+                title="Painel de Controle Admin"
+              >
+                <Shield className="w-3.5 h-3.5 text-amber-400" />
+              </button>
+            )}
           </div>
 
           {/* Mobile menu hamburger */}
@@ -305,6 +319,19 @@ export const Header: React.FC<HeaderProps> = ({
               <Ticket className="w-4 h-4 text-amber-400" />
               Minhas Reservas VIP
             </button>
+
+            {onOpenAdmin && (
+              <button
+                onClick={() => {
+                  onOpenAdmin();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-900 text-amber-400 font-semibold flex items-center gap-2"
+              >
+                <Shield className="w-4 h-4 text-amber-400" />
+                Painel Administrativo VIP
+              </button>
+            )}
 
             {currentUser ? (
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">

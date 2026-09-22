@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { X, Ticket, Calendar, Clock, Users, ShieldCheck, LogIn, ExternalLink } from 'lucide-react';
-import { auth, loginWithGoogle, subscribeUserBookings, FirebaseBooking } from '../lib/firebase';
+import { X, Ticket, Calendar, Clock, Users, ShieldCheck, LogIn, ExternalLink, AlertTriangle } from 'lucide-react';
+import { auth, loginWithGoogleDetailed, isRunningInIframe, subscribeUserBookings, FirebaseBooking } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 interface UserReservationsModalProps {
@@ -17,6 +17,9 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
   const [user, setUser] = useState<User | null>(auth.currentUser);
   const [bookings, setBookings] = useState<FirebaseBooking[]>([]);
   const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const inIframe = isRunningInIframe();
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -41,6 +44,23 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
   }, [user]);
 
   if (!isOpen) return null;
+
+  const handleGoogleSignIn = async () => {
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      const res = await loginWithGoogleDetailed();
+      if (res.user) {
+        setUser(res.user);
+      } else if (res.error) {
+        setAuthError(res.error);
+      }
+    } catch (err: any) {
+      setAuthError(err?.message || 'Falha ao autenticar.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -82,14 +102,45 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
                 <p className="text-xs text-slate-400 mb-6">
                   Faça login para visualizar seus passaportes marítimos, horários de maré baixa e emitir vouchers a qualquer momento.
                 </p>
+                {inIframe && (
+                  <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 text-left">
+                    <span>Navegando no preview? Se o pop-up do Google fechar sozinho, </span>
+                    <a
+                      href={window.location.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline font-bold text-amber-300 inline-flex items-center gap-1 ml-1"
+                    >
+                      abra o site em uma nova aba
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
+
+                {authError && (
+                  <div className="mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-[11px] text-rose-300 text-left flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    <span>{authError}</span>
+                  </div>
+                )}
+
                 <button
-                  onClick={async () => {
-                    await loginWithGoogle();
-                  }}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 hover:brightness-110 shadow-lg"
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={authLoading}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 hover:brightness-110 shadow-lg disabled:opacity-50 cursor-pointer"
                 >
-                  <LogIn className="w-4 h-4" />
-                  Entrar com Google
+                  {authLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      Conectando...
+                    </span>
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4" />
+                      <span>Entrar com Google</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

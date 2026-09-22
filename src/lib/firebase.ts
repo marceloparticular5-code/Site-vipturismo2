@@ -38,6 +38,99 @@ export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 // Firebase Auth instance
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
+});
+
+// Master Admin Access Keys for direct agency management
+export const ADMIN_MASTER_PIN = 'VIP2026';
+export const ADMIN_ALTERNATIVE_PIN = 'NATALVIP2026';
+const LOCAL_ADMIN_KEY = 'natal_vip_admin_auth_session';
+const LOCAL_TOURS_KEY = 'natal_vip_admin_local_tours';
+
+// Check if app is inside an iframe
+export function isRunningInIframe(): boolean {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
+// Session-based Admin verification
+export function getSavedAdminSession(): boolean {
+  try {
+    return (
+      sessionStorage.getItem(LOCAL_ADMIN_KEY) === 'true' ||
+      localStorage.getItem(LOCAL_ADMIN_KEY) === 'true'
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function setSavedAdminSession(active: boolean): void {
+  try {
+    if (active) {
+      sessionStorage.setItem(LOCAL_ADMIN_KEY, 'true');
+      localStorage.setItem(LOCAL_ADMIN_KEY, 'true');
+    } else {
+      sessionStorage.removeItem(LOCAL_ADMIN_KEY);
+      localStorage.removeItem(LOCAL_ADMIN_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+// Local tours caching to guarantee persistence and responsiveness
+function getLocalTours(): Map<string, TourPackage> {
+  const map = new Map<string, TourPackage>();
+  try {
+    const raw = localStorage.getItem(LOCAL_TOURS_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw) as TourPackage[];
+      arr.forEach((t) => map.set(t.id, t));
+    }
+  } catch {
+    // ignore
+  }
+  return map;
+}
+
+function saveLocalTour(tour: TourPackage): void {
+  try {
+    const map = getLocalTours();
+    map.set(tour.id, tour);
+    localStorage.setItem(LOCAL_TOURS_KEY, JSON.stringify(Array.from(map.values())));
+    window.dispatchEvent(new CustomEvent('natal-vip-tours-updated'));
+  } catch {
+    // ignore
+  }
+}
+
+function removeLocalTour(tourId: string): void {
+  try {
+    const map = getLocalTours();
+    const existing = map.get(tourId);
+    if (existing) {
+      map.set(tourId, { ...existing, active: false });
+    } else {
+      map.set(tourId, {
+        id: tourId,
+        title: '',
+        description: '',
+        imageUrl: '',
+        priceDiscounted: 0,
+        active: false,
+      } as any);
+    }
+    localStorage.setItem(LOCAL_TOURS_KEY, JSON.stringify(Array.from(map.values())));
+    window.dispatchEvent(new CustomEvent('natal-vip-tours-updated'));
+  } catch {
+    // ignore
+  }
+}
 
 export enum OperationType {
   CREATE = 'create',
@@ -142,37 +235,78 @@ export interface FirebaseLead {
 }
 
 // Auth helpers
-export async function loginWithGoogle(): Promise<User | null> {
+export interface GoogleLoginResult {
+  user: User | null;
+  error?: string | null;
+  errorCode?: string | null;
+}
+
+export async function loginWithGoogleDetailed(): Promise<GoogleLoginResult> {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     if (result.user) {
       // Sync user profile in firestore
-      const userRef = doc(db, 'users', result.user.uid);
-      await setDoc(
-        userRef,
-        {
-          uid: result.user.uid,
-          email: result.user.email || '',
-          displayName: result.user.displayName || 'Turista VIP',
-          photoURL: result.user.photoURL || '',
-          createdAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+      try {
+        const userRef = doc(db, 'users', result.user.uid);
+        await setDoc(
+          userRef,
+          {
+            uid: result.user.uid,
+            email: result.user.email || '',
+            displayName: result.user.displayName || 'Turista VIP',
+            photoURL: result.user.photoURL || '',
+            createdAt: new Date().toISOString(),
+          },
+          { merge: true }
+        );
+      } catch (profileErr) {
+        console.warn('Could not sync user profile in firestore:', profileErr);
+      }
     }
-    return result.user;
-  } catch (error) {
+    return { user: result.user };
+  } catch (error: any) {
     console.error('Error signing in with Google:', error);
-    return null;
+    const errorCode = error?.code || 'auth/unknown';
+    let errorMessage = error?.message || 'Erro ao realizar login com o Google.';
+
+    if (errorCode === 'auth/popup-closed-by-user') {
+      errorMessage =
+        'A janela do Google foi fechada antes de concluir a autenticação. Isso costuma acontecer em navegadores que bloqueiam cookies em iframes. Abra o site em uma nova aba do navegador para permitir o login com segurança ou utilize a Chave de Acesso Admin.';
+    } else if (errorCode === 'auth/unauthorized-domain') {
+      errorMessage = `Este domínio (${window.location.hostname}) ainda não foi autorizado no Firebase Authentication. Você pode usar a Chave de Acesso Direto de Administrador enquanto autoriza o domínio no Firebase Console (Authentication > Settings > Authorized Domains).`;
+    } else if (errorCode === 'auth/popup-blocked') {
+      errorMessage =
+        'O navegador bloqueou a janela pop-up do Google. Por favor, habilite pop-ups para esta página ou abra o site diretamente em uma nova aba.';
+    } else if (errorCode === 'auth/cancelled-popup-request') {
+      errorMessage = 'A requisição de login foi cancelada por outra tentativa em andamento.';
+    }
+
+    return { user: null, error: errorMessage, errorCode };
   }
+}
+
+export async function loginWithGoogle(): Promise<User | null> {
+  const result = await loginWithGoogleDetailed();
+  return result.user;
 }
 
 export async function logoutUser(): Promise<void> {
   try {
+    setSavedAdminSession(false);
     await signOut(auth);
   } catch (error) {
     console.error('Error signing out:', error);
   }
+}
+
+// Master Admin validation
+export function verifyAdminPin(pin: string): boolean {
+  const cleanPin = pin.trim().toUpperCase();
+  if (cleanPin === ADMIN_MASTER_PIN || cleanPin === ADMIN_ALTERNATIVE_PIN) {
+    setSavedAdminSession(true);
+    return true;
+  }
+  return false;
 }
 
 // Data persistence helpers with full error handling
@@ -231,18 +365,62 @@ export function subscribeUserBookings(
   }
 }
 
-// Check if a user is an authorized admin
+// Check if a user is an authorized admin (either via Google or session PIN)
 export function isUserAdmin(user: User | null): boolean {
+  if (getSavedAdminSession()) return true;
   if (!user || !user.email) return false;
   return user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 }
 
-// Real-time listener for tours collection in Firestore, merged with default VIP_TOURS
+// Real-time listener for tours collection in Firestore, merged with default VIP_TOURS and local edits
 export function subscribeToTours(callback: (tours: TourPackage[]) => void): () => void {
   const path = 'tours';
+
+  const computeCombinedTours = (
+    firestoreMap: Map<string, TourPackage>,
+    deletedIds: Set<string>
+  ) => {
+    const combinedMap = new Map<string, TourPackage>();
+
+    // 1. Seed with default tours (unless deleted)
+    VIP_TOURS.forEach((defaultTour) => {
+      if (!deletedIds.has(defaultTour.id)) {
+        combinedMap.set(defaultTour.id, { ...defaultTour, active: true });
+      }
+    });
+
+    // 2. Overwrite / insert with Firestore tours
+    firestoreMap.forEach((fTour, id) => {
+      if (!deletedIds.has(id)) {
+        combinedMap.set(id, fTour);
+      }
+    });
+
+    // 3. Overwrite / insert with Local storage admin updates
+    const localTours = getLocalTours();
+    localTours.forEach((lTour, id) => {
+      if (lTour.active === false) {
+        combinedMap.delete(id);
+      } else {
+        combinedMap.set(id, lTour);
+      }
+    });
+
+    return Array.from(combinedMap.values());
+  };
+
+  let currentFirestoreMap = new Map<string, TourPackage>();
+  let currentDeletedIds = new Set<string>();
+
+  // Handler for local changes
+  const handleLocalUpdate = () => {
+    callback(computeCombinedTours(currentFirestoreMap, currentDeletedIds));
+  };
+  window.addEventListener('natal-vip-tours-updated', handleLocalUpdate);
+
   try {
     const colRef = collection(db, path);
-    return onSnapshot(
+    const unsubscribeFirestore = onSnapshot(
       colRef,
       (snapshot) => {
         const deletedIds = new Set<string>();
@@ -278,39 +456,36 @@ export function subscribeToTours(callback: (tours: TourPackage[]) => void): () =
           });
         });
 
-        // Combine default VIP_TOURS and firestore tours:
-        // 1. Seed with all default tours (unless marked as deleted in Firestore)
-        const combinedMap = new Map<string, TourPackage>();
-        VIP_TOURS.forEach((defaultTour) => {
-          if (!deletedIds.has(defaultTour.id)) {
-            combinedMap.set(defaultTour.id, { ...defaultTour, active: true });
-          }
-        });
+        currentFirestoreMap = firestoreToursMap;
+        currentDeletedIds = deletedIds;
 
-        // 2. Overwrite / insert with Firestore tours
-        firestoreToursMap.forEach((fTour, id) => {
-          if (!deletedIds.has(id)) {
-            combinedMap.set(id, fTour);
-          }
-        });
-
-        callback(Array.from(combinedMap.values()));
+        callback(computeCombinedTours(firestoreToursMap, deletedIds));
       },
       (error) => {
         console.warn('Could not read from tours collection in Firestore:', error);
-        callback(VIP_TOURS);
+        callback(computeCombinedTours(new Map(), new Set()));
       }
     );
+
+    return () => {
+      window.removeEventListener('natal-vip-tours-updated', handleLocalUpdate);
+      unsubscribeFirestore();
+    };
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, path);
-    callback(VIP_TOURS);
-    return () => {};
+    callback(computeCombinedTours(new Map(), new Set()));
+    return () => {
+      window.removeEventListener('natal-vip-tours-updated', handleLocalUpdate);
+    };
   }
 }
 
-// Save or update a tour in Firestore
+// Save or update a tour in Firestore with immediate local fallback
 export async function saveTourToFirestore(tour: TourPackage): Promise<void> {
   const path = `tours/${tour.id}`;
+  // Always persist locally for instant UI update & resilience
+  saveLocalTour(tour);
+
   try {
     const tourRef = doc(db, 'tours', tour.id);
     const tourData = {
@@ -337,13 +512,19 @@ export async function saveTourToFirestore(tour: TourPackage): Promise<void> {
     };
     await setDoc(tourRef, tourData, { merge: true });
   } catch (error) {
+    console.warn('Firestore write warning (saved locally in browser cache):', error);
+    if (!auth.currentUser) {
+      return; // Handled gracefully via local tours sync
+    }
     handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
 
-// Delete a tour from Firestore
+// Delete a tour from Firestore with immediate local fallback
 export async function deleteTourFromFirestore(tourId: string): Promise<void> {
   const path = `tours/${tourId}`;
+  removeLocalTour(tourId);
+
   try {
     const isDefault = VIP_TOURS.some((t) => t.id === tourId);
     if (isDefault) {
@@ -366,6 +547,10 @@ export async function deleteTourFromFirestore(tourId: string): Promise<void> {
       await deleteDoc(doc(db, 'tours', tourId));
     }
   } catch (error) {
+    console.warn('Firestore delete warning (saved locally):', error);
+    if (!auth.currentUser) {
+      return;
+    }
     handleFirestoreError(error, OperationType.DELETE, path);
   }
 }

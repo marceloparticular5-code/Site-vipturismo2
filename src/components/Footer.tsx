@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NatalVipLogo } from './NatalVipLogo';
-import { Phone, Mail, MapPin, ShieldCheck, Heart, ArrowUp, Sparkles, Send, CheckCircle2 } from 'lucide-react';
+import { Phone, Mail, MapPin, ShieldCheck, Heart, ArrowUp, Sparkles, Send, CheckCircle2, Shield } from 'lucide-react';
 import { subscribeToTravelDeals } from '../lib/emailService';
 
 interface FooterProps {
@@ -9,6 +9,7 @@ interface FooterProps {
   onOpenAutoAtendimento: () => void;
   onOpenCrm?: () => void;
   onOpenCookies?: () => void;
+  onOpenAdmin?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -17,6 +18,7 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenAutoAtendimento,
   onOpenCrm,
   onOpenCookies,
+  onOpenAdmin,
 }) => {
   const [subEmail, setSubEmail] = useState('');
   const [subStatus, setSubStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -236,6 +238,17 @@ export const Footer: React.FC<FooterProps> = ({
                   Cookies & LGPD (Marketing)
                 </button>
               </li>
+              {onOpenAdmin && (
+                <li>
+                  <button
+                    onClick={onOpenAdmin}
+                    className="hover:text-amber-300 transition-colors text-left flex items-center gap-1.5 text-amber-400 font-semibold"
+                  >
+                    <Shield className="w-3.5 h-3.5" />
+                    <span>Painel Admin VIP</span>
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -275,10 +288,22 @@ export const Footer: React.FC<FooterProps> = ({
 
         {/* Bottom Bar */}
         <div className="border-t border-slate-800/80 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-400">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span>© 2026 Natal Vip Turismo Agency · Todos os direitos reservados.</span>
             <span>•</span>
             <span>CNPJ & Cadastur Regular</span>
+            {onOpenAdmin && (
+              <>
+                <span>•</span>
+                <button
+                  onClick={onOpenAdmin}
+                  className="hover:text-amber-300 text-slate-400 flex items-center gap-1 transition-colors"
+                >
+                  <Shield className="w-3 h-3 text-amber-400" />
+                  <span>Admin</span>
+                </button>
+              </>
+            )}
           </div>
 
           <button
