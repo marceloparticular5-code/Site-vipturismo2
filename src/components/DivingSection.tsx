@@ -1,15 +1,18 @@
 import React from 'react';
 import { Sparkles, Anchor, Waves, CheckCircle2, Star, Clock, MapPin, ArrowRight } from 'lucide-react';
 import { VIP_TOURS } from '../data/toursData';
+import { TourPackage } from '../types';
 
 interface DivingSectionProps {
   onBookTour: (tourId: string) => void;
   onScrollToCalendar: () => void;
+  tours?: TourPackage[];
 }
 
-export const DivingSection: React.FC<DivingSectionProps> = ({ onBookTour, onScrollToCalendar }) => {
-  const maracajau = VIP_TOURS.find((t) => t.id === 'maracajau-vip')!;
-  const rioDoFogo = VIP_TOURS.find((t) => t.id === 'rio-do-fogo-vip')!;
+export const DivingSection: React.FC<DivingSectionProps> = ({ onBookTour, onScrollToCalendar, tours }) => {
+  const tourList = tours && tours.length > 0 ? tours : VIP_TOURS;
+  const maracajau = tourList.find((t) => t.id === 'maracajau-vip') || VIP_TOURS[0];
+  const rioDoFogo = tourList.find((t) => t.id === 'rio-do-fogo-vip') || VIP_TOURS[1];
 
   return (
     <section id="roteiros-mergulho" className="py-20 bg-[#050C16] relative overflow-hidden scroll-mt-20">

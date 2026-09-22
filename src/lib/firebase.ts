@@ -3,9 +3,11 @@ import {
   getFirestore,
   doc,
   getDocFromServer,
+  getDoc,
   collection,
   addDoc,
   setDoc,
+  deleteDoc,
   getDocs,
   query,
   where,
@@ -21,6 +23,11 @@ import {
   User,
 } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
+import { TourPackage } from '../types';
+import { VIP_TOURS } from '../data/toursData';
+
+// Admin email configured for agency management
+export const ADMIN_EMAIL = 'marceloparticular5@gmail.com';
 
 // Initialize Firebase App singleton
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
@@ -221,5 +228,181 @@ export function subscribeUserBookings(
     );
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, path);
+  }
+}
+
+// Check if a user is an authorized admin
+export function isUserAdmin(user: User | null): boolean {
+  if (!user || !user.email) return false;
+  return user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
+
+// Real-time listener for tours collection in Firestore, merged with default VIP_TOURS
+export function subscribeToTours(callback: (tours: TourPackage[]) => void): () => void {
+  const path = 'tours';
+  try {
+    const colRef = collection(db, path);
+    return onSnapshot(
+      colRef,
+      (snapshot) => {
+        const deletedIds = new Set<string>();
+        const firestoreToursMap = new Map<string, TourPackage>();
+
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.deleted === true) {
+            deletedIds.add(docSnap.id);
+            return;
+          }
+
+          firestoreToursMap.set(docSnap.id, {
+            id: docSnap.id,
+            title: data.title || '',
+            subtitle: data.subtitle || '',
+            badge: data.badge || '',
+            location: data.location || '',
+            rating: typeof data.rating === 'number' ? data.rating : 4.9,
+            reviewsCount: typeof data.reviewsCount === 'number' ? data.reviewsCount : 100,
+            priceOriginal: typeof data.priceOriginal === 'number' ? data.priceOriginal : 0,
+            priceDiscounted: typeof data.priceDiscounted === 'number' ? data.priceDiscounted : 0,
+            duration: data.duration || 'Dia inteiro',
+            includesDiving: Boolean(data.includesDiving),
+            isVip: Boolean(data.isVip),
+            urgencyText: data.urgencyText || '',
+            description: data.description || '',
+            highlights: Array.isArray(data.highlights) ? data.highlights : [],
+            included: Array.isArray(data.included) ? data.included : [],
+            imageUrl: data.imageUrl || '',
+            active: data.active !== false,
+            updatedAt: data.updatedAt,
+          });
+        });
+
+        // Combine default VIP_TOURS and firestore tours:
+        // 1. Seed with all default tours (unless marked as deleted in Firestore)
+        const combinedMap = new Map<string, TourPackage>();
+        VIP_TOURS.forEach((defaultTour) => {
+          if (!deletedIds.has(defaultTour.id)) {
+            combinedMap.set(defaultTour.id, { ...defaultTour, active: true });
+          }
+        });
+
+        // 2. Overwrite / insert with Firestore tours
+        firestoreToursMap.forEach((fTour, id) => {
+          if (!deletedIds.has(id)) {
+            combinedMap.set(id, fTour);
+          }
+        });
+
+        callback(Array.from(combinedMap.values()));
+      },
+      (error) => {
+        console.warn('Could not read from tours collection in Firestore:', error);
+        callback(VIP_TOURS);
+      }
+    );
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+    callback(VIP_TOURS);
+    return () => {};
+  }
+}
+
+// Save or update a tour in Firestore
+export async function saveTourToFirestore(tour: TourPackage): Promise<void> {
+  const path = `tours/${tour.id}`;
+  try {
+    const tourRef = doc(db, 'tours', tour.id);
+    const tourData = {
+      id: tour.id,
+      title: tour.title,
+      subtitle: tour.subtitle || '',
+      badge: tour.badge || '',
+      location: tour.location || '',
+      rating: tour.rating || 5.0,
+      reviewsCount: tour.reviewsCount || 1,
+      priceOriginal: tour.priceOriginal || 0,
+      priceDiscounted: tour.priceDiscounted,
+      duration: tour.duration || 'Dia inteiro',
+      includesDiving: Boolean(tour.includesDiving),
+      isVip: Boolean(tour.isVip),
+      urgencyText: tour.urgencyText || '',
+      description: tour.description,
+      imageUrl: tour.imageUrl,
+      highlights: tour.highlights || [],
+      included: tour.included || [],
+      active: tour.active !== false,
+      deleted: false,
+      updatedAt: new Date().toISOString(),
+    };
+    await setDoc(tourRef, tourData, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+// Delete a tour from Firestore
+export async function deleteTourFromFirestore(tourId: string): Promise<void> {
+  const path = `tours/${tourId}`;
+  try {
+    const isDefault = VIP_TOURS.some((t) => t.id === tourId);
+    if (isDefault) {
+      const defaultTour = VIP_TOURS.find((t) => t.id === tourId)!;
+      await setDoc(
+        doc(db, 'tours', tourId),
+        {
+          id: defaultTour.id,
+          title: defaultTour.title,
+          priceDiscounted: defaultTour.priceDiscounted,
+          description: defaultTour.description,
+          imageUrl: defaultTour.imageUrl,
+          active: false,
+          deleted: true,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+    } else {
+      await deleteDoc(doc(db, 'tours', tourId));
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+// Seed default tours to Firestore if needed
+export async function seedDefaultToursToFirestore(defaultTours: TourPackage[]): Promise<void> {
+  try {
+    for (const tour of defaultTours) {
+      await saveTourToFirestore(tour);
+    }
+  } catch (error) {
+    console.error('Error seeding default tours:', error);
+    throw error;
+  }
+}
+
+// Admin listener for all bookings
+export function subscribeAllBookingsForAdmin(
+  callback: (bookings: FirebaseBooking[]) => void
+): () => void {
+  const path = 'bookings';
+  try {
+    const colRef = collection(db, path);
+    return onSnapshot(
+      colRef,
+      (snapshot) => {
+        const bookings: FirebaseBooking[] = [];
+        snapshot.forEach((docSnap) => {
+          bookings.push({ id: docSnap.id, ...(docSnap.data() as Omit<FirebaseBooking, 'id'>) });
+        });
+        callback(bookings);
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.LIST, path);
+      }
+    );
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
   }
 }

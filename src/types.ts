@@ -34,6 +34,8 @@ export interface TourPackage {
   highlights: string[];
   included: string[];
   imageUrl: string;
+  active?: boolean;
+  updatedAt?: string;
 }
 
 export interface BookingAddon {

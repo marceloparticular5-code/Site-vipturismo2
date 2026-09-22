@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { AVAILABLE_ADDONS, VIP_TOURS } from '../data/toursData';
-import { BookingState, VoucherData } from '../types';
+import { BookingState, VoucherData, TourPackage } from '../types';
 import { auth, saveBookingToFirestore } from '../lib/firebase';
+import { isDateStringInPast } from '../lib/dateUtils';
+import { triggerBookingEmailConfirmation } from '../lib/emailService';
 import {
   X,
   Calendar,
@@ -18,6 +20,8 @@ import {
   ArrowRight,
   Flame,
   Check,
+  Mail,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface BookingDrawerProps {
@@ -27,6 +31,7 @@ interface BookingDrawerProps {
   preselectedDate?: string;
   preselectedTimeWindow?: string;
   preselectedTideHeight?: number;
+  tours?: TourPackage[];
 }
 
 export const BookingDrawer: React.FC<BookingDrawerProps> = ({
@@ -36,6 +41,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   preselectedDate = '03/01/2026',
   preselectedTimeWindow = '08:30 às 10:00',
   preselectedTideHeight = 0.2,
+  tours,
 }) => {
   const [selectedTourId, setSelectedTourId] = useState(preselectedTourId);
   const [bookingDate, setBookingDate] = useState(preselectedDate);
@@ -110,7 +116,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  const currentTour = VIP_TOURS.find((t) => t.id === selectedTourId) || VIP_TOURS[0];
+  const tourList = (tours && tours.length > 0 ? tours : VIP_TOURS).filter((t) => t.active !== false);
+  const currentTour = tourList.find((t) => t.id === selectedTourId) || tourList[0] || VIP_TOURS[0];
 
   // Price calculations
   const baseTourPrice = currentTour.priceDiscounted;
@@ -205,23 +212,24 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       console.warn('Firestore sync error:', err);
     }
 
-    // Try sending voucher email via API endpoint (with graceful fallback)
-    try {
-      fetch('/api/send-voucher', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          voucherCode: bookingCode,
-          customerEmail: newBooking.customerEmail,
-          agencyEmail: 'reservas@natalvipturismo.com',
-          booking: newBooking,
-        }),
-      }).catch(() => {
-        // silent fallback
-      });
-    } catch {
-      // ignore
-    }
+    // Trigger mock email confirmation service function upon booking
+    triggerBookingEmailConfirmation({
+      voucherCode: bookingCode,
+      customerName: newBooking.customerName,
+      customerEmail: newBooking.customerEmail,
+      customerPhone: newBooking.customerPhone,
+      tourName: currentTour.title,
+      date: newBooking.date,
+      timeWindow: newBooking.timeWindow,
+      tideHeight: newBooking.tideHeight,
+      adultsCount: newBooking.adultsCount,
+      childrenCount: newBooking.childrenCount,
+      hotelPickup: newBooking.hotelPickup,
+      paymentMethod: paymentTab,
+      totalPrice: finalTotal,
+    }).catch((err) => {
+      console.warn('Booking confirmation email trigger error:', err);
+    });
 
     setGeneratedVoucher(voucher);
     setStep('voucher');
@@ -319,9 +327,9 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   onChange={(e) => setSelectedTourId(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400"
                 >
-                  {VIP_TOURS.map((t) => (
+                  {tourList.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.title} — R$ {t.priceDiscounted},00 por pessoa
+                      {t.title} — R$ {t.priceDiscounted.toFixed(2)} por pessoa
                     </option>
                   ))}
                 </select>
@@ -338,12 +346,23 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     type="text"
                     value={bookingDate}
                     onChange={(e) => setBookingDate(e.target.value)}
-                    placeholder="Ex: 03/01/2026"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400"
+                    placeholder="Ex: 27/09/2026"
+                    className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-sm text-white focus:outline-none ${
+                      isDateStringInPast(bookingDate)
+                        ? 'border-rose-500 focus:border-rose-400'
+                        : 'border-slate-700 focus:border-amber-400'
+                    }`}
                   />
-                  <span className="text-[10px] text-slate-400 mt-1 block">
-                    Sincronizada com o calendário de maré baixa
-                  </span>
+                  {isDateStringInPast(bookingDate) ? (
+                    <span className="text-[11px] text-rose-400 mt-1 flex items-center gap-1 font-semibold">
+                      <AlertTriangle className="w-3 h-3 shrink-0" />
+                      Esta data já passou no calendário. Escolha uma data a partir de hoje.
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 mt-1 block">
+                      Sincronizada com o calendário oficial de marés
+                    </span>
+                  )}
                 </div>
 
                 <div>
@@ -510,12 +529,29 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               </div>
 
               {/* Action: Proceed to Gateway */}
+              {isDateStringInPast(bookingDate) && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>A data selecionada ({bookingDate}) já passou no calendário. Escolha uma data a partir de hoje para continuar.</span>
+                </div>
+              )}
               <button
                 type="button"
-                onClick={() => setStep('gateway')}
-                className="w-full py-4 rounded-xl font-extrabold text-sm uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                disabled={isDateStringInPast(bookingDate)}
+                onClick={() => {
+                  if (isDateStringInPast(bookingDate)) {
+                    alert('Por favor, selecione uma data válida (a partir de hoje).');
+                    return;
+                  }
+                  setStep('gateway');
+                }}
+                className={`w-full py-4 rounded-xl font-extrabold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                  isDateStringInPast(bookingDate)
+                    ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60'
+                    : 'text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.4)] cursor-pointer'
+                }`}
               >
-                <span>Avançar para Pagamento Seguro</span>
+                <span>{isDateStringInPast(bookingDate) ? 'Data Inválida (Já Passou)' : 'Avançar para Pagamento Seguro'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

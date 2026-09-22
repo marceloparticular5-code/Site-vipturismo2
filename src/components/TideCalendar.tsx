@@ -13,7 +13,13 @@ import {
   XCircle,
   Clock,
   ArrowRight,
+  Lock,
 } from 'lucide-react';
+import {
+  isDateInPast,
+  isDateToday,
+  getCurrentCalendarMonthIndex,
+} from '../lib/dateUtils';
 
 interface TideCalendarProps {
   onSelectDayForBooking: (dayInfo: {
@@ -25,11 +31,24 @@ interface TideCalendarProps {
 }
 
 export const TideCalendar: React.FC<TideCalendarProps> = ({ onSelectDayForBooking }) => {
-  // Current month default: current local month or January 2026 for demonstration
-  const [selectedMonthIdx, setSelectedMonthIdx] = useState(0); // Janeiro 2026
-  const [selectedDay, setSelectedDay] = useState<TideDayInfo | null>(
-    ALL_2026_MONTHS[0].days[2] // Day 3, 0.2m (Verde)
-  );
+  // Synchronized with current date in 2026 (September)
+  const currentCalMonthIdx = getCurrentCalendarMonthIndex();
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState(currentCalMonthIdx);
+
+  // Initialize selected day with first upcoming non-past day with good tide
+  const [selectedDay, setSelectedDay] = useState<TideDayInfo | null>(() => {
+    const curMonth = ALL_2026_MONTHS[currentCalMonthIdx];
+    const upcomingMelhor = curMonth.days.find(
+      (d) =>
+        !isDateInPast(curMonth.year, curMonth.monthIndex, d.day) &&
+        d.category === 'melhor'
+    );
+    if (upcomingMelhor) return upcomingMelhor;
+    const upcomingAny = curMonth.days.find(
+      (d) => !isDateInPast(curMonth.year, curMonth.monthIndex, d.day)
+    );
+    return upcomingAny || curMonth.days[0];
+  });
   const [selectedDivingDestination, setSelectedDivingDestination] = useState<
     'maracajau-vip' | 'rio-do-fogo-vip'
   >('maracajau-vip');
@@ -230,51 +249,99 @@ export const TideCalendar: React.FC<TideCalendarProps> = ({ onSelectDayForBookin
 
           {/* Quick Month Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-6 scrollbar-none text-xs">
-            {ALL_2026_MONTHS.map((m, idx) => (
-              <button
-                key={m.monthName}
-                onClick={() => {
-                  setSelectedMonthIdx(idx);
-                  // select first green day of new month if available
-                  const firstGreen = m.days.find((d) => d.category === 'melhor') || m.days[0];
-                  setSelectedDay(firstGreen);
-                }}
-                className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-semibold transition-all ${
-                  selectedMonthIdx === idx
-                    ? 'bg-amber-400 text-slate-950 shadow-md font-bold'
-                    : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800'
-                }`}
-              >
-                {m.monthName.slice(0, 3)}
-              </button>
-            ))}
+            {ALL_2026_MONTHS.map((m, idx) => {
+              const isPastMonth = idx < currentCalMonthIdx;
+              const isCurrentMonth = idx === currentCalMonthIdx;
+
+              return (
+                <button
+                  key={m.monthName}
+                  onClick={() => {
+                    setSelectedMonthIdx(idx);
+                    // select first valid upcoming green day of new month if available
+                    const firstValid =
+                      m.days.find(
+                        (d) =>
+                          !isDateInPast(m.year, m.monthIndex, d.day) &&
+                          (d.category === 'melhor' || d.category === 'atencao')
+                      ) ||
+                      m.days.find((d) => !isDateInPast(m.year, m.monthIndex, d.day)) ||
+                      m.days[0];
+                    setSelectedDay(firstValid);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-semibold transition-all flex items-center gap-1.5 ${
+                    selectedMonthIdx === idx
+                      ? 'bg-amber-400 text-slate-950 shadow-md font-bold'
+                      : isPastMonth
+                      ? 'bg-slate-900/40 text-slate-500 hover:text-slate-300 border border-slate-900'
+                      : isCurrentMonth
+                      ? 'bg-amber-400/15 text-amber-300 border border-amber-400/40 font-bold'
+                      : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  }`}
+                >
+                  <span>{m.monthName.slice(0, 3)}</span>
+                  {isCurrentMonth && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" title="Mês Atual" />
+                  )}
+                  {isPastMonth && (
+                    <span className="text-[9px] opacity-60">(passado)</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* Days Grid - Faithful reproduction of the requested Instagram design! */}
           <div className="grid grid-cols-5 sm:grid-cols-7 gap-2 sm:gap-3">
             {filteredDays.map((d) => {
               const isSelected = selectedDay?.day === d.day;
+              const isPast = isDateInPast(currentMonthData.year, currentMonthData.monthIndex, d.day);
+              const isToday = isDateToday(currentMonthData.year, currentMonthData.monthIndex, d.day);
               const borderStyle = getBorderColorClass(d.category);
 
               return (
                 <button
                   key={d.day}
                   onClick={() => setSelectedDay(d)}
-                  className={`relative flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl border-2 transition-all group ${borderStyle} ${
+                  className={`relative flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl border-2 transition-all group ${
+                    isPast
+                      ? 'opacity-40 bg-slate-950/60 border-slate-800/80 grayscale cursor-pointer hover:opacity-75'
+                      : borderStyle
+                  } ${
                     isSelected
                       ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-950 scale-105 z-10 shadow-lg'
                       : 'hover:scale-[1.03]'
                   }`}
                 >
+                  {/* Today Indicator */}
+                  {isToday && (
+                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 bg-amber-400 text-slate-950 rounded-full shadow z-20">
+                      Hoje
+                    </span>
+                  )}
+
+                  {/* Past Indicator */}
+                  {isPast && (
+                    <span className="absolute -top-1.5 right-1.5 text-[8px] font-bold uppercase text-slate-500">
+                      Passou
+                    </span>
+                  )}
+
                   {/* Day Number */}
-                  <span className="text-base sm:text-xl font-black text-white group-hover:text-amber-300">
+                  <span
+                    className={`text-base sm:text-xl font-black ${
+                      isPast ? 'text-slate-500 line-through' : 'text-white group-hover:text-amber-300'
+                    }`}
+                  >
                     {d.day}
                   </span>
 
                   {/* Tide Value formatted with comma (0,3 - 0,5 - 0,8) */}
                   <span
                     className={`text-xs sm:text-sm font-bold tracking-tight ${
-                      d.category === 'melhor'
+                      isPast
+                        ? 'text-slate-500'
+                        : d.category === 'melhor'
                         ? 'text-emerald-400'
                         : d.category === 'atencao'
                         ? 'text-amber-400'
@@ -287,7 +354,9 @@ export const TideCalendar: React.FC<TideCalendarProps> = ({ onSelectDayForBookin
                   {/* Small Indicator Dot */}
                   <span
                     className={`w-1.5 h-1.5 rounded-full mt-1 ${
-                      d.category === 'melhor'
+                      isPast
+                        ? 'bg-slate-600'
+                        : d.category === 'melhor'
                         ? 'bg-emerald-400'
                         : d.category === 'atencao'
                         ? 'bg-amber-400'
@@ -311,98 +380,148 @@ export const TideCalendar: React.FC<TideCalendarProps> = ({ onSelectDayForBookin
         {/* Selected Day Inspection Panel & 1-Click Booking Action */}
         <div className="lg:col-span-4 bg-gradient-to-b from-[#0F1E36] to-[#081220] border border-amber-500/30 rounded-3xl p-6 shadow-2xl sticky top-24">
           {selectedDay ? (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-widest text-amber-400">
-                  Condição Selecionada
-                </span>
-                {getTideBadge(selectedDay.category)}
-              </div>
+            (() => {
+              const isSelectedDayPast = isDateInPast(
+                currentMonthData.year,
+                currentMonthData.monthIndex,
+                selectedDay.day
+              );
+              const isSelectedDayToday = isDateToday(
+                currentMonthData.year,
+                currentMonthData.monthIndex,
+                selectedDay.day
+              );
 
-              {/* Day Big Feature */}
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
-                <div className="text-3xl sm:text-4xl font-black text-white mb-1">
-                  Dia {selectedDay.day} de {currentMonthData.monthName}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-slate-300">
-                  <span className="text-slate-400">Maré Mínima:</span>
-                  <span className="font-extrabold text-amber-300 text-lg">
-                    {selectedDay.height.toFixed(1).replace('.', ',')} metros
-                  </span>
-                </div>
-              </div>
-
-              {/* Embarkation window info */}
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="block text-xs font-bold text-slate-400 uppercase">
-                      Janela Recomendada de Embarque
+              return (
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-widest text-amber-400">
+                      Condição Selecionada
                     </span>
-                    <span className="text-sm font-semibold text-white">
-                      {selectedDay.timeWindow}
-                    </span>
+                    {getTideBadge(selectedDay.category)}
                   </div>
+
+                  {/* Day Big Feature */}
+                  <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 relative">
+                    {isSelectedDayToday && (
+                      <span className="absolute top-3 right-3 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
+                        Hoje
+                      </span>
+                    )}
+                    {isSelectedDayPast && (
+                      <span className="absolute top-3 right-3 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                        Data Passada
+                      </span>
+                    )}
+                    <div className="text-3xl sm:text-4xl font-black text-white mb-1">
+                      Dia {selectedDay.day} de {currentMonthData.monthName}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-300">
+                      <span className="text-slate-400">Maré Mínima:</span>
+                      <span className="font-extrabold text-amber-300 text-lg">
+                        {selectedDay.height.toFixed(1).replace('.', ',')} metros
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Embarkation window info */}
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                      <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="block text-xs font-bold text-slate-400 uppercase">
+                          Janela Recomendada de Embarque
+                        </span>
+                        <span className="text-sm font-semibold text-white">
+                          {selectedDay.timeWindow}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+                      {TIDE_CATEGORY_LABELS[selectedDay.category].desc}
+                    </div>
+                  </div>
+
+                  {/* Past Date Warning */}
+                  {isSelectedDayPast && (
+                    <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-medium flex items-center gap-2.5">
+                      <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                      <div>
+                        <span className="font-bold text-white block">Data Encerrada</span>
+                        <span>
+                          Este dia já passou no calendário. Por favor, escolha uma data a partir de hoje para efetuar sua reserva.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recommendation message (for current/future days) */}
+                  {!isSelectedDayPast && selectedDay.category === 'melhor' && (
+                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-xs font-medium">
+                      🌟 <strong>Dia de Ouro:</strong> Visibilidade cristalina máxima nos Parrachos!
+                      Recomendamos garantir sua vaga com antecedência pois os catamarãs esgotam rápido.
+                    </div>
+                  )}
+
+                  {!isSelectedDayPast && selectedDay.category === 'atencao' && (
+                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-medium">
+                      ⚖️ <strong>Dia Bom:</strong> O mergulho é realizado com sucesso. Nossos guias levam
+                      você às bancadas de corais mais rasas.
+                    </div>
+                  )}
+
+                  {!isSelectedDayPast && selectedDay.category === 'nao_recomendado' && (
+                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-200 text-xs font-medium">
+                      ⚠️ <strong>Atenção:</strong> Por respeito à sua experiência e segurança, não
+                      recomendamos os Parrachos neste dia. Que tal agendar o incrível Passeio de Buggy em
+                      Genipabu ou o Pipa VIP?
+                    </div>
+                  )}
+
+                  {/* Action Button */}
+                  {isSelectedDayPast ? (
+                    <button
+                      disabled
+                      className="w-full py-3.5 px-4 rounded-xl font-bold text-sm uppercase tracking-wider text-slate-500 bg-slate-900/80 border border-slate-800 cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>Reservas Encerradas (Data Passada)</span>
+                    </button>
+                  ) : (
+                    <button
+                      id="btn-reserve-selected-day"
+                      onClick={() =>
+                        onSelectDayForBooking({
+                          dateFormatted: `${selectedDay.day.toString().padStart(2, '0')}/${(
+                            selectedMonthIdx + 1
+                          )
+                            .toString()
+                            .padStart(2, '0')}/2026`,
+                          height: selectedDay.height,
+                          timeWindow: selectedDay.timeWindow,
+                          tourRecommended: selectedDivingDestination,
+                        })
+                      }
+                      className="w-full py-3.5 px-4 rounded-xl font-extrabold text-sm uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.4)] transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                    >
+                      <span>
+                        {selectedDay.category === 'nao_recomendado'
+                          ? 'Ver Roteiros Alternativos'
+                          : isSelectedDayToday
+                          ? `Reservar para Hoje (Dia ${selectedDay.day})`
+                          : `Reservar para o Dia ${selectedDay.day}`}
+                      </span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  )}
+
+                  <p className="text-[11px] text-center text-slate-400">
+                    Cancelamento gratuito até 24h antes · Suporte 24h via WhatsApp
+                  </p>
                 </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300 leading-relaxed">
-                  {TIDE_CATEGORY_LABELS[selectedDay.category].desc}
-                </div>
-              </div>
-
-              {/* Recommendation message */}
-              {selectedDay.category === 'melhor' && (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-xs font-medium">
-                  🌟 <strong>Dia de Ouro:</strong> Visibilidade cristalina máxima nos Parrachos!
-                  Recomendamos garantir sua vaga com antecedência pois os catamarãs esgotam rápido.
-                </div>
-              )}
-
-              {selectedDay.category === 'atencao' && (
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-medium">
-                  ⚖️ <strong>Dia Bom:</strong> O mergulho é realizado com sucesso. Nossos guias levam
-                  você às bancadas de corais mais rasas.
-                </div>
-              )}
-
-              {selectedDay.category === 'nao_recomendado' && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-200 text-xs font-medium">
-                  ⚠️ <strong>Atenção:</strong> Por respeito à sua experiência e segurança, não
-                  recomendamos os Parrachos neste dia. Que tal agendar o incrível Passeio de Buggy em
-                  Genipabu ou o Pipa VIP?
-                </div>
-              )}
-
-              {/* Action Button */}
-              <button
-                id="btn-reserve-selected-day"
-                onClick={() =>
-                  onSelectDayForBooking({
-                    dateFormatted: `${selectedDay.day.toString().padStart(2, '0')}/${(
-                      selectedMonthIdx + 1
-                    )
-                      .toString()
-                      .padStart(2, '0')}/2026`,
-                    height: selectedDay.height,
-                    timeWindow: selectedDay.timeWindow,
-                    tourRecommended: selectedDivingDestination,
-                  })
-                }
-                className="w-full py-3.5 px-4 rounded-xl font-extrabold text-sm uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.4)] transition-all flex items-center justify-center gap-2 group cursor-pointer"
-              >
-                <span>
-                  {selectedDay.category === 'nao_recomendado'
-                    ? 'Ver Roteiros Alternativos'
-                    : `Reservar para o Dia ${selectedDay.day}`}
-                </span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <p className="text-[11px] text-center text-slate-400">
-                Cancelamento gratuito até 24h antes · Suporte 24h via WhatsApp
-              </p>
-            </div>
+              );
+            })()
           ) : (
             <div className="py-12 text-center text-slate-400">
               <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-30 text-amber-400" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { TideCalendar } from './components/TideCalendar';
@@ -12,13 +12,18 @@ import { GeminiChatbot } from './components/GeminiChatbot';
 import { FollowUpSystem } from './components/FollowUpSystem';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { UserReservationsModal } from './components/UserReservationsModal';
+import { AdminToursModal } from './components/AdminToursModal';
 import { Footer } from './components/Footer';
 import { Sparkles, MessageCircle, Users } from 'lucide-react';
+import { TourPackage } from './types';
+import { VIP_TOURS } from './data/toursData';
+import { subscribeToTours } from './lib/firebase';
+import { getInitialBookingDate } from './lib/dateUtils';
 
 export function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedTourId, setSelectedTourId] = useState<string>('maracajau-vip');
-  const [selectedDate, setSelectedDate] = useState<string>('03/01/2026');
+  const [selectedDate, setSelectedDate] = useState<string>(() => getInitialBookingDate());
   const [selectedTimeWindow, setSelectedTimeWindow] = useState<string>('08:30 às 10:00');
   const [selectedTideHeight, setSelectedTideHeight] = useState<number>(0.2);
 
@@ -26,6 +31,57 @@ export function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isCrmOpen, setIsCrmOpen] = useState(false);
   const [isReservationsOpen, setIsReservationsOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
+
+  // Detect URL containing /admin or #admin to open the admin panel
+  useEffect(() => {
+    const checkAdminRoute = () => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      const search = window.location.search.toLowerCase();
+
+      if (
+        path === '/admin' ||
+        path === '/admin/' ||
+        hash === '#admin' ||
+        hash === '#/admin' ||
+        search.includes('admin')
+      ) {
+        setIsAdminOpen(true);
+      }
+    };
+
+    checkAdminRoute();
+
+    window.addEventListener('popstate', checkAdminRoute);
+    window.addEventListener('hashchange', checkAdminRoute);
+
+    return () => {
+      window.removeEventListener('popstate', checkAdminRoute);
+      window.removeEventListener('hashchange', checkAdminRoute);
+    };
+  }, []);
+
+  const handleCloseAdmin = () => {
+    setIsAdminOpen(false);
+    const path = window.location.pathname.toLowerCase();
+    if (
+      path === '/admin' ||
+      path === '/admin/' ||
+      window.location.hash.includes('admin') ||
+      window.location.search.includes('admin')
+    ) {
+      window.history.pushState({}, '', '/');
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = subscribeToTours((allTours) => {
+      setTours(allTours);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleOpenBooking = (tourId?: string) => {
     if (tourId) setSelectedTourId(tourId);
@@ -86,10 +142,14 @@ export function App() {
         <DivingSection
           onBookTour={(tourId) => handleOpenBooking(tourId)}
           onScrollToCalendar={scrollToCalendar}
+          tours={tours}
         />
 
         {/* 5. Pacotes VIP em Destaque com Gatilhos Mentais */}
-        <FeaturedPackages onSelectTour={(tourId) => handleOpenBooking(tourId)} />
+        <FeaturedPackages
+          onSelectTour={(tourId) => handleOpenBooking(tourId)}
+          tours={tours}
+        />
 
         {/* 6. Depoimentos de Clientes VIP (Avaliações Reais com Fotos e Estrelas) */}
         <TestimonialsSection onOpenBooking={() => handleOpenBooking()} />
@@ -154,6 +214,7 @@ export function App() {
         preselectedDate={selectedDate}
         preselectedTimeWindow={selectedTimeWindow}
         preselectedTideHeight={selectedTideHeight}
+        tours={tours}
       />
 
       {/* Autoatendimento 24h Modal */}
@@ -186,6 +247,12 @@ export function App() {
         isOpen={isReservationsOpen}
         onClose={() => setIsReservationsOpen(false)}
         onOpenBooking={() => handleOpenBooking()}
+      />
+
+      {/* Painel Administrativo de Gestão de Passeios VIP (Acesso via URL /admin) */}
+      <AdminToursModal
+        isOpen={isAdminOpen}
+        onClose={handleCloseAdmin}
       />
     </div>
   );

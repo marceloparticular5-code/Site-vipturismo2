@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NatalVipLogo } from './NatalVipLogo';
-import { Phone, Mail, MapPin, ShieldCheck, Heart, ArrowUp } from 'lucide-react';
+import { Phone, Mail, MapPin, ShieldCheck, Heart, ArrowUp, Sparkles, Send, CheckCircle2 } from 'lucide-react';
+import { subscribeToTravelDeals } from '../lib/emailService';
 
 interface FooterProps {
   onOpenBooking: (tourId?: string) => void;
@@ -17,6 +18,30 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenCrm,
   onOpenCookies,
 }) => {
+  const [subEmail, setSubEmail] = useState('');
+  const [subStatus, setSubStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [subMessage, setSubMessage] = useState('');
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subEmail || !subEmail.includes('@')) {
+      setSubStatus('error');
+      setSubMessage('Por favor, informe um e-mail válido.');
+      return;
+    }
+
+    try {
+      setSubStatus('loading');
+      const res = await subscribeToTravelDeals(subEmail);
+      setSubStatus('success');
+      setSubMessage(res.message || 'Inscrição realizada com sucesso!');
+      setSubEmail('');
+    } catch (err: any) {
+      setSubStatus('error');
+      setSubMessage(err?.message || 'Erro ao cadastrar e-mail. Tente novamente.');
+    }
+  };
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -24,6 +49,76 @@ export const Footer: React.FC<FooterProps> = ({
   return (
     <footer className="bg-[#030811] border-t border-slate-800/80 pt-16 pb-12 text-slate-400 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* VIP Deals Subscription Section */}
+        <div className="mb-14 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#0C1A30] via-[#0A1628] to-[#071220] border border-amber-500/30 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-[11px] font-bold tracking-wide uppercase mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                Clube de Ofertas Exclusivas VIP
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                Receba Ofertas Exclusivas de Viagens & Melhores Marés
+              </h3>
+              <p className="text-slate-300 text-xs sm:text-sm mt-1.5 leading-relaxed">
+                Cadastre seu e-mail para receber cupons secretos, alertas antecipados de piscinas naturais perfeitas em Natal e condições exclusivas de passeios.
+              </p>
+            </div>
+
+            <div className="w-full lg:w-auto lg:min-w-[400px]">
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="email"
+                    value={subEmail}
+                    onChange={(e) => {
+                      setSubEmail(e.target.value);
+                      if (subStatus !== 'idle') setSubStatus('idle');
+                    }}
+                    placeholder="Seu melhor e-mail..."
+                    disabled={subStatus === 'loading'}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={subStatus === 'loading'}
+                  className="px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {subStatus === 'loading' ? (
+                    <span>Cadastrando...</span>
+                  ) : (
+                    <>
+                      <span>Quero Ofertas</span>
+                      <Send className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {subStatus === 'success' && (
+                <div className="mt-2.5 flex items-center gap-2 text-xs text-emerald-400 font-semibold animate-fadeIn">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{subMessage}</span>
+                </div>
+              )}
+
+              {subStatus === 'error' && (
+                <div className="mt-2.5 text-xs text-rose-400 font-medium">
+                  {subMessage}
+                </div>
+              )}
+
+              <span className="text-[10px] text-slate-500 mt-2 block">
+                Sem spam. Cancele sua inscrição quando desejar com 1 clique.
+              </span>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
           {/* Col 1 & 2: Brand & Preserved Logo */}
           <div className="lg:col-span-2 space-y-4">

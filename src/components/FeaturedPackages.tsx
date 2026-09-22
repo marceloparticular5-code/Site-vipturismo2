@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { VIP_TOURS } from '../data/toursData';
+import { TourPackage } from '../types';
 import {
   Star,
   Check,
@@ -14,12 +15,15 @@ import {
 
 interface FeaturedPackagesProps {
   onSelectTour: (tourId: string) => void;
+  tours?: TourPackage[];
 }
 
-export const FeaturedPackages: React.FC<FeaturedPackagesProps> = ({ onSelectTour }) => {
+export const FeaturedPackages: React.FC<FeaturedPackagesProps> = ({ onSelectTour, tours }) => {
   const [activeTab, setActiveTab] = useState<'todos' | 'mergulho' | 'dunas-praias'>('todos');
 
-  const filteredTours = VIP_TOURS.filter((tour) => {
+  const tourList = (tours && tours.length > 0 ? tours : VIP_TOURS).filter((t) => t.active !== false);
+
+  const filteredTours = tourList.filter((tour) => {
     if (activeTab === 'mergulho') return tour.includesDiving;
     if (activeTab === 'dunas-praias') return !tour.includesDiving;
     return true;

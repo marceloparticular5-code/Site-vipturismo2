@@ -7,13 +7,20 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Helper functions
+    // Global Helpers
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'marceloparticular5@gmail.com' && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
     }
 
     function incoming() {
@@ -66,36 +73,73 @@ service cloud.firestore {
              (!('travelMonth' in data) || (data.travelMonth is string && data.travelMonth.size() <= 64));
     }
 
+    function isValidTour(data) {
+      return data.keys().hasAll(['id', 'title', 'priceDiscounted', 'description', 'imageUrl']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 64 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 160 &&
+             data.priceDiscounted is number && data.priceDiscounted >= 0 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.imageUrl is string && data.imageUrl.size() <= 1024 &&
+             (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 250)) &&
+             (!('badge' in data) || (data.badge is string && data.badge.size() <= 64)) &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 120)) &&
+             (!('rating' in data) || (data.rating is number)) &&
+             (!('reviewsCount' in data) || (data.reviewsCount is number)) &&
+             (!('priceOriginal' in data) || (data.priceOriginal is number)) &&
+             (!('duration' in data) || (data.duration is string && data.duration.size() <= 64)) &&
+             (!('includesDiving' in data) || (data.includesDiving is bool)) &&
+             (!('isVip' in data) || (data.isVip is bool)) &&
+             (!('urgencyText' in data) || (data.urgencyText is string && data.urgencyText.size() <= 160)) &&
+             (!('active' in data) || (data.active is bool)) &&
+             (!('deleted' in data) || (data.deleted is bool)) &&
+             (!('highlights' in data) || (data.highlights is list && data.highlights.size() <= 15)) &&
+             (!('included' in data) || (data.included is list && data.included.size() <= 15)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
     // Test connection endpoint
     match /test/{docId} {
       allow get: if true;
     }
 
+    // Admins Collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Tours Collection (Public read, admin write)
+    match /tours/{tourId} {
+      allow get, list: if true;
+      allow create, update: if isAdmin() && isValidTour(incoming());
+      allow delete: if isAdmin();
+    }
+
     // Users Collection
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().uid == request.auth.uid;
       allow update: if isOwner(userId) && isValidUser(incoming()) && incoming().uid == existing().uid;
     }
 
     // Bookings Collection
     match /bookings/{bookingId} {
-      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow list: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
       allow create: if isValidBooking(incoming()) && (
         (isSignedIn() && incoming().userId == request.auth.uid) ||
         (!isSignedIn() && ('userId' in incoming()) && incoming().userId.size() > 0)
       );
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && isValidBooking(incoming()) && incoming().userId == existing().userId;
-      allow delete: if false;
+      allow update: if ((isSignedIn() && resource.data.userId == request.auth.uid && incoming().userId == existing().userId) || isAdmin()) && isValidBooking(incoming());
+      allow delete: if isAdmin();
     }
 
     // Leads Collection
     match /leads/{leadId} {
       allow create: if isValidLead(incoming());
-      allow get, list: if isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-      allow update, delete: if false;
+      allow get, list: if isAdmin();
+      allow update, delete: if isAdmin();
     }
   }
 }

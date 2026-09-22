@@ -161,6 +161,92 @@
         }
       },
       "required": ["name", "phone", "couponCode", "status", "createdAt"]
+    },
+    "Tour": {
+      "title": "Tour",
+      "description": "Tour package offered by the agency and managed via Admin panel",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Tour unique ID slug",
+          "maxLength": 64
+        },
+        "title": {
+          "type": "string",
+          "description": "Main title of the tour",
+          "maxLength": 160
+        },
+        "subtitle": {
+          "type": "string",
+          "description": "Engaging subtitle or USP",
+          "maxLength": 250
+        },
+        "badge": {
+          "type": "string",
+          "description": "Promotional badge text",
+          "maxLength": 64
+        },
+        "location": {
+          "type": "string",
+          "description": "Tour location and departure zone",
+          "maxLength": 120
+        },
+        "rating": {
+          "type": "number",
+          "description": "Tour rating from 1 to 5"
+        },
+        "reviewsCount": {
+          "type": "number",
+          "description": "Total count of reviews"
+        },
+        "priceOriginal": {
+          "type": "number",
+          "description": "Original retail price"
+        },
+        "priceDiscounted": {
+          "type": "number",
+          "description": "Current promotional price"
+        },
+        "duration": {
+          "type": "string",
+          "description": "Duration text",
+          "maxLength": 64
+        },
+        "includesDiving": {
+          "type": "boolean",
+          "description": "Whether tour includes diving"
+        },
+        "isVip": {
+          "type": "boolean",
+          "description": "Whether tour is exclusive VIP"
+        },
+        "urgencyText": {
+          "type": "string",
+          "description": "Urgency banner or tide advisory",
+          "maxLength": 160
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the tour",
+          "maxLength": 2000
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Cover photo URL of the tour",
+          "maxLength": 1024
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether the tour is active and visible on the website"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update ISO timestamp",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "title", "priceDiscounted", "description", "imageUrl"]
     }
   },
   "firestore": {
@@ -181,6 +267,31 @@
         "$ref": "#/entities/Lead"
       },
       "description": "VIP Concierge leads and promotional coupons"
+    },
+    "/tours/{tourId}": {
+      "schema": {
+        "$ref": "#/entities/Tour"
+      },
+      "description": "Registered tours managed by administrators"
+    },
+    "/admins/{adminId}": {
+      "schema": {
+        "title": "Admin",
+        "description": "Administrator permission record",
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "role": {
+            "type": "string",
+            "maxLength": 32
+          }
+        },
+        "required": ["email", "role"]
+      },
+      "description": "List of system administrators"
     }
   }
 }
