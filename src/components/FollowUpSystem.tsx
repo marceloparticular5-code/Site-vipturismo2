@@ -29,6 +29,41 @@ interface FollowUpSystemProps {
   setIsCrmOpen: (open: boolean) => void;
 }
 
+// Gera dinamicamente a lista dos próximos meses a partir do mês e ano atuais
+export const getAvailableTravelMonths = (totalMonths = 12): { value: string; label: string }[] => {
+  const months: { value: string; label: string }[] = [];
+  const now = new Date();
+  const currentMonthIndex = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const monthNames = [
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
+  ];
+
+  for (let i = 0; i < totalMonths; i++) {
+    const futureDate = new Date(currentYear, currentMonthIndex + i, 1);
+    const mIndex = futureDate.getMonth();
+    const year = futureDate.getFullYear();
+    const monthName = monthNames[mIndex];
+    const value = `${monthName}/${year}`;
+    const label = i === 0 ? `${monthName}/${year} (Mês Atual)` : `${monthName}/${year}`;
+    months.push({ value, label });
+  }
+
+  return months;
+};
+
 export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
   onOpenBookingWithTour,
   isCrmOpen,
@@ -38,14 +73,18 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
   const [showExitModal, setShowExitModal] = useState(false);
   const [hasDismissedPromo, setHasDismissedPromo] = useState(false);
 
+  // Lista dinâmica de meses válidos a partir do mês atual
+  const availableTravelMonths = React.useMemo(() => getAvailableTravelMonths(12), []);
+
   // Form fields
   const [leadName, setLeadName] = useState('');
   const [leadPhone, setLeadPhone] = useState('');
   const [leadEmail, setLeadEmail] = useState('');
-  const [travelMonth, setTravelMonth] = useState('03/2026');
+  const [travelMonth, setTravelMonth] = useState<string>(() => availableTravelMonths[0]?.value || '');
   const [tourInterest, setTourInterest] = useState('maracajau-vip');
   const [isSuccess, setIsSuccess] = useState(false);
   const [copiedCoupon, setCopiedCoupon] = useState(false);
+  const [downloadNotice, setDownloadNotice] = useState(false);
 
   // CRM Leads state
   const [leadsList, setLeadsList] = useState<LeadFollowUp[]>([]);
@@ -339,18 +378,16 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
                         Mês da Sua Viagem
                       </label>
                       <select
+                        id="select-mes-viagem-oferta"
                         value={travelMonth}
                         onChange={(e) => setTravelMonth(e.target.value)}
-                        className="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                        className="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 cursor-pointer"
                       >
-                        <option value="Janeiro/2026">Janeiro/2026</option>
-                        <option value="Fevereiro/2026">Fevereiro/2026</option>
-                        <option value="Março/2026">Março/2026</option>
-                        <option value="Abril/2026">Abril/2026</option>
-                        <option value="Maio/2026">Maio/2026</option>
-                        <option value="Junho/2026">Junho/2026</option>
-                        <option value="Julho/2026">Julho/2026</option>
-                        <option value="Segundo Semestre/2026">Segundo Semestre/2026</option>
+                        {availableTravelMonths.map((item) => (
+                          <option key={item.value} value={item.value} className="bg-slate-900 text-white">
+                            {item.label}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -441,15 +478,59 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
                   </a>
 
                   <button
+                    id="btn-baixar-guia-pdf"
                     onClick={() => {
-                      alert('Download do Guia de Maré 2026 em PDF iniciado! Verifique seus downloads.');
-                      handleDismissModal();
-                      if (onOpenBookingWithTour) onOpenBookingWithTour(tourInterest);
+                      try {
+                        const guideText = `NATAL VIP TURISMO - GUIA EXCLUSIVO DE MARÉ & PARRACHOS
+=====================================================
+CUPOM DE DESCONTO ATIVADO: VIPNATAL30 (R$ 30,00 OFF)
+CLIENTE: ${leadName || 'Viajante VIP'}
+MÊS PREVISTO: ${travelMonth}
+PASSEIO SELECIONADO: ${tourInterest}
+
+REGRAS DE OURO DA MARÉ BAIXA:
+1. Os melhores dias para mergulho nos Parrachos (Maracajaú e Rio do Fogo) ocorrem nas luas Nova e Cheia.
+2. Níveis de maré entre 0.0m e 0.4m garantem águas cristalinas estilo Caribe.
+3. Reserve com a lancha rápida VIP para navegar com segurança e chegar antes dos grupos grandes.
+
+ATENDIMENTO E AGENDAMENTOS:
+WhatsApp Oficial: (84) 98825-6545
+Site Oficial: https://www.natalvipturismo.com.br
+Natal / Rio Grande do Norte - Brasil
+=====================================================`;
+
+                        const blob = new Blob([guideText], { type: 'text/plain;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const tempLink = document.createElement('a');
+                        tempLink.href = url;
+                        tempLink.download = `Guia-Mare-Natal-Vip-${travelMonth.replace(/[/ ]/g, '-')}.txt`;
+                        document.body.appendChild(tempLink);
+                        tempLink.click();
+                        document.body.removeChild(tempLink);
+                        URL.revokeObjectURL(url);
+                      } catch {
+                        // fallback
+                      }
+
+                      setDownloadNotice(true);
+                      setTimeout(() => {
+                        handleDismissModal();
+                        if (onOpenBookingWithTour) onOpenBookingWithTour(tourInterest);
+                      }, 1200);
                     }}
-                    className="py-3 px-4 rounded-xl border border-amber-400/40 text-amber-300 hover:bg-amber-400/10 font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                    className="py-3 px-4 rounded-xl border border-amber-400/40 text-amber-300 hover:bg-amber-400/10 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>Baixar Guia em PDF</span>
+                    {downloadNotice ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-400" />
+                        <span className="text-emerald-300">Download Iniciado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        <span>Baixar Guia em PDF</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
