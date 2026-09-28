@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Calendar,
-  Sparkles,
+  UserCheck,
   ShieldCheck,
   Star,
   Compass,
@@ -42,7 +42,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <img
               src="/imagens/logovip.jpg"
               alt="Selo Oficial Natal VIP"
-              className="w-5 h-5 rounded-full object-contain drop-shadow"
+              className="w-6 h-6 rounded-full object-cover scale-105 border border-amber-400/40 drop-shadow shrink-0"
               referrerPolicy="no-referrer"
             />
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -113,12 +113,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </button>
 
           <button
-            id="hero-btn-ai-chat"
+            id="hero-btn-marcelo-chat"
             onClick={onOpenChat}
-            className="w-full sm:w-auto px-5 py-4 rounded-2xl font-bold text-xs text-sky-200 hover:text-white bg-gradient-to-r from-blue-950/80 to-indigo-950/80 hover:from-blue-900/90 hover:to-indigo-900/90 border border-indigo-500/30 hover:border-indigo-400/70 transition-all flex items-center justify-center gap-1.5 cursor-pointer backdrop-blur-md"
+            className="relative w-full sm:w-auto px-5 py-3.5 rounded-2xl font-bold text-xs text-amber-200 hover:text-white bg-gradient-to-r from-slate-900/95 via-[#0A1A33]/95 to-slate-900/95 hover:from-slate-800 hover:to-[#0D2447] border border-amber-400/60 hover:border-amber-300 transition-all flex items-center justify-center gap-2.5 cursor-pointer backdrop-blur-md shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] group overflow-hidden marcelo-btn-glow"
           >
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Chatbot Gemini</span>
+            {/* Shimmer light sweep */}
+            <span className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent marcelo-shimmer-beam pointer-events-none" />
+
+            <div className="relative">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center text-[10px] font-black group-hover:scale-110 transition-transform shadow-md">
+                M
+              </div>
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-slate-900 animate-ping" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-slate-900" />
+            </div>
+
+            <div className="flex flex-col items-start text-left leading-tight">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400/90 flex items-center gap-1">
+                Consultor Pessoal VIP
+              </span>
+              <span className="text-white text-xs font-black tracking-tight">
+                Falar com Marcelo
+              </span>
+            </div>
           </button>
         </div>
 

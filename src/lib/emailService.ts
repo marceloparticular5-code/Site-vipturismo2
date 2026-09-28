@@ -1,3 +1,6 @@
+import { buildBookingConfirmationEmailHtml } from './emailTemplate';
+import { syncReservationWithGoogleCalendar, generateGoogleCalendarUrl } from './googleCalendarSync';
+
 /**
  * Service function for triggering mock email confirmations upon booking
  * and managing travel deal newsletter subscriptions.
@@ -27,6 +30,8 @@ export interface EmailConfirmationResult {
   sentAt: string;
   subject: string;
   previewSummary: string;
+  calendarUrl?: string;
+  htmlTemplate?: string;
 }
 
 /**
@@ -43,31 +48,30 @@ export async function triggerBookingEmailConfirmation(
 
   const previewSummary = `Olá, ${booking.customerName}! Sua reserva para ${booking.tourName} no dia ${booking.date} (janela ${booking.timeWindow}, maré ${booking.tideHeight}m) foi confirmada com sucesso. Valor: R$ ${booking.totalPrice.toFixed(2)}.`;
 
+  const htmlTemplate = buildBookingConfirmationEmailHtml(booking);
+  const calendarUrl = generateGoogleCalendarUrl({
+    voucherCode: booking.voucherCode,
+    customerName: booking.customerName,
+    customerEmail: booking.customerEmail,
+    customerPhone: booking.customerPhone,
+    tourName: booking.tourName,
+    date: booking.date,
+    timeWindow: booking.timeWindow,
+    tideHeight: booking.tideHeight,
+    hotelPickup: booking.hotelPickup,
+    adultsCount: booking.adultsCount,
+    childrenCount: booking.childrenCount,
+    totalPrice: booking.totalPrice,
+    paymentMethod: booking.paymentMethod,
+  });
+
   console.log(
-    `%c[EMAIL SERVICE]%c Enviando confirmação de reserva para ${booking.customerEmail} e cópia para ${agencyCopy}...`,
+    `%c[EMAIL SERVICE]%c Enviando confirmação de reserva para ${booking.customerEmail} de reservas@natalvipturismo.com...`,
     'background: #d97706; color: #000; font-weight: bold; padding: 2px 6px; border-radius: 4px;',
     'color: #38bdf8;'
   );
-  console.log({
-    messageId,
-    subject,
-    recipient: booking.customerEmail,
-    agencyCopy,
-    sentAt: timestamp,
-    bookingDetails: {
-      voucherCode: booking.voucherCode,
-      tour: booking.tourName,
-      date: booking.date,
-      timeWindow: booking.timeWindow,
-      tide: `${booking.tideHeight}m`,
-      passengers: `${booking.adultsCount} adulto(s), ${booking.childrenCount} criança(s)`,
-      hotelPickup: booking.hotelPickup || 'A combinar',
-      paymentMethod: booking.paymentMethod.toUpperCase(),
-      totalPrice: `R$ ${booking.totalPrice.toFixed(2)}`,
-    },
-  });
 
-  // Attempt server-side dispatch to /api/send-voucher if backend route is available
+  // 1. Attempt server-side dispatch to /api/send-voucher with full HTML and sender reservas@natalvipturismo.com
   try {
     await fetch('/api/send-voucher', {
       method: 'POST',
@@ -77,22 +81,46 @@ export async function triggerBookingEmailConfirmation(
         customerEmail: booking.customerEmail,
         agencyEmail: agencyCopy,
         booking,
+        html: htmlTemplate,
+        subject,
       }),
     });
   } catch (err) {
-    // Graceful fallback for mock service
     console.debug('[EMAIL SERVICE] Backend endpoint simulation complete:', err);
   }
 
-  // Also persist in local storage for demonstration & customer review
+  // 2. Automatically synchronize with Google Agenda for reservas@natalvipturismo.com
+  try {
+    await syncReservationWithGoogleCalendar({
+      voucherCode: booking.voucherCode,
+      customerName: booking.customerName,
+      customerEmail: booking.customerEmail,
+      customerPhone: booking.customerPhone,
+      tourName: booking.tourName,
+      date: booking.date,
+      timeWindow: booking.timeWindow,
+      tideHeight: booking.tideHeight,
+      hotelPickup: booking.hotelPickup,
+      adultsCount: booking.adultsCount,
+      childrenCount: booking.childrenCount,
+      totalPrice: booking.totalPrice,
+      paymentMethod: booking.paymentMethod,
+    });
+  } catch (err) {
+    console.debug('[GOOGLE CALENDAR] Auto-sync notice:', err);
+  }
+
+  // 3. Persist in local storage for demonstration & customer review
   try {
     const existing = JSON.parse(localStorage.getItem('natalvip_email_logs') || '[]');
     existing.unshift({
       messageId,
       recipient: booking.customerEmail,
+      agencyCopy,
       subject,
       sentAt: timestamp,
       voucherCode: booking.voucherCode,
+      calendarUrl,
     });
     localStorage.setItem('natalvip_email_logs', JSON.stringify(existing.slice(0, 20)));
   } catch {
@@ -107,6 +135,8 @@ export async function triggerBookingEmailConfirmation(
     sentAt: timestamp,
     subject,
     previewSummary,
+    calendarUrl,
+    htmlTemplate,
   };
 }
 

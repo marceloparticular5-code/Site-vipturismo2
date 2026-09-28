@@ -14,6 +14,7 @@ import {
   Clock,
   ArrowRight,
   Lock,
+  Bell,
 } from 'lucide-react';
 import {
   isDateInPast,
@@ -28,9 +29,13 @@ interface TideCalendarProps {
     timeWindow: string;
     tourRecommended: 'maracajau-vip' | 'rio-do-fogo-vip';
   }) => void;
+  onOpenNotifications?: () => void;
 }
 
-export const TideCalendar: React.FC<TideCalendarProps> = ({ onSelectDayForBooking }) => {
+export const TideCalendar: React.FC<TideCalendarProps> = ({
+  onSelectDayForBooking,
+  onOpenNotifications,
+}) => {
   // Synchronized with current date in 2026 (September)
   const currentCalMonthIdx = getCurrentCalendarMonthIndex();
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(currentCalMonthIdx);
@@ -119,6 +124,19 @@ export const TideCalendar: React.FC<TideCalendarProps> = ({ onSelectDayForBookin
           maré baixa. Nosso sistema analisa a tábua oficial dos Parrachos e indica os dias perfeitos
           para água cristalina tipo piscina.
         </p>
+
+        {onOpenNotifications && (
+          <div className="mt-4 flex items-center justify-center">
+            <button
+              onClick={onOpenNotifications}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg shadow-amber-400/5"
+              title="Receba alertas instantâneos quando a maré estiver em condição excelente"
+            >
+              <Bell className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>Receber Alertas de Maré Baixa no Navegador (Push API)</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Destination Selector Tabs */}

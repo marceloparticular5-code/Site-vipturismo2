@@ -3,7 +3,9 @@ import { AVAILABLE_ADDONS, VIP_TOURS } from '../data/toursData';
 import { BookingState, VoucherData, TourPackage } from '../types';
 import { auth, saveBookingToFirestore } from '../lib/firebase';
 import { isDateStringInPast } from '../lib/dateUtils';
-import { triggerBookingEmailConfirmation } from '../lib/emailService';
+import { triggerBookingEmailConfirmation, BookingEmailConfirmationPayload } from '../lib/emailService';
+import { generateGoogleCalendarUrl, downloadIcsFile } from '../lib/googleCalendarSync';
+import { EmailConfirmationModal } from './EmailConfirmationModal';
 import {
   X,
   Calendar,
@@ -22,6 +24,8 @@ import {
   Check,
   Mail,
   AlertTriangle,
+  Eye,
+  ExternalLink,
 } from 'lucide-react';
 
 interface BookingDrawerProps {
@@ -67,6 +71,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
   const [step, setStep] = useState<'details' | 'gateway' | 'voucher'>('details');
   const [generatedVoucher, setGeneratedVoucher] = useState<VoucherData | null>(null);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailBookingPayload, setEmailBookingPayload] = useState<BookingEmailConfirmationPayload | null>(null);
 
   // Capture abandoned reservation if customer filled info but closed drawer without completing
   const handleCloseDrawer = () => {
@@ -212,11 +218,11 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       console.warn('Firestore sync error:', err);
     }
 
-    // Trigger mock email confirmation service function upon booking
-    triggerBookingEmailConfirmation({
+    // Setup email and calendar payload
+    const emailPayload: BookingEmailConfirmationPayload = {
       voucherCode: bookingCode,
       customerName: newBooking.customerName,
-      customerEmail: newBooking.customerEmail,
+      customerEmail: newBooking.customerEmail || 'cliente@natalvipturismo.com',
       customerPhone: newBooking.customerPhone,
       tourName: currentTour.title,
       date: newBooking.date,
@@ -227,7 +233,11 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       hotelPickup: newBooking.hotelPickup,
       paymentMethod: paymentTab,
       totalPrice: finalTotal,
-    }).catch((err) => {
+    };
+    setEmailBookingPayload(emailPayload);
+
+    // Trigger automatic email confirmation and Google Calendar sync
+    triggerBookingEmailConfirmation(emailPayload).catch((err) => {
       console.warn('Booking confirmation email trigger error:', err);
     });
 
@@ -805,12 +815,14 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               <div className="bg-gradient-to-b from-[#0C1A30] to-[#071220] border-2 border-amber-400/50 rounded-3xl p-6 text-left shadow-2xl relative overflow-hidden">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
                   <div className="flex items-center gap-3">
-                    <img
-                      src="/imagens/logovip.jpg"
-                      alt="Natal Vip Turismo"
-                      className="w-10 h-10 rounded-full object-contain drop-shadow-[0_2px_8px_rgba(212,175,55,0.4)] shrink-0"
-                      referrerPolicy="no-referrer"
-                    />
+                    <div className="w-11 h-11 rounded-full overflow-hidden border border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.3)] shrink-0 bg-slate-950">
+                      <img
+                        src="/imagens/logovip.jpg"
+                        alt="Natal Vip Turismo"
+                        className="w-full h-full rounded-full object-cover scale-[1.04]"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
                     <div>
                       <span className="text-[10px] uppercase font-bold text-amber-400 block">
                         Localizador
@@ -871,26 +883,119 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               </div>
 
               {/* Automatic Email Notification Card */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-[#0A1D1A] border border-emerald-500/40 text-left text-xs space-y-2">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Vouchers Encaminhados Automaticamente por E-mail</span>
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-[#0A1D1A] to-[#0A1628] border border-emerald-500/40 text-left text-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Confirmação Enviada por E-mail</span>
+                  </div>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold border border-emerald-500/40">
+                    Sincronizado
+                  </span>
                 </div>
-                <div className="text-slate-300 text-[11px] space-y-1">
+
+                <div className="text-slate-300 text-[11px] space-y-1.5 bg-slate-950/50 p-3 rounded-xl border border-slate-800">
                   <div>
-                    📧 <strong>E-mail do Cliente:</strong>{' '}
-                    <span className="text-emerald-300 font-mono">
+                    📤 <strong>Remetente Oficial:</strong>{' '}
+                    <span className="text-amber-300 font-mono font-bold">
+                      reservas@natalvipturismo.com
+                    </span>
+                  </div>
+                  <div>
+                    📧 <strong>E-mail Cadastrado:</strong>{' '}
+                    <span className="text-emerald-300 font-mono font-bold">
                       {generatedVoucher.booking.customerEmail}
                     </span>{' '}
-                    (Cópia com QR Code e detalhes)
+                    (Voucher completo & instruções)
                   </div>
                   <div>
-                    🏢 <strong>Central da Agência:</strong>{' '}
-                    <span className="text-amber-300 font-mono">
+                    🏢 <strong>Cópia Central:</strong>{' '}
+                    <span className="text-slate-400 font-mono">
                       reservas@natalvipturismo.com
                     </span>{' '}
-                    (Confirmado no sistema operacional)
+                    (Registro operacional aprovado)
                   </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsEmailModalOpen(true)}
+                  className="w-full py-2.5 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                >
+                  <Eye className="w-4 h-4 text-amber-400" />
+                  <span>Visualizar Modelo do E-mail Enviado</span>
+                </button>
+              </div>
+
+              {/* Google Agenda Integration Card */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-950/60 via-[#0B1A30] to-[#0A1628] border border-blue-500/40 text-left text-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-blue-400 font-bold">
+                    <Calendar className="w-4 h-4 text-blue-400 shrink-0" />
+                    <span>Sincronizado com Google Agenda</span>
+                  </div>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-extrabold border border-blue-500/40">
+                    Google Calendar
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Os dados desta reserva foram integrados com a agenda oficial da agência em{' '}
+                  <strong className="text-amber-300">reservas@natalvipturismo.com</strong>.
+                  Adicione também ao seu calendário pessoal:
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <a
+                    href={generateGoogleCalendarUrl({
+                      voucherCode: generatedVoucher.voucherCode,
+                      customerName: generatedVoucher.booking.customerName,
+                      customerEmail: generatedVoucher.booking.customerEmail,
+                      customerPhone: generatedVoucher.booking.customerPhone,
+                      tourName: generatedVoucher.booking.tourName,
+                      date: generatedVoucher.booking.date,
+                      timeWindow: generatedVoucher.booking.timeWindow,
+                      tideHeight: generatedVoucher.booking.tideHeight,
+                      hotelPickup: generatedVoucher.booking.hotelPickup,
+                      adultsCount: generatedVoucher.booking.adultsCount,
+                      childrenCount: generatedVoucher.booking.childrenCount,
+                      totalPrice: generatedVoucher.booking.totalPrice,
+                      paymentMethod: generatedVoucher.booking.paymentMethod,
+                    })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-md transition-all"
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>+ Adicionar ao Meu Google Agenda</span>
+                    <ExternalLink className="w-3 h-3 opacity-80" />
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      downloadIcsFile({
+                        voucherCode: generatedVoucher.voucherCode,
+                        customerName: generatedVoucher.booking.customerName,
+                        customerEmail: generatedVoucher.booking.customerEmail,
+                        customerPhone: generatedVoucher.booking.customerPhone,
+                        tourName: generatedVoucher.booking.tourName,
+                        date: generatedVoucher.booking.date,
+                        timeWindow: generatedVoucher.booking.timeWindow,
+                        tideHeight: generatedVoucher.booking.tideHeight,
+                        hotelPickup: generatedVoucher.booking.hotelPickup,
+                        adultsCount: generatedVoucher.booking.adultsCount,
+                        childrenCount: generatedVoucher.booking.childrenCount,
+                        totalPrice: generatedVoucher.booking.totalPrice,
+                        paymentMethod: generatedVoucher.booking.paymentMethod,
+                      })
+                    }
+                    className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                    title="Baixar arquivo de evento (.ics) para Outlook, iPhone ou Android"
+                  >
+                    <Download className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Baixar .ICS</span>
+                  </button>
                 </div>
               </div>
 
@@ -920,6 +1025,32 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
           )}
         </div>
       </div>
+
+      {/* Official Email Model Preview Modal */}
+      <EmailConfirmationModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        booking={
+          emailBookingPayload ||
+          (generatedVoucher
+            ? {
+                voucherCode: generatedVoucher.voucherCode,
+                customerName: generatedVoucher.booking.customerName,
+                customerEmail: generatedVoucher.booking.customerEmail,
+                customerPhone: generatedVoucher.booking.customerPhone,
+                tourName: generatedVoucher.booking.tourName,
+                date: generatedVoucher.booking.date,
+                timeWindow: generatedVoucher.booking.timeWindow,
+                tideHeight: generatedVoucher.booking.tideHeight,
+                hotelPickup: generatedVoucher.booking.hotelPickup,
+                adultsCount: generatedVoucher.booking.adultsCount,
+                childrenCount: generatedVoucher.booking.childrenCount,
+                totalPrice: generatedVoucher.booking.totalPrice,
+                paymentMethod: generatedVoucher.booking.paymentMethod,
+              }
+            : null)
+        }
+      />
     </div>
   );
 };

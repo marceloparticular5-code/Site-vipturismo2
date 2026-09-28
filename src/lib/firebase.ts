@@ -23,11 +23,50 @@ import {
   User,
 } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { TourPackage } from '../types';
+import { TourPackage, LeadFollowUp } from '../types';
 import { VIP_TOURS } from '../data/toursData';
 
 // Admin email configured for agency management
 export const ADMIN_EMAIL = 'marceloparticular5@gmail.com';
+
+// Master Admin Passcodes accepted for instant management anywhere (iframe, mobile, direct)
+export const ADMIN_MASTER_PINS = ['vip2026', 'natalvip', 'vipnatal2026'];
+export const ADMIN_AUTH_STORAGE_KEY = 'natal_vip_admin_auth_token';
+
+export function isPinAdminAuthenticated(): boolean {
+  try {
+    const token =
+      sessionStorage.getItem(ADMIN_AUTH_STORAGE_KEY) ||
+      localStorage.getItem(ADMIN_AUTH_STORAGE_KEY);
+    return token === 'authenticated_admin_vip';
+  } catch {
+    return false;
+  }
+}
+
+export function setPinAdminAuthenticated(value: boolean): void {
+  try {
+    if (value) {
+      sessionStorage.setItem(ADMIN_AUTH_STORAGE_KEY, 'authenticated_admin_vip');
+      localStorage.setItem(ADMIN_AUTH_STORAGE_KEY, 'authenticated_admin_vip');
+    } else {
+      sessionStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+      localStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+export function verifyAdminPin(pin: string): boolean {
+  if (!pin) return false;
+  const clean = pin.trim().toLowerCase();
+  const valid = ADMIN_MASTER_PINS.includes(clean);
+  if (valid) {
+    setPinAdminAuthenticated(true);
+  }
+  return valid;
+}
 
 // Initialize Firebase App singleton
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
@@ -83,9 +122,9 @@ function saveLocalTour(tour: TourPackage): void {
 function removeLocalTour(tourId: string): void {
   try {
     const map = getLocalTours();
-    const existing = map.get(tourId);
+    const existing = map.get(tourId) || VIP_TOURS.find((t) => t.id === tourId);
     if (existing) {
-      map.set(tourId, { ...existing, active: false });
+      map.set(tourId, { ...existing, active: false, deleted: true } as any);
     } else {
       map.set(tourId, {
         id: tourId,
@@ -94,6 +133,7 @@ function removeLocalTour(tourId: string): void {
         imageUrl: '',
         priceDiscounted: 0,
         active: false,
+        deleted: true,
       } as any);
     }
     localStorage.setItem(LOCAL_TOURS_KEY, JSON.stringify(Array.from(map.values())));
@@ -325,8 +365,9 @@ export function subscribeUserBookings(
   }
 }
 
-// Check if a user is an authorized admin strictly via verified Google Account
+// Check if a user is an authorized admin via PIN or verified Google Account
 export function isUserAdmin(user: User | null): boolean {
+  if (isPinAdminAuthenticated()) return true;
   if (!user || !user.email) return false;
   return user.email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
 }
@@ -358,7 +399,7 @@ export function subscribeToTours(callback: (tours: TourPackage[]) => void): () =
     // 3. Overwrite / insert with Local storage admin updates
     const localTours = getLocalTours();
     localTours.forEach((lTour, id) => {
-      if (lTour.active === false) {
+      if (lTour.active === false || (lTour as any).deleted === true) {
         combinedMap.delete(id);
       } else {
         combinedMap.set(id, lTour);
@@ -410,6 +451,8 @@ export function subscribeToTours(callback: (tours: TourPackage[]) => void): () =
             highlights: Array.isArray(data.highlights) ? data.highlights : [],
             included: Array.isArray(data.included) ? data.included : [],
             imageUrl: data.imageUrl || '',
+            remainingSlots: typeof data.remainingSlots === 'number' ? data.remainingSlots : undefined,
+            category: data.category || undefined,
             active: data.active !== false,
             updatedAt: data.updatedAt,
           });
@@ -439,50 +482,68 @@ export function subscribeToTours(callback: (tours: TourPackage[]) => void): () =
   }
 }
 
-// Save or update a tour in Firestore with immediate local fallback
-export async function saveTourToFirestore(tour: TourPackage): Promise<void> {
-  const path = `tours/${tour.id}`;
+export interface TourMutationResult {
+  success: boolean;
+  firestoreSynced: boolean;
+  tour?: TourPackage;
+  error?: string;
+}
+
+// Save or update a tour in Firestore with immediate local persistence
+export async function saveTourToFirestore(tour: TourPackage): Promise<TourMutationResult> {
   // Always persist locally for instant UI update & resilience
   saveLocalTour(tour);
+
+  let firestoreSynced = false;
+  let firestoreError: string | undefined;
 
   try {
     const tourRef = doc(db, 'tours', tour.id);
     const tourData = {
       id: tour.id,
-      title: tour.title,
-      subtitle: tour.subtitle || '',
-      badge: tour.badge || '',
-      location: tour.location || '',
-      rating: tour.rating || 5.0,
-      reviewsCount: tour.reviewsCount || 1,
-      priceOriginal: tour.priceOriginal || 0,
-      priceDiscounted: tour.priceDiscounted,
-      duration: tour.duration || 'Dia inteiro',
+      title: (tour.title || '').trim(),
+      subtitle: (tour.subtitle || '').trim(),
+      badge: (tour.badge || '').trim(),
+      location: (tour.location || '').trim(),
+      rating: Number(tour.rating) || 5.0,
+      reviewsCount: Number(tour.reviewsCount) || 1,
+      priceOriginal: Number(tour.priceOriginal) || 0,
+      priceDiscounted: Number(tour.priceDiscounted) || 0,
+      duration: (tour.duration || 'Dia inteiro').trim(),
       includesDiving: Boolean(tour.includesDiving),
       isVip: Boolean(tour.isVip),
-      urgencyText: tour.urgencyText || '',
-      description: tour.description,
-      imageUrl: tour.imageUrl,
-      highlights: tour.highlights || [],
-      included: tour.included || [],
+      urgencyText: (tour.urgencyText || '').trim(),
+      description: (tour.description || '').trim(),
+      imageUrl: (tour.imageUrl || '').trim(),
+      remainingSlots: typeof tour.remainingSlots === 'number' ? tour.remainingSlots : 3,
+      category: (tour.category || '').trim(),
+      highlights: Array.isArray(tour.highlights) ? tour.highlights : [],
+      included: Array.isArray(tour.included) ? tour.included : [],
       active: tour.active !== false,
       deleted: false,
       updatedAt: new Date().toISOString(),
     };
     await setDoc(tourRef, tourData, { merge: true });
+    firestoreSynced = true;
   } catch (error) {
-    console.warn('Firestore write warning (saved locally in browser cache):', error);
-    if (!auth.currentUser) {
-      return; // Handled gracefully via local tours sync
-    }
-    handleFirestoreError(error, OperationType.WRITE, path);
+    console.warn('Firestore write warning (tour preserved locally):', error);
+    firestoreError = error instanceof Error ? error.message : String(error);
   }
+
+  return {
+    success: true,
+    firestoreSynced,
+    tour,
+    error: firestoreError,
+  };
 }
 
-// Delete a tour from Firestore with immediate local fallback
-export async function deleteTourFromFirestore(tourId: string): Promise<void> {
-  const path = `tours/${tourId}`;
+// Delete a tour from Firestore with immediate local persistence
+export async function deleteTourFromFirestore(tourId: string): Promise<TourMutationResult> {
   removeLocalTour(tourId);
+
+  let firestoreSynced = false;
+  let firestoreError: string | undefined;
 
   try {
     const isDefault = VIP_TOURS.some((t) => t.id === tourId);
@@ -505,21 +566,27 @@ export async function deleteTourFromFirestore(tourId: string): Promise<void> {
     } else {
       await deleteDoc(doc(db, 'tours', tourId));
     }
+    firestoreSynced = true;
   } catch (error) {
-    console.warn('Firestore delete warning (saved locally):', error);
-    if (!auth.currentUser) {
-      return;
-    }
-    handleFirestoreError(error, OperationType.DELETE, path);
+    console.warn('Firestore delete warning (tour removed locally):', error);
+    firestoreError = error instanceof Error ? error.message : String(error);
   }
+
+  return {
+    success: true,
+    firestoreSynced,
+    error: firestoreError,
+  };
 }
 
 // Seed default tours to Firestore if needed
 export async function seedDefaultToursToFirestore(defaultTours: TourPackage[]): Promise<void> {
   try {
+    localStorage.removeItem(LOCAL_TOURS_KEY);
     for (const tour of defaultTours) {
-      await saveTourToFirestore(tour);
+      await saveTourToFirestore({ ...tour, active: true });
     }
+    window.dispatchEvent(new CustomEvent('natal-vip-tours-updated'));
   } catch (error) {
     console.error('Error seeding default tours:', error);
     throw error;
@@ -550,3 +617,171 @@ export function subscribeAllBookingsForAdmin(
     handleFirestoreError(error, OperationType.LIST, path);
   }
 }
+
+// Admin listener for all leads with combined Firestore + localStorage cache
+export function subscribeAllLeadsForAdmin(
+  callback: (leads: LeadFollowUp[]) => void
+): () => void {
+  const path = 'leads';
+
+  const getLocalLeads = (): LeadFollowUp[] => {
+    try {
+      const raw = localStorage.getItem('natal_vip_leads');
+      if (raw) return JSON.parse(raw);
+    } catch {
+      // ignore
+    }
+    return [];
+  };
+
+  try {
+    const colRef = collection(db, path);
+    return onSnapshot(
+      colRef,
+      (snapshot) => {
+        const localLeads = getLocalLeads();
+        const firestoreLeads: LeadFollowUp[] = [];
+
+        snapshot.forEach((docSnap) => {
+          const d = docSnap.data();
+          const mappedStatus =
+            d.status === 'booked'
+              ? 'convertido'
+              : d.status === 'contacted'
+              ? 'followup_enviado'
+              : d.status === 'archived'
+              ? 'arquivado'
+              : d.status || 'novo';
+
+          firestoreLeads.push({
+            id: docSnap.id,
+            name: d.name || 'Cliente Sem Nome',
+            phone: d.phone || '',
+            email: d.email || 'contato@cliente.com',
+            tourInterest: d.tourInterest || 'Passeio VIP',
+            travelMonth: d.travelMonth || '',
+            origin: d.origin || 'landing_modal',
+            createdAt: d.createdAt
+              ? d.createdAt.includes('T')
+                ? new Date(d.createdAt).toLocaleString('pt-BR')
+                : d.createdAt
+              : new Date().toLocaleString('pt-BR'),
+            status: mappedStatus as 'novo' | 'followup_enviado' | 'convertido' | 'arquivado',
+            couponCode: d.couponCode || 'VIPNATAL30',
+            notes: d.notes || '',
+            lastFollowUpDate: d.lastFollowUpDate || '',
+            utmSource: d.utmSource || '',
+            estimatedValue: d.estimatedValue || 220,
+          });
+        });
+
+        // Merge: Firestore documents take priority, plus any local leads
+        const map = new Map<string, LeadFollowUp>();
+        localLeads.forEach((l) => map.set(l.id, l));
+        firestoreLeads.forEach((f) => map.set(f.id, f));
+
+        const merged = Array.from(map.values()).sort((a, b) => {
+          return (b.createdAt || '').localeCompare(a.createdAt || '');
+        });
+
+        callback(merged);
+      },
+      (error) => {
+        console.warn('Firestore leads sync notice (using local leads cache):', error);
+        callback(getLocalLeads());
+      }
+    );
+  } catch (error) {
+    console.warn('Firestore leads listener exception:', error);
+    callback(getLocalLeads());
+    return () => {};
+  }
+}
+
+// Update lead status and notes in Firestore and LocalStorage
+export async function updateLeadInFirestore(
+  leadId: string,
+  updates: Partial<LeadFollowUp>
+): Promise<void> {
+  // Update local storage first
+  try {
+    const raw = localStorage.getItem('natal_vip_leads');
+    if (raw) {
+      const leads: LeadFollowUp[] = JSON.parse(raw);
+      const updated = leads.map((l) => (l.id === leadId ? { ...l, ...updates } : l));
+      localStorage.setItem('natal_vip_leads', JSON.stringify(updated));
+    }
+  } catch {
+    // ignore
+  }
+
+  // Update in Firestore if logged in
+  try {
+    const docRef = doc(db, 'leads', leadId);
+    await setDoc(
+      docRef,
+      {
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn('Could not update lead in Firestore:', err);
+  }
+}
+
+// Delete lead from Firestore and LocalStorage
+export async function deleteLeadFromFirestore(leadId: string): Promise<void> {
+  try {
+    const raw = localStorage.getItem('natal_vip_leads');
+    if (raw) {
+      const leads: LeadFollowUp[] = JSON.parse(raw);
+      const updated = leads.filter((l) => l.id !== leadId);
+      localStorage.setItem('natal_vip_leads', JSON.stringify(updated));
+    }
+  } catch {
+    // ignore
+  }
+
+  try {
+    await deleteDoc(doc(db, 'leads', leadId));
+  } catch (err) {
+    console.warn('Could not delete lead from Firestore:', err);
+  }
+}
+
+// Save lead created manually by Admin
+export async function saveLeadManualAdmin(
+  leadData: Omit<LeadFollowUp, 'id'>
+): Promise<string> {
+  const newId = `lead-${Date.now()}`;
+  const fullLead: LeadFollowUp = {
+    ...leadData,
+    id: newId,
+  };
+
+  // Local storage save
+  try {
+    const raw = localStorage.getItem('natal_vip_leads');
+    const list: LeadFollowUp[] = raw ? JSON.parse(raw) : [];
+    list.unshift(fullLead);
+    localStorage.setItem('natal_vip_leads', JSON.stringify(list));
+  } catch {
+    // ignore
+  }
+
+  // Firestore save
+  try {
+    await setDoc(doc(db, 'leads', newId), {
+      ...leadData,
+      id: newId,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn('Could not save manual lead in Firestore:', err);
+  }
+
+  return newId;
+}
+

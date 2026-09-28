@@ -34,6 +34,8 @@ export interface TourPackage {
   highlights: string[];
   included: string[];
   imageUrl: string;
+  remainingSlots?: number;
+  category?: 'combo' | 'aventura' | 'mergulho' | 'cultural' | 'transfer' | string;
   active?: boolean;
   updatedAt?: string;
 }
@@ -112,13 +114,14 @@ export interface LeadFollowUp {
   email: string;
   travelMonth?: string;
   tourInterest?: string;
-  origin: 'exit_intent' | 'abandoned_cart' | 'tide_guide' | 'landing_modal';
+  origin: 'exit_intent' | 'abandoned_cart' | 'tide_guide' | 'landing_modal' | 'marcelo_chat' | 'manual_admin' | string;
   createdAt: string;
-  status: 'novo' | 'followup_enviado' | 'convertido';
+  status: 'novo' | 'followup_enviado' | 'convertido' | 'arquivado';
   lastFollowUpDate?: string;
   notes?: string;
   utmSource?: string;
   couponCode?: string;
+  estimatedValue?: number;
 }
 
 export interface CustomerTestimonial {
@@ -133,3 +136,69 @@ export interface CustomerTestimonial {
   verifiedTag: string;
   badge?: string;
 }
+
+export interface NotificationSettings {
+  enabled: boolean;
+  tideAlerts: boolean; // Alertas de maré excelente (≤ 0.3m) e condições nos Parrachos
+  vacancyAlerts: boolean; // Alertas de novas vagas e últimas vagas em lanchas VIP
+  promoAlerts: boolean; // Alertas de ofertas relâmpago e cupons VIP
+  lastUpdated?: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string;
+  type: 'tide' | 'vacancy' | 'promo' | 'general';
+  url?: string;
+  timestamp: string;
+  read: boolean;
+  badge?: string;
+}
+
+export interface HotelPartner {
+  id: string;
+  name: string;
+  tagline: string;
+  category: 'Resort 5 Estrelas' | 'Hotel Boutique' | 'Resort All-Inclusive' | 'Hotel Executivo & Lazer' | 'Pousada de Charme';
+  region: 'Ponta Negra' | 'Via Costeira' | 'Litoral Norte' | 'Pipa / Litoral Sul';
+  departurePointProximity: string;
+  distanceToDeparture: string;
+  rating: number;
+  reviewsCount: number;
+  priceEstimate: string;
+  badge?: string;
+  perksForVipClients: string[];
+  amenities: string[];
+  imageUrl: string;
+  directBookingUrl: string;
+  whatsappConciergeNumber?: string;
+  marceloTip: string;
+  address: string;
+  toursNearby: string[];
+}
+
+export type InfraCategory = 'vistos' | 'seguro' | 'conectividade' | 'financas';
+
+export interface InfraChecklistTask {
+  id: string;
+  category: InfraCategory;
+  title: string;
+  description: string;
+  requiredFor: string;
+  tip?: string;
+  linkText?: string;
+  linkUrl?: string;
+}
+
+export interface StudentProfile {
+  id: string;
+  name?: string;
+  email?: string;
+  targetTripMonth?: string;
+  checklistProgress: Record<string, boolean>; // taskId -> boolean
+  lastActiveTab?: InfraCategory | 'todos';
+  notes?: string;
+  updatedAt: string;
+}
+

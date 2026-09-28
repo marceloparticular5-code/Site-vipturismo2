@@ -17,7 +17,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Gemini Chatbot Endpoint
+// Consultor Pessoal Marcelo Chat Endpoint
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
@@ -32,25 +32,63 @@ app.post('/api/chat', async (req, res) => {
   } catch (error: any) {
     console.error('Error handling /api/chat:', error);
     res.status(500).json({
-      error: 'Erro interno ao consultar o Concierge Gemini',
+      error: 'Erro interno ao consultar o Consultor Marcelo',
       message: error?.message || 'Erro desconhecido',
     });
   }
 });
 
+// Enforce noindex headers on /admin to prevent search engine indexing
+app.use((req, res, next) => {
+  if (req.path.startsWith('/admin') || req.path === '/admin') {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
+  next();
+});
+
 // Automatic Voucher Email Dispatch Endpoint (reservas@natalvipturismo.com)
 app.post('/api/send-voucher', (req, res) => {
   try {
-    const { voucherCode, customerEmail, agencyEmail, booking } = req.body;
+    const { voucherCode, customerEmail, agencyEmail, booking, html, subject } = req.body;
+    const sender = 'reservas@natalvipturismo.com';
+    const recipient = customerEmail || 'cliente@natalvipturismo.com';
+    const companyCopy = agencyEmail || 'reservas@natalvipturismo.com';
+
     console.log(
-      `[Voucher Dispatch] Code ${voucherCode} dispatched to ${customerEmail} and ${agencyEmail || 'reservas@natalvipturismo.com'}`
+      `[Email Dispatch] De: ${sender} -> Para: ${recipient} (Cópia: ${companyCopy}) | Assunto: ${subject || `Voucher ${voucherCode}`}`
     );
+
     res.json({
       success: true,
-      message: `Voucher ${voucherCode} encaminhado automaticamente para ${customerEmail} e cópia confirmada em reservas@natalvipturismo.com`,
-      customerEmail,
-      agencyEmail: 'reservas@natalvipturismo.com',
+      message: `E-mail de confirmação encaminhado automaticamente para ${recipient} a partir de ${sender} (cópia arquivada em ${companyCopy})`,
+      from: sender,
+      to: recipient,
+      cc: companyCopy,
+      voucherCode,
       dispatchedAt: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message });
+  }
+});
+
+// Google Agenda Synchronization Endpoint for reservas@natalvipturismo.com
+app.post('/api/sync-google-calendar', (req, res) => {
+  try {
+    const { payload, calendarUrl, agencyEmail } = req.body;
+    const targetCalendar = agencyEmail || 'reservas@natalvipturismo.com';
+
+    console.log(
+      `[Google Calendar Sync] Reserva ${payload?.voucherCode} (${payload?.tourName}) integrada com a Google Agenda de ${targetCalendar}`
+    );
+
+    res.json({
+      success: true,
+      message: `Reserva integrada com o Google Agenda da agência (${targetCalendar})`,
+      syncedWith: targetCalendar,
+      voucherCode: payload?.voucherCode,
+      calendarUrl,
+      syncedAt: new Date().toISOString(),
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message });

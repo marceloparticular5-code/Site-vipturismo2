@@ -4,7 +4,6 @@ import {
   Calendar,
   Compass,
   Headphones,
-  Sparkles,
   Phone,
   Menu,
   X,
@@ -15,6 +14,9 @@ import {
   LogOut,
   LogIn,
   Shield,
+  Bell,
+  Sparkles,
+  Luggage,
 } from 'lucide-react';
 import { auth, loginWithGoogle, logoutUser, isUserAdmin } from '../lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -25,6 +27,7 @@ interface HeaderProps {
   onOpenAutoAtendimento: () => void;
   onOpenChat: () => void;
   onOpenMyReservations: () => void;
+  onOpenNotifications: () => void;
   onNavigateSection: (sectionId: string) => void;
   onOpenAdmin?: () => void;
 }
@@ -35,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAutoAtendimento,
   onOpenChat,
   onOpenMyReservations,
+  onOpenNotifications,
   onNavigateSection,
   onOpenAdmin,
 }) => {
@@ -111,11 +115,19 @@ export const Header: React.FC<HeaderProps> = ({
             className="flex items-center text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded-lg group"
             title="Natal Vip Turismo - Página Inicial"
           >
-            <NatalVipLogo size={scrolled ? 42 : 50} />
+            <NatalVipLogo size={scrolled ? 48 : 60} />
           </button>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium">
+          <nav className="hidden lg:flex items-center gap-5 text-sm font-medium">
+            <button
+              onClick={() => onNavigateSection('passeios-indispensaveis')}
+              className="text-amber-300 hover:text-white font-bold transition-colors flex items-center gap-1.5 py-1"
+            >
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Indispensáveis</span>
+            </button>
+
             <button
               onClick={() => onNavigateSection('pacotes-vip')}
               className="text-slate-200 hover:text-amber-300 transition-colors flex items-center gap-1.5 py-1"
@@ -150,11 +162,32 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
+              onClick={() => onNavigateSection('infra-checklist')}
+              className="text-slate-200 hover:text-amber-300 transition-colors flex items-center gap-1.5 py-1"
+            >
+              <Luggage className="w-4 h-4 text-amber-400" />
+              <span>Checklist Viagem</span>
+            </button>
+
+            <button
               onClick={onOpenAutoAtendimento}
               className="text-slate-200 hover:text-amber-300 transition-colors flex items-center gap-1.5 py-1"
             >
               <Headphones className="w-4 h-4 text-sky-400" />
               Autoatendimento
+            </button>
+
+            <button
+              id="header-marcelo-btn"
+              onClick={onOpenChat}
+              className="text-amber-200 hover:text-white transition-all flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/40 hover:border-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)] hover:shadow-[0_0_18px_rgba(245,158,11,0.4)] text-xs font-semibold cursor-pointer group"
+              title="Falar com Marcelo (Consultor VIP)"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span>Consultor Marcelo</span>
             </button>
           </nav>
 
@@ -200,15 +233,16 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Gemini AI Bot trigger */}
+            {/* Notifications Bell CTA */}
             <button
-              id="header-chat-btn"
-              onClick={onOpenChat}
-              className="px-3 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-950 to-blue-900 border border-indigo-500/40 hover:border-indigo-400 text-indigo-200 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
-              title="Conversar com o Concierge Inteligente Gemini"
+              id="header-notifications-btn"
+              onClick={onOpenNotifications}
+              className="relative p-2.5 rounded-xl text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-slate-300 hover:text-amber-300 transition-all flex items-center justify-center group cursor-pointer"
+              title="Alertas de Vagas & Marés em Tempo Real"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-              <span>Chatbot Gemini</span>
+              <Bell className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border border-slate-950" />
             </button>
 
             {/* Direct Booking Drawer CTA */}
@@ -232,15 +266,16 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Mobile menu hamburger */}
+          {/* Mobile menu hamburger & quick buttons */}
           <div className="flex items-center gap-2 lg:hidden">
             <button
-              id="header-mobile-chat-btn"
-              onClick={onOpenChat}
-              className="p-2 rounded-lg bg-indigo-950/60 border border-indigo-500/30 text-amber-300"
-              title="Chatbot Gemini"
+              id="header-mobile-notifications-btn"
+              onClick={onOpenNotifications}
+              className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-amber-400 relative"
+              title="Alertas & Notificações"
             >
-              <Sparkles className="w-4 h-4" />
+              <Bell className="w-4 h-4" />
+              <span className="absolute 1 top-1 right-1 w-2 h-2 bg-amber-400 rounded-full animate-ping" />
             </button>
             <button
               id="header-mobile-toggle"
@@ -256,6 +291,27 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Mobile dropdown menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-slate-800 bg-[#070E1A] px-4 pt-3 pb-6 space-y-3 mt-2">
+            <button
+              onClick={() => {
+                onOpenNotifications();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-lg bg-amber-400/10 border border-amber-400/30 text-amber-300 font-bold flex items-center gap-2"
+            >
+              <Bell className="w-4 h-4 text-amber-400" />
+              <span>Alertas de Marés & Novas Vagas (Push)</span>
+            </button>
+            <button
+              onClick={() => {
+                onNavigateSection('passeios-indispensaveis');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-900 text-amber-300 font-bold flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              Passeios Indispensáveis
+            </button>
+
             <button
               onClick={() => {
                 onNavigateSection('pacotes-vip');
@@ -296,6 +352,37 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-900 text-slate-200"
             >
               Blog: Dicas Noturnas & Gastronomia
+            </button>
+
+            <button
+              onClick={() => {
+                onNavigateSection('infra-checklist');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-900 text-slate-200 flex items-center gap-2"
+            >
+              <Luggage className="w-4 h-4 text-amber-400" />
+              <span>Checklist de Infraestrutura (Vistos, Seguro, etc.)</span>
+            </button>
+
+            <button
+              id="mobile-nav-marcelo-btn"
+              onClick={() => {
+                onOpenChat();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2.5 px-3 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/50 text-amber-300 font-bold flex items-center justify-between shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+            >
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                </span>
+                <span>Falar com Consultor Marcelo</span>
+              </div>
+              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                Online
+              </span>
             </button>
 
             <button

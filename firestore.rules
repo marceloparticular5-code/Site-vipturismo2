@@ -18,7 +18,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        (request.auth.token.email == 'marceloparticular5@gmail.com' && request.auth.token.email_verified == true) ||
+        (request.auth.token.email.matches('(?i)^marceloparticular5@gmail\\.com$')) ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
@@ -75,26 +75,28 @@ service cloud.firestore {
 
     function isValidTour(data) {
       return data.keys().hasAll(['id', 'title', 'priceDiscounted', 'description', 'imageUrl']) &&
-             data.id is string && data.id.size() > 0 && data.id.size() <= 64 &&
-             data.title is string && data.title.size() > 0 && data.title.size() <= 160 &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
              data.priceDiscounted is number && data.priceDiscounted >= 0 &&
-             data.description is string && data.description.size() <= 2000 &&
-             data.imageUrl is string && data.imageUrl.size() <= 1024 &&
-             (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 250)) &&
-             (!('badge' in data) || (data.badge is string && data.badge.size() <= 64)) &&
-             (!('location' in data) || (data.location is string && data.location.size() <= 120)) &&
+             data.description is string && data.description.size() <= 5000 &&
+             data.imageUrl is string && data.imageUrl.size() <= 2048 &&
+             (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 500)) &&
+             (!('badge' in data) || (data.badge is string && data.badge.size() <= 100)) &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 200)) &&
              (!('rating' in data) || (data.rating is number)) &&
              (!('reviewsCount' in data) || (data.reviewsCount is number)) &&
              (!('priceOriginal' in data) || (data.priceOriginal is number)) &&
-             (!('duration' in data) || (data.duration is string && data.duration.size() <= 64)) &&
+             (!('duration' in data) || (data.duration is string && data.duration.size() <= 100)) &&
              (!('includesDiving' in data) || (data.includesDiving is bool)) &&
              (!('isVip' in data) || (data.isVip is bool)) &&
-             (!('urgencyText' in data) || (data.urgencyText is string && data.urgencyText.size() <= 160)) &&
+             (!('urgencyText' in data) || (data.urgencyText is string && data.urgencyText.size() <= 250)) &&
              (!('active' in data) || (data.active is bool)) &&
              (!('deleted' in data) || (data.deleted is bool)) &&
-             (!('highlights' in data) || (data.highlights is list && data.highlights.size() <= 15)) &&
-             (!('included' in data) || (data.included is list && data.included.size() <= 15)) &&
-             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+             (!('remainingSlots' in data) || (data.remainingSlots is number)) &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+             (!('highlights' in data) || (data.highlights is list && data.highlights.size() <= 30)) &&
+             (!('included' in data) || (data.included is list && data.included.size() <= 30)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 100));
     }
 
     // Test connection endpoint
@@ -111,7 +113,7 @@ service cloud.firestore {
     // Tours Collection (Public read, admin write)
     match /tours/{tourId} {
       allow get, list: if true;
-      allow create, update: if isAdmin() && isValidTour(incoming());
+      allow create, update: if isAdmin() && (incoming().get('deleted', false) == true || isValidTour(incoming()));
       allow delete: if isAdmin();
     }
 

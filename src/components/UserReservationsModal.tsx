@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { X, Ticket, Calendar, Clock, Users, ShieldCheck, LogIn, ExternalLink, AlertTriangle } from 'lucide-react';
+import { X, Ticket, Calendar, Clock, Users, ShieldCheck, LogIn, ExternalLink, AlertTriangle, Mail, Eye } from 'lucide-react';
 import { auth, loginWithGoogleDetailed, isRunningInIframe, subscribeUserBookings, FirebaseBooking } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { generateGoogleCalendarUrl } from '../lib/googleCalendarSync';
+import { EmailConfirmationModal } from './EmailConfirmationModal';
+import { BookingEmailConfirmationPayload } from '../lib/emailService';
 
 interface UserReservationsModalProps {
   isOpen: boolean;
@@ -19,6 +22,7 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [previewBooking, setPreviewBooking] = useState<BookingEmailConfirmationPayload | null>(null);
   const inIframe = isRunningInIframe();
 
   useEffect(() => {
@@ -181,12 +185,14 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
                     <div className="flex items-center gap-2">
-                      <img
-                        src="/imagens/logovip.jpg"
-                        alt="Natal VIP"
-                        className="w-7 h-7 rounded-full object-contain"
-                        referrerPolicy="no-referrer"
-                      />
+                      <div className="w-8 h-8 rounded-full overflow-hidden border border-amber-400/40 shrink-0 bg-slate-950">
+                        <img
+                          src="/imagens/logovip.jpg"
+                          alt="Natal VIP"
+                          className="w-full h-full rounded-full object-cover scale-[1.04]"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
                       <span className="text-xs font-mono font-bold text-amber-300">
                         {booking.voucherCode}
                       </span>
@@ -225,6 +231,56 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
                       Vaga Garantida na Lancha
                     </span>
                   </div>
+
+                  {/* Actions: Google Calendar & Email Preview */}
+                  <div className="pt-2 border-t border-slate-800/80 flex flex-wrap gap-2">
+                    <a
+                      href={generateGoogleCalendarUrl({
+                        voucherCode: booking.voucherCode,
+                        customerName: booking.passengerName || 'Passageiro VIP',
+                        customerEmail: booking.passengerEmail || user?.email || 'cliente@natalvipturismo.com',
+                        customerPhone: booking.passengerPhone,
+                        tourName: booking.tourName,
+                        date: booking.date,
+                        timeWindow: booking.timeWindow || '08:30 às 10:00',
+                        adultsCount: booking.participants || 1,
+                        childrenCount: 0,
+                        totalPrice: booking.totalAmount,
+                        paymentMethod: booking.paymentMethod || 'PIX',
+                      })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 text-[11px] font-bold flex items-center gap-1.5 transition-all"
+                    >
+                      <Calendar className="w-3 h-3" />
+                      <span>+ Google Agenda</span>
+                      <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPreviewBooking({
+                          voucherCode: booking.voucherCode,
+                          customerName: booking.passengerName || 'Passageiro VIP',
+                          customerEmail: booking.passengerEmail || user?.email || 'cliente@natalvipturismo.com',
+                          customerPhone: booking.passengerPhone,
+                          tourName: booking.tourName,
+                          date: booking.date,
+                          timeWindow: booking.timeWindow || '08:30 às 10:00',
+                          tideHeight: 0.2,
+                          adultsCount: booking.participants || 1,
+                          childrenCount: 0,
+                          totalPrice: booking.totalAmount,
+                          paymentMethod: booking.paymentMethod || 'PIX',
+                        })
+                      }
+                      className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold flex items-center gap-1.5 transition-all"
+                    >
+                      <Mail className="w-3 h-3 text-amber-400" />
+                      <span>Ver E-mail de Confirmação</span>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -242,6 +298,12 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
           </button>
         </div>
       </div>
+
+      <EmailConfirmationModal
+        isOpen={!!previewBooking}
+        onClose={() => setPreviewBooking(null)}
+        booking={previewBooking}
+      />
     </div>
   );
 };

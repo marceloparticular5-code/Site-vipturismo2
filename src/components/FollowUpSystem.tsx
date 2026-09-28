@@ -4,29 +4,25 @@ import { saveLeadToFirestore } from '../lib/firebase';
 import {
   Sparkles,
   Gift,
-  Download,
   Send,
   X,
   Calendar,
   CheckCircle2,
   Clock,
-  Phone,
-  Mail,
   User,
   Tag,
   Flame,
   ArrowRight,
-  Database,
-  ExternalLink,
-  MessageCircle,
   Copy,
   Check,
+  Phone,
+  Mail,
+  MessageCircle,
+  Download,
 } from 'lucide-react';
 
 interface FollowUpSystemProps {
   onOpenBookingWithTour?: (tourId: string) => void;
-  isCrmOpen: boolean;
-  setIsCrmOpen: (open: boolean) => void;
 }
 
 // Gera dinamicamente a lista dos próximos meses a partir do mês e ano atuais
@@ -66,8 +62,6 @@ export const getAvailableTravelMonths = (totalMonths = 12): { value: string; lab
 
 export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
   onOpenBookingWithTour,
-  isCrmOpen,
-  setIsCrmOpen,
 }) => {
   // Exit-intent / Promo pop-up state
   const [showExitModal, setShowExitModal] = useState(false);
@@ -86,9 +80,8 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
   const [copiedCoupon, setCopiedCoupon] = useState(false);
   const [downloadNotice, setDownloadNotice] = useState(false);
 
-  // CRM Leads state
+  // Leads list in localStorage for seamless persistence
   const [leadsList, setLeadsList] = useState<LeadFollowUp[]>([]);
-  const [crmFilter, setCrmFilter] = useState<'todos' | 'novo' | 'followup_enviado' | 'convertido'>('todos');
 
   // Load leads from storage or initialize sample data
   useEffect(() => {
@@ -240,44 +233,6 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
     setCopiedCoupon(true);
     setTimeout(() => setCopiedCoupon(false), 2500);
   };
-
-  const handleUpdateLeadStatus = (
-    leadId: string,
-    newStatus: 'novo' | 'followup_enviado' | 'convertido'
-  ) => {
-    const updated = leadsList.map((l) =>
-      l.id === leadId
-        ? {
-            ...l,
-            status: newStatus,
-            lastFollowUpDate: new Date().toLocaleString('pt-BR'),
-          }
-        : l
-    );
-    setLeadsList(updated);
-    try {
-      localStorage.setItem('natal_vip_leads', JSON.stringify(updated));
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleSendWhatsAppFollowUp = (lead: LeadFollowUp) => {
-    handleUpdateLeadStatus(lead.id, 'followup_enviado');
-    const cleanPhone = lead.phone.replace(/\D/g, '');
-    const message = encodeURIComponent(
-      `Olá ${lead.name}! Aqui é da equipe de Concierge da Natal Vip Turismo 🌴.\n\nVimos seu interesse no roteiro ${lead.tourInterest} para sua viagem em ${lead.travelMonth || 'breve'}!\n\nSeu Cupom Exclusivo de R$ 30 OFF (*VIPNATAL30*) foi ativado com sucesso em nosso sistema. Gostaria que eu verificasse as melhores datas de maré baixa para sua estada em Natal?`
-    );
-    const targetUrl = cleanPhone.length >= 10
-      ? `https://wa.me/55${cleanPhone}?text=${message}`
-      : `https://wa.me/5584988256545?text=${message}`;
-    window.open(targetUrl, '_blank');
-  };
-
-  const filteredLeads = leadsList.filter((l) => {
-    if (crmFilter === 'todos') return true;
-    return l.status === crmFilter;
-  });
 
   return (
     <>
@@ -464,17 +419,17 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <a
-                    href={`https://wa.me/5584988256545?text=Ol%C3%A1%20Natal%20Vip%20Turismo!%20Meu%20nome%20%C3%A9%20${encodeURIComponent(
+                    href={`https://wa.me/5584988256545?text=Ol%C3%A1%20Marcelo!%20Meu%20nome%20%C3%A9%20${encodeURIComponent(
                       leadName
                     )}.%20Acabei%20de%20ativar%20meu%20cupom%20VIPNATAL30%20para%20${encodeURIComponent(
                       tourInterest
-                    )}%20em%20${encodeURIComponent(travelMonth)}.%20Pode%20me%20ajudar%20a%20agendar?`}
+                    )}%20em%20${encodeURIComponent(travelMonth)}.%20Pode%20me%20ajudar%20a%20planejar%20na%20melhor%20mar%C3%A9?`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
                   >
                     <MessageCircle className="w-4 h-4" />
-                    <span>Falar no WhatsApp VIP</span>
+                    <span>Falar com Marcelo no WhatsApp</span>
                   </a>
 
                   <button
@@ -482,6 +437,10 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
                     onClick={() => {
                       try {
                         const guideText = `NATAL VIP TURISMO - GUIA EXCLUSIVO DE MARÉ & PARRACHOS
+=====================================================
+CONSULTOR VIP: Marcelo - Agente de Turismo Pessoal
+WHATSAPP DIRETO: (84) 98825-6545
+SITE OFICIAL: https://www.natalvipturismo.com.br
 =====================================================
 CUPOM DE DESCONTO ATIVADO: VIPNATAL30 (R$ 30,00 OFF)
 CLIENTE: ${leadName || 'Viajante VIP'}
@@ -494,8 +453,7 @@ REGRAS DE OURO DA MARÉ BAIXA:
 3. Reserve com a lancha rápida VIP para navegar com segurança e chegar antes dos grupos grandes.
 
 ATENDIMENTO E AGENDAMENTOS:
-WhatsApp Oficial: (84) 98825-6545
-Site Oficial: https://www.natalvipturismo.com.br
+Fale com o Marcelo no WhatsApp: (84) 98825-6545
 Natal / Rio Grande do Norte - Brasil
 =====================================================`;
 
@@ -535,217 +493,6 @@ Natal / Rio Grande do Norte - Brasil
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* 2. CRM / MARKETING LEADS & FOLLOW-UP MANAGEMENT MODAL */}
-      {isCrmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-4xl h-[90vh] max-h-[800px] bg-[#071324] border-2 border-amber-400/40 rounded-3xl p-5 sm:p-7 shadow-2xl flex flex-col text-slate-200 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400">
-                  <Database className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-black text-white">
-                      Central de Leads & Sistema de Follow-up VIP
-                    </h3>
-                    <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded font-mono font-bold">
-                      Marketing & CRM
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    Controle de conversão, disparo de mensagens e recuperação de viajantes em tempo real.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsCrmOpen(false)}
-                className="p-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-400 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Metrics Ribbon */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">
-                  Total de Leads
-                </span>
-                <span className="text-xl font-black text-white">{leadsList.length}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-[10px] text-emerald-400 uppercase font-bold block">
-                  Convertidos
-                </span>
-                <span className="text-xl font-black text-emerald-400">
-                  {leadsList.filter((l) => l.status === 'convertido').length}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-[10px] text-amber-300 uppercase font-bold block">
-                  Follow-up Enviado
-                </span>
-                <span className="text-xl font-black text-amber-300">
-                  {leadsList.filter((l) => l.status === 'followup_enviado').length}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-[10px] text-blue-400 uppercase font-bold block">
-                  Novos (Quentes)
-                </span>
-                <span className="text-xl font-black text-blue-400">
-                  {leadsList.filter((l) => l.status === 'novo').length}
-                </span>
-              </div>
-            </div>
-
-            {/* Filter Tabs */}
-            <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
-              <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
-                {(['todos', 'novo', 'followup_enviado', 'convertido'] as const).map((filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => setCrmFilter(filter)}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                      crmFilter === filter
-                        ? 'bg-amber-400 text-slate-950 shadow'
-                        : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-                    }`}
-                  >
-                    {filter === 'todos'
-                      ? 'Todos os Leads'
-                      : filter === 'novo'
-                      ? 'Novos'
-                      : filter === 'followup_enviado'
-                      ? 'Follow-up Feito'
-                      : 'Convertidos'}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => {
-                  const dataStr =
-                    'data:text/json;charset=utf-8,' +
-                    encodeURIComponent(JSON.stringify(leadsList, null, 2));
-                  const dlAnchor = document.createElement('a');
-                  dlAnchor.setAttribute('href', dataStr);
-                  dlAnchor.setAttribute('download', `leads_natalvipturismo_${Date.now()}.json`);
-                  dlAnchor.click();
-                }}
-                className="text-xs text-amber-300 hover:text-amber-200 font-bold flex items-center gap-1"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Exportar Dados</span>
-              </button>
-            </div>
-
-            {/* Leads List */}
-            <div className="flex-1 overflow-y-auto space-y-3 py-3 pr-1">
-              {filteredLeads.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 text-sm">
-                  Nenhum lead encontrado neste filtro.
-                </div>
-              ) : (
-                filteredLeads.map((lead) => (
-                  <div
-                    key={lead.id}
-                    className="p-4 rounded-2xl bg-gradient-to-r from-slate-900/90 to-[#0A182B] border border-slate-800 hover:border-amber-400/40 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-                  >
-                    <div className="space-y-1.5 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-white text-sm">{lead.name}</span>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            lead.status === 'convertido'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                              : lead.status === 'followup_enviado'
-                              ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
-                              : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                          }`}
-                        >
-                          {lead.status === 'convertido'
-                            ? '✓ Venda Convertida'
-                            : lead.status === 'followup_enviado'
-                            ? '💬 Follow-up Enviado'
-                            : '🔥 Lead Novo'}
-                        </span>
-                        <span className="text-[10px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                          {lead.origin === 'exit_intent'
-                            ? 'Exit-Intent Pop-up'
-                            : lead.origin === 'abandoned_cart'
-                            ? 'Abandono de Carrinho'
-                            : 'Guia de Maré'}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
-                        <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                          <Phone className="w-3 h-3" /> {lead.phone}
-                        </span>
-                        <span className="flex items-center gap-1 text-slate-400">
-                          <Mail className="w-3 h-3" /> {lead.email}
-                        </span>
-                        <span className="text-amber-200">
-                          Passeio: <strong>{lead.tourInterest}</strong>
-                        </span>
-                        {lead.travelMonth && (
-                          <span className="text-slate-400">Data: {lead.travelMonth}</span>
-                        )}
-                      </div>
-
-                      {lead.notes && (
-                        <p className="text-[11px] text-slate-400 italic bg-slate-950/60 p-1.5 rounded border border-slate-800/60">
-                          Nota: {lead.notes}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end">
-                      <button
-                        onClick={() => handleSendWhatsAppFollowUp(lead)}
-                        className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black flex items-center gap-1.5 transition-all shadow"
-                        title="Abrir WhatsApp com mensagem automática de follow-up"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span>Disparar WhatsApp</span>
-                      </button>
-
-                      {lead.status !== 'convertido' ? (
-                        <button
-                          onClick={() => handleUpdateLeadStatus(lead.id, 'convertido')}
-                          className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-400 border border-emerald-500/30"
-                          title="Marcar como cliente que fechou reserva"
-                        >
-                          Marcar Convertido
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleUpdateLeadStatus(lead.id, 'novo')}
-                          className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-400"
-                        >
-                          Resetar
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-              <span>E-mail automático oficial: <strong>reservas@natalvipturismo.com</strong></span>
-              <span>WhatsApp de Atendimento: <strong>(84) 98825-6545 / (84) 98188-2828</strong></span>
-            </div>
           </div>
         </div>
       )}

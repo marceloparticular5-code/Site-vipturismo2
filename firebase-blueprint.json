@@ -240,6 +240,15 @@
           "type": "boolean",
           "description": "Whether the tour is active and visible on the website"
         },
+        "remainingSlots": {
+          "type": "number",
+          "description": "Available vacancy slots for booking"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category tag for the tour",
+          "maxLength": 100
+        },
         "updatedAt": {
           "type": "string",
           "description": "Last update ISO timestamp",

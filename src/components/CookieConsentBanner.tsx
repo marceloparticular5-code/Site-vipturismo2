@@ -18,6 +18,29 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = () => {
 
   useEffect(() => {
     try {
+      // Capture UTM & SEO Attribution parameters
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const utmSource = params.get('utm_source');
+        const utmMedium = params.get('utm_medium');
+        const utmCampaign = params.get('utm_campaign');
+        const utmTerm = params.get('utm_term');
+        const referrer = document.referrer;
+
+        if (utmSource || utmCampaign || referrer) {
+          const attribution = {
+            utmSource: utmSource || (referrer.includes('google') ? 'Google SEO Orgânico' : referrer.includes('instagram') ? 'Instagram Ads' : 'Acesso Direto / Recomendação'),
+            utmMedium: utmMedium || 'organico_ou_cpc',
+            utmCampaign: utmCampaign || 'Campanha Maré e Parrachos 2026',
+            utmTerm: utmTerm || 'passeios em natal maracajau',
+            referrer: referrer || 'Acesso Direto',
+            landingPage: window.location.pathname,
+            capturedAt: new Date().toISOString(),
+          };
+          localStorage.setItem('natal_vip_attribution', JSON.stringify(attribution));
+        }
+      }
+
       const saved = localStorage.getItem('natal_vip_cookie_consent');
       if (!saved) {
         // Show after a brief delay for smoother UX

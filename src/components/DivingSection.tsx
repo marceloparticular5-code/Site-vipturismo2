@@ -1,15 +1,21 @@
 import React from 'react';
-import { Sparkles, Anchor, Waves, CheckCircle2, Star, Clock, MapPin, ArrowRight } from 'lucide-react';
+import { Sparkles, Anchor, Waves, CheckCircle2, Star, Clock, MapPin, ArrowRight, Scale } from 'lucide-react';
 import { VIP_TOURS } from '../data/toursData';
 import { TourPackage } from '../types';
 
 interface DivingSectionProps {
   onBookTour: (tourId: string) => void;
   onScrollToCalendar: () => void;
+  onOpenCompare?: (tourId: string) => void;
   tours?: TourPackage[];
 }
 
-export const DivingSection: React.FC<DivingSectionProps> = ({ onBookTour, onScrollToCalendar, tours }) => {
+export const DivingSection: React.FC<DivingSectionProps> = ({
+  onBookTour,
+  onScrollToCalendar,
+  onOpenCompare,
+  tours,
+}) => {
   const tourList = tours && tours.length > 0 ? tours : VIP_TOURS;
   const maracajau = tourList.find((t) => t.id === 'maracajau-vip') || VIP_TOURS[0];
   const rioDoFogo = tourList.find((t) => t.id === 'rio-do-fogo-vip') || VIP_TOURS[1];
@@ -110,7 +116,18 @@ export const DivingSection: React.FC<DivingSectionProps> = ({ onBookTour, onScro
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {onOpenCompare && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenCompare('maracajau-vip')}
+                      className="px-3 py-2.5 rounded-xl bg-slate-900/90 border border-amber-400/40 hover:border-amber-300 text-xs font-bold text-amber-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      title="Comparar especificações técnicas de Maracajaú"
+                    >
+                      <Scale className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Comparar</span>
+                    </button>
+                  )}
                   <button
                     onClick={onScrollToCalendar}
                     className="px-3.5 py-2.5 rounded-xl border border-slate-700 hover:border-amber-400 text-xs font-bold text-slate-200 hover:text-amber-300 transition-colors"
@@ -198,7 +215,18 @@ export const DivingSection: React.FC<DivingSectionProps> = ({ onBookTour, onScro
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {onOpenCompare && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenCompare('rio-do-fogo-vip')}
+                      className="px-3 py-2.5 rounded-xl bg-slate-900/90 border border-teal-400/40 hover:border-teal-300 text-xs font-bold text-teal-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      title="Comparar especificações técnicas de Rio do Fogo"
+                    >
+                      <Scale className="w-3.5 h-3.5 text-teal-400" />
+                      <span>Comparar</span>
+                    </button>
+                  )}
                   <button
                     onClick={onScrollToCalendar}
                     className="px-3.5 py-2.5 rounded-xl border border-slate-700 hover:border-teal-400 text-xs font-bold text-slate-200 hover:text-teal-300 transition-colors"
@@ -220,9 +248,21 @@ export const DivingSection: React.FC<DivingSectionProps> = ({ onBookTour, onScro
 
         {/* Comparison Table Mini Card */}
         <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
-          <div className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Waves className="w-4 h-4 text-amber-400" />
-            Qual escolher entre Maracajaú e Rio do Fogo?
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <Waves className="w-4 h-4 text-amber-400" />
+              Qual escolher entre Maracajaú e Rio do Fogo?
+            </div>
+            {onOpenCompare && (
+              <button
+                type="button"
+                onClick={() => onOpenCompare('maracajau-vip')}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-white border border-amber-400/40 text-xs font-bold flex items-center gap-2 transition-all self-start sm:self-auto cursor-pointer"
+              >
+                <Scale className="w-4 h-4 text-amber-400" />
+                <span>Abrir Comparador Completo Lado a Lado</span>
+              </button>
+            )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm text-slate-300">
             <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800">

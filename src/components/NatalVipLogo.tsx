@@ -8,20 +8,20 @@ interface NatalVipLogoProps {
 
 export const NatalVipLogo: React.FC<NatalVipLogoProps> = ({
   className = '',
-  size = 48,
+  size = 56,
   showText = true,
 }) => {
   return (
     <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* Official Luxury Emblem Logo */}
+      {/* Official Luxury Emblem Logo - Maximum Fill & Zero Gaps */}
       <div
-        className="relative shrink-0 rounded-full transition-transform duration-300 group-hover:scale-105"
+        className="relative shrink-0 rounded-full overflow-hidden transition-transform duration-300 group-hover:scale-105 border border-amber-400/40 shadow-[0_0_16px_rgba(245,158,11,0.35)] bg-slate-950"
         style={{ width: size, height: size }}
       >
         <img
           src="/imagens/logovip.jpg"
           alt="Natal VIP Turismo Agency Logo"
-          className="w-full h-full object-contain rounded-full drop-shadow-[0_4px_14px_rgba(212,175,55,0.45)]"
+          className="w-full h-full object-cover scale-[1.04] block rounded-full"
           width={size}
           height={size}
           loading="eager"

@@ -1,25 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
 import {
-  Sparkles,
   X,
   Send,
-  Bot,
   User,
   Compass,
   ArrowRight,
   Maximize2,
   Minimize2,
+  UserCheck,
+  MessageCircle,
+  Phone,
+  ShieldCheck,
 } from 'lucide-react';
 
-interface GeminiChatbotProps {
+interface PersonalConsultantChatProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenBooking: (tourId?: string) => void;
   onOpenCalendar: () => void;
 }
 
-export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
+export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
   isOpen,
   onClose,
   onOpenBooking,
@@ -30,7 +32,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
       id: 'welcome-msg',
       role: 'assistant',
       content:
-        'Olá! Sou o Concierge Inteligente da Natal Vip Turismo, equipado com inteligência artificial Gemini. Como posso ajudar você hoje com a nossa tábua de maré 2026, mergulho em Maracajaú ou Rio do Fogo, pacotes VIP e dicas da noite potiguar?',
+        'Olá! Muito prazer, sou o Marcelo, seu agente de turismo pessoal na Natal Vip Turismo 🌴.\n\nComo posso planejar o seu roteiro perfeito hoje? Posso analisar a tábua de maré oficial 2026 para o melhor mergulho em Maracajaú e Rio do Fogo, indicar as vagas em lancha rápida VIP, buggy em Genipabu e as melhores dicas de gastronomia potiguar!',
       timestamp: 'Agora',
       suggestedTourId: 'maracajau-vip',
     },
@@ -56,13 +58,26 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
   const quickQuestions = [
     'Qual o melhor dia de maré para mergulho?',
     'Diferença entre Maracajaú e Rio do Fogo',
+    'Melhores passeios para fazer com a família',
     'Onde jantar frutos do mar hoje à noite?',
-    'Como funciona a garantia da tábua de maré?',
+    'Como funciona a garantia da maré baixa?',
   ];
+
+  const handleOpenWhatsApp = () => {
+    const text = encodeURIComponent(
+      'Olá Marcelo! Estou no site da Natal Vip Turismo e gostaria de uma consultoria pessoal para os passeios da minha viagem!'
+    );
+    window.open(`https://wa.me/5584988256545?text=${text}`, '_blank');
+  };
 
   const handleSendMessage = async (textToSend?: string) => {
     const query = textToSend || inputPrompt;
     if (!query.trim() || loading) return;
+
+    if (query.toLowerCase().includes('whatsapp') || query.toLowerCase().includes('zap')) {
+      handleOpenWhatsApp();
+      return;
+    }
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -95,28 +110,28 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
       const data = await response.json();
 
       const botMessage: ChatMessage = {
-        id: `bot-${Date.now()}`,
+        id: `marcelo-${Date.now()}`,
         role: 'assistant',
-        content: data.reply || 'Desculpe, não consegui processar no momento. Por favor contate nosso WhatsApp VIP no (84) 98825-6545.',
+        content: data.reply || 'Estou à disposição! Se preferir, pode também me chamar diretamente no WhatsApp (84) 98825-6545.',
         timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         suggestedTourId: data.suggestedTourId || undefined,
       };
 
       setMessages((prev) => [...prev, botMessage]);
-    } catch (err) {
-      // Graceful fallback concierge response with exact domain knowledge
+    } catch {
+      // Graceful fallback from Marcelo with exact domain knowledge
       let fallback =
-        'Para mergulho nos Parrachos, as melhores marés são as de nível 0.0 a 0.5 (Verde), com águas calmas e cristalinas tipo caribenhas! Nos dias de maré 0.6 a 0.7 (Amarelo) ainda é possível fazer o passeio com segurança, e nos dias 0.8+ (Vermelho) sugerimos o Passeio de Buggy em Genipabu.';
+        'Para mergulho nos Parrachos, minha orientação pessoal é priorizar marés de 0.0 a 0.5 (Verde no nosso calendário), quando as piscinas naturais ficam cristalinas e mornas como uma piscina caribenha! De 0.6 a 0.7 ainda aproveitamos muito bem. Se a maré for mais alta (0.8+), eu recomendo agendarmos o Passeio de Buggy em Genipabu com emoção!';
 
       if (query.toLowerCase().includes('noite') || query.toLowerCase().includes('jantar') || query.toLowerCase().includes('restaurante')) {
         fallback =
-          'Para a sua noite em Natal, recomendamos o consagrado Camarões Potiguar em Ponta Negra ou curtir o forró no Rastapé na Rua do Salsa. E no dia seguinte, a Natal Vip Turismo busca você no hotel para curtir as piscinas naturais de Maracajaú!';
+          'Para sua noite, recomendo com certeza o Camarões Potiguar em Ponta Negra ou o forró do Rastapé! Só recomendo jantar em bom horário, pois no dia seguinte nosso transfer busca você cedinho no hotel para a maré baixa dos Parrachos!';
       }
 
       setMessages((prev) => [
         ...prev,
         {
-          id: `bot-${Date.now()}`,
+          id: `marcelo-${Date.now()}`,
           role: 'assistant',
           content: fallback,
           timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -130,48 +145,72 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
 
   return (
     <div
-      id="gemini-chatbot-window"
+      id="marcelo-consultant-chat-window"
       className={`fixed z-50 transition-all duration-300 ${
         isExpanded
           ? 'inset-4 sm:inset-10'
-          : 'bottom-4 right-4 sm:bottom-6 sm:right-6 w-[95vw] sm:w-[440px] h-[600px] max-h-[85vh]'
+          : 'bottom-4 right-4 sm:bottom-6 sm:right-6 w-[95vw] sm:w-[440px] h-[610px] max-h-[85vh]'
       } bg-[#091426] border-2 border-amber-400/50 rounded-3xl shadow-2xl flex flex-col overflow-hidden backdrop-blur-xl`}
     >
-      {/* Header */}
+      {/* Header com Identidade Marcelo - Agente de Turismo Pessoal */}
       <div className="p-4 bg-gradient-to-r from-[#0C1B33] via-[#0E2242] to-[#0A1629] border-b border-amber-500/20 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-yellow-500 flex items-center justify-center text-slate-950 shadow-md">
-            <Sparkles className="w-5 h-5" />
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 via-amber-500 to-yellow-600 flex items-center justify-center text-slate-950 font-black shadow-lg border-2 border-amber-300">
+              <UserCheck className="w-5 h-5 text-slate-950" />
+            </div>
+            <span
+              className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#0C1B33]"
+              title="Online agora"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white">Concierge Gemini VIP</h3>
+              <h3 className="text-sm font-bold text-white tracking-wide">
+                Marcelo · Agente de Turismo Pessoal
+              </h3>
               <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40">
                 Online
               </span>
             </div>
-            <span className="text-[11px] text-slate-400">
-              Natal Vip Turismo · Especialista em Marés & Roteiros
-            </span>
+            <div className="flex items-center gap-1.5 text-[11px] text-amber-300/90 font-medium">
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              <span>Consultor Especialista · Natal Vip Turismo</span>
+            </div>
           </div>
         </div>
 
         <div className="flex items-center gap-1">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             title={isExpanded ? 'Reduzir' : 'Expandir'}
           >
             {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             title="Fechar Chat"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
+      </div>
+
+      {/* WhatsApp Quick Direct Contact Banner */}
+      <div className="px-4 py-2 bg-gradient-to-r from-emerald-950/80 via-emerald-900/60 to-slate-900 border-b border-emerald-500/30 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-2 text-emerald-300 font-medium">
+          <MessageCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <span className="text-[11px]">Precisa de atendimento direto?</span>
+        </div>
+        <button
+          onClick={handleOpenWhatsApp}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] transition-all hover:scale-105"
+        >
+          <Phone className="w-2.5 h-2.5" />
+          <span>WhatsApp do Marcelo</span>
+        </button>
       </div>
 
       {/* Messages List */}
@@ -182,8 +221,11 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
             className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.role === 'assistant' && (
-              <div className="w-7 h-7 rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-                <Bot className="w-4 h-4" />
+              <div
+                className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center shrink-0 mt-0.5 shadow-sm font-black text-xs"
+                title="Marcelo"
+              >
+                M
               </div>
             )}
 
@@ -204,7 +246,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
                       onOpenBooking(msg.suggestedTourId);
                       onClose();
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-sm"
+                    className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-sm transition-all"
                   >
                     <span>Reservar este Passeio</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -215,10 +257,10 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
                       onOpenCalendar();
                       onClose();
                     }}
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1 transition-all"
                   >
                     <Compass className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Ver no Calendário</span>
+                    <span>Ver no Calendário de Maré</span>
                   </button>
                 </div>
               )}
@@ -241,9 +283,9 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
         ))}
 
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-amber-400 p-2">
-            <Sparkles className="w-4 h-4 animate-spin" />
-            <span>O Concierge Gemini está consultando a tábua de maré e passeios...</span>
+          <div className="flex items-center gap-2 text-xs text-amber-300 p-2 bg-slate-900/60 rounded-xl border border-amber-400/20 animate-pulse">
+            <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+            <span>Marcelo está analisando as marés e preparando sua resposta...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -255,7 +297,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
           <button
             key={i}
             onClick={() => handleSendMessage(q)}
-            className="px-2.5 py-1 rounded-full bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border border-slate-700 whitespace-nowrap transition-colors"
+            className="px-3 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border border-slate-700 whitespace-nowrap transition-colors cursor-pointer"
           >
             {q}
           </button>
@@ -274,14 +316,14 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
           type="text"
           value={inputPrompt}
           onChange={(e) => setInputPrompt(e.target.value)}
-          placeholder="Pergunte sobre maré, mergulho, passeios ou noite..."
+          placeholder="Pergunte ao Marcelo sobre maré, mergulho, buggy ou roteiro..."
           className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400 placeholder-slate-500"
         />
         <button
           type="submit"
           disabled={loading || !inputPrompt.trim()}
-          className="p-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-slate-950 font-bold transition-colors"
-          title="Enviar mensagem"
+          className="p-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-slate-950 font-bold transition-colors cursor-pointer"
+          title="Enviar para o Marcelo"
         >
           <Send className="w-4 h-4" />
         </button>
@@ -289,3 +331,5 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
     </div>
   );
 };
+
+export const GeminiChatbot = PersonalConsultantChat;

@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { NatalVipLogo } from './NatalVipLogo';
-import { Phone, Mail, MapPin, ShieldCheck, Heart, ArrowUp, Sparkles, Send, CheckCircle2 } from 'lucide-react';
+import { Phone, Mail, MapPin, ShieldCheck, Heart, ArrowUp, Sparkles, Send, CheckCircle2, Bell } from 'lucide-react';
 import { subscribeToTravelDeals } from '../lib/emailService';
 
 interface FooterProps {
   onOpenBooking: (tourId?: string) => void;
   onOpenCalendar: () => void;
   onOpenAutoAtendimento: () => void;
-  onOpenCrm?: () => void;
   onOpenCookies?: () => void;
+  onOpenNotifications?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   onOpenBooking,
   onOpenCalendar,
   onOpenAutoAtendimento,
-  onOpenCrm,
   onOpenCookies,
+  onOpenNotifications,
 }) => {
   const [subEmail, setSubEmail] = useState('');
   const [subStatus, setSubStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -47,7 +47,7 @@ export const Footer: React.FC<FooterProps> = ({
   };
 
   return (
-    <footer className="bg-[#030811] border-t border-slate-800/80 pt-16 pb-12 text-slate-400 text-xs">
+    <footer className="bg-[#030811] border-t border-slate-800/80 pt-16 pb-36 sm:pb-32 text-slate-400 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* VIP Deals Subscription Section */}
         <div className="mb-14 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#0C1A30] via-[#0A1628] to-[#071220] border border-amber-500/30 shadow-2xl relative overflow-hidden">
@@ -122,7 +122,7 @@ export const Footer: React.FC<FooterProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
           {/* Col 1 & 2: Brand & Preserved Logo */}
           <div className="lg:col-span-2 space-y-4">
-            <NatalVipLogo size={52} />
+            <NatalVipLogo size={68} />
             <p className="text-slate-300 text-sm leading-relaxed max-w-sm">
               Agência de turismo receptivo de alto padrão em Natal/RN. Especialistas em mergulho nos
               Parrachos de Maracajaú e Rio do Fogo com análise inteligente da tábua de maré e
@@ -221,21 +221,23 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <button
-                  onClick={onOpenCrm}
-                  className="hover:text-amber-300 transition-colors text-left flex items-center gap-1 text-emerald-400 font-semibold"
-                >
-                  <span>Central de Leads & Follow-up</span>
-                  <span className="text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">CRM</span>
-                </button>
-              </li>
-              <li>
-                <button
                   onClick={onOpenCookies}
                   className="hover:text-amber-300 transition-colors text-left"
                 >
                   Cookies & LGPD (Marketing)
                 </button>
               </li>
+              {onOpenNotifications && (
+                <li>
+                  <button
+                    onClick={onOpenNotifications}
+                    className="hover:text-amber-300 transition-colors text-left flex items-center gap-1.5 text-amber-300 font-medium"
+                  >
+                    <Bell className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Alertas no Navegador (Push API)</span>
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
 

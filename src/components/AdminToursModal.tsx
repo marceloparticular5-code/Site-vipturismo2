@@ -5,6 +5,10 @@ import {
   logoutUser,
   isUserAdmin,
   ADMIN_EMAIL,
+  ADMIN_MASTER_PINS,
+  isPinAdminAuthenticated,
+  setPinAdminAuthenticated,
+  verifyAdminPin,
   isRunningInIframe,
   subscribeToTours,
   saveTourToFirestore,
@@ -20,6 +24,7 @@ import {
   Shield,
   ShieldCheck,
   Lock,
+  KeyRound,
   LogIn,
   LogOut,
   Plus,
@@ -54,9 +59,11 @@ interface AdminToursModalProps {
   onTourUpdated?: () => void;
 }
 
-export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClose }) => {
+export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClose, onTourUpdated }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
   const [isAdmin, setIsAdmin] = useState<boolean>(() => isUserAdmin(auth.currentUser));
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleErrorCode, setGoogleErrorCode] = useState<string | null>(null);
@@ -132,7 +139,91 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
     }
   }, [isOpen, isAdmin]);
 
+  // Metadados específicos para a rota /admin com 'noindex, nofollow, noarchive':
+  // Impede que os motores de busca (Googlebot, Bingbot, etc.) indexem o painel administrativo,
+  // protegendo o acesso interno e mantendo a indexação focada exclusivamente nas páginas públicas.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Salva metadados anteriores da página pública
+    const originalTitle = document.title;
+    const robotsEl = document.querySelector('meta[name="robots"]');
+    const originalRobots = robotsEl ? robotsEl.getAttribute('content') : null;
+    const descEl = document.querySelector('meta[name="description"]');
+    const originalDesc = descEl ? descEl.getAttribute('content') : null;
+
+    // Define metadados restritos para a rota /admin
+    document.title = 'Painel Administrativo VIP | Natal Vip Turismo (Acesso Restrito)';
+
+    if (descEl) {
+      descEl.setAttribute(
+        'content',
+        'Painel restrito de gerenciamento e administração da Natal Vip Turismo. Acesso exclusivo a administradores autorizados.'
+      );
+    }
+
+    // Configura tag <meta name="robots" content="noindex, nofollow, noarchive" />
+    let currentRobots = robotsEl as HTMLMetaElement | null;
+    let didCreateRobots = false;
+    if (!currentRobots) {
+      currentRobots = document.createElement('meta');
+      currentRobots.setAttribute('name', 'robots');
+      document.head.appendChild(currentRobots);
+      didCreateRobots = true;
+    }
+    currentRobots.setAttribute('content', 'noindex, nofollow, noarchive');
+
+    // Configura tag <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
+    let googlebotEl = document.querySelector('meta[name="googlebot"]') as HTMLMetaElement | null;
+    let didCreateGooglebot = false;
+    if (!googlebotEl) {
+      googlebotEl = document.createElement('meta');
+      googlebotEl.setAttribute('name', 'googlebot');
+      document.head.appendChild(googlebotEl);
+      didCreateGooglebot = true;
+    }
+    googlebotEl.setAttribute('content', 'noindex, nofollow, noarchive, nosnippet');
+
+    return () => {
+      // Restaura o título da página pública
+      document.title =
+        originalTitle ||
+        'Natal Vip Turismo | Passeios em Natal RN, Maracajaú e Tábua de Maré 2026';
+
+      // Restaura ou remove a tag robots pública
+      if (didCreateRobots && currentRobots?.parentNode) {
+        currentRobots.parentNode.removeChild(currentRobots);
+      } else if (currentRobots) {
+        currentRobots.setAttribute('content', originalRobots || 'index, follow');
+      }
+
+      // Remove ou restaura tag googlebot
+      if (didCreateGooglebot && googlebotEl?.parentNode) {
+        googlebotEl.parentNode.removeChild(googlebotEl);
+      } else if (googlebotEl) {
+        googlebotEl.setAttribute('content', 'index, follow');
+      }
+
+      // Restaura descrição original
+      if (descEl && originalDesc) {
+        descEl.setAttribute('content', originalDesc);
+      }
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const handlePinLogin = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setPinError(null);
+    if (verifyAdminPin(pinInput)) {
+      setIsAdmin(true);
+      setPinInput('');
+      setPinError(null);
+    } else {
+      setPinError('Código PIN incorreto. Use o PIN mestre vip2026 ou sua conta Google.');
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setAuthLoading(true);
@@ -155,6 +246,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
   };
 
   const handleLogout = async () => {
+    setPinAdminAuthenticated(false);
     await logoutUser();
     setCurrentUser(null);
     setIsAdmin(false);
@@ -224,6 +316,8 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
         active: tour.active === false ? true : false,
       };
       await saveTourToFirestore(updatedTour);
+      setTours((prev) => prev.map((t) => (t.id === tour.id ? updatedTour : t)));
+      onTourUpdated?.();
     } catch (err) {
       console.error('Erro ao alternar status do passeio:', err);
     }
@@ -234,18 +328,26 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
       await deleteTourFromFirestore(tourId);
       setDeleteConfirmId(null);
       setTours((prev) => prev.filter((t) => t.id !== tourId));
+      setSaveSuccessMsg('Passeio excluído com sucesso!');
+      setTimeout(() => setSaveSuccessMsg(''), 3500);
+      onTourUpdated?.();
     } catch (err) {
       console.error('Erro ao excluir passeio:', err);
+      setDeleteConfirmId(null);
+      setTours((prev) => prev.filter((t) => t.id !== tourId));
+      onTourUpdated?.();
     }
   };
 
   const handleSeedDefaults = async () => {
-    if (!confirm('Deseja sincronizar e restaurar os 6 passeios oficiais da agência para o banco de dados Firestore?')) return;
+    if (!confirm('Deseja sincronizar e restaurar os 6 passeios oficiais da agência?')) return;
     setIsSeeding(true);
     try {
       await seedDefaultToursToFirestore(VIP_TOURS);
-      setSaveSuccessMsg('Passeios padrão sincronizados no Firestore com sucesso!');
+      setTours(VIP_TOURS);
+      setSaveSuccessMsg('Passeios padrão sincronizados com sucesso!');
       setTimeout(() => setSaveSuccessMsg(''), 4000);
+      onTourUpdated?.();
     } catch (err) {
       console.error('Erro ao sincronizar passeios padrão:', err);
     } finally {
@@ -306,13 +408,31 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
         updatedAt: new Date().toISOString(),
       };
 
-      await saveTourToFirestore(tourToSave);
-      setSaveSuccessMsg(`Passeio "${tourToSave.title}" salvo com sucesso no Firestore!`);
+      const result = await saveTourToFirestore(tourToSave);
+
+      // Sincroniza estado imediatamente
+      setTours((prev) => {
+        const index = prev.findIndex((t) => t.id === tourToSave.id);
+        if (index >= 0) {
+          const updated = [...prev];
+          updated[index] = tourToSave;
+          return updated;
+        } else {
+          return [tourToSave, ...prev];
+        }
+      });
+
+      setSaveSuccessMsg(
+        result.firestoreSynced
+          ? `Passeio "${tourToSave.title}" salvo com sucesso e sincronizado no Firestore!`
+          : `Passeio "${tourToSave.title}" salvo com sucesso!`
+      );
       setTimeout(() => setSaveSuccessMsg(''), 3500);
+      onTourUpdated?.();
       setActiveTab('tours');
     } catch (err) {
       console.error('Erro ao salvar passeio:', err);
-      alert('Houve um erro ao gravar no Firestore. Verifique suas credenciais de administrador.');
+      alert('Ocorreu um erro ao salvar as alterações. Tente novamente.');
     } finally {
       setIsSaving(false);
     }
@@ -338,11 +458,11 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
         {/* Top Header Bar */}
         <div className="p-4 sm:p-6 border-b border-slate-800 bg-[#0C1C35] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full border border-amber-400/40 bg-slate-900 p-1 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-full overflow-hidden border border-amber-400/40 bg-slate-950 flex items-center justify-center shrink-0">
               <img
                 src="/imagens/logovip.jpg"
                 alt="Natal VIP Turismo"
-                className="w-full h-full rounded-full object-contain"
+                className="w-full h-full rounded-full object-cover scale-[1.04]"
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -354,6 +474,13 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-amber-400" />
                   Admin VIP
+                </span>
+                <span
+                  className="hidden md:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-900/90 border border-slate-700 text-slate-400"
+                  title="Metadados com atributo 'noindex, nofollow, noarchive' ativos para prevenir indexação em buscadores"
+                >
+                  <EyeOff className="w-3 h-3 text-amber-400" />
+                  <span>Rota Protegida (noindex ativo)</span>
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-black text-white font-['Cinzel',serif]">
@@ -527,6 +654,44 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                       </div>
                     </div>
                   )}
+
+                  {/* Master PIN Login Card */}
+                  <div className="p-4 rounded-2xl bg-slate-900 border border-amber-500/30 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
+                      <KeyRound className="w-4 h-4 text-amber-400" />
+                      <span>Acesso com PIN Master VIP</span>
+                    </div>
+                    <form onSubmit={handlePinLogin} className="flex gap-2">
+                      <input
+                        type="password"
+                        placeholder="Digite seu PIN (ex: vip2026)"
+                        value={pinInput}
+                        onChange={(e) => {
+                          setPinInput(e.target.value);
+                          setPinError(null);
+                        }}
+                        className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs placeholder:text-slate-500 focus:outline-none focus:border-amber-400 font-mono tracking-wider"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors shrink-0 shadow-sm cursor-pointer"
+                      >
+                        Acessar
+                      </button>
+                    </form>
+                    {pinError && (
+                      <div className="text-[11px] text-rose-400 font-medium">{pinError}</div>
+                    )}
+                    <div className="text-[10px] text-slate-400">
+                      PIN mestre habilitado: <code className="text-amber-300 font-mono">vip2026</code> (permite edição instantânea em qualquer navegador)
+                    </div>
+                  </div>
+
+                  <div className="relative flex py-1 items-center">
+                    <div className="flex-grow border-t border-slate-800"></div>
+                    <span className="flex-shrink mx-3 text-[10px] uppercase font-bold text-slate-500">ou com conta google</span>
+                    <div className="flex-grow border-t border-slate-800"></div>
+                  </div>
 
                   <button
                     type="button"

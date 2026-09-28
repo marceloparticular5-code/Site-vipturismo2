@@ -4,8 +4,10 @@ import { HeroSection } from './components/HeroSection';
 import { TideCalendar } from './components/TideCalendar';
 import { DivingSection } from './components/DivingSection';
 import { FeaturedPackages } from './components/FeaturedPackages';
+import { MustSeeToursCarousel } from './components/MustSeeToursCarousel';
 import { TestimonialsSection } from './components/TestimonialsSection';
 import { NightlifeBlogSection } from './components/NightlifeBlogSection';
+import { InfraChecklist } from './components/InfraChecklist';
 import { BookingDrawer } from './components/BookingDrawer';
 import { AutoAtendimentoModal } from './components/AutoAtendimentoModal';
 import { GeminiChatbot } from './components/GeminiChatbot';
@@ -13,12 +15,16 @@ import { FollowUpSystem } from './components/FollowUpSystem';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { UserReservationsModal } from './components/UserReservationsModal';
 import { AdminToursModal } from './components/AdminToursModal';
+import { NotificationCenterModal } from './components/NotificationCenterModal';
+import { InAppNotificationToast } from './components/InAppNotificationToast';
 import { Footer } from './components/Footer';
-import { Sparkles, MessageCircle, Users } from 'lucide-react';
-import { TourPackage } from './types';
+import { FixedSupportFooter } from './components/FixedSupportFooter';
+import { TourPackage, StudentProfile } from './types';
 import { VIP_TOURS } from './data/toursData';
 import { subscribeToTours } from './lib/firebase';
 import { getInitialBookingDate } from './lib/dateUtils';
+import { useRealTimeTideAndVacancyMonitor } from './hooks/useRealTimeTideAndVacancyMonitor';
+import { registerServiceWorker } from './lib/pushNotifications';
 
 export function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
@@ -29,10 +35,58 @@ export function App() {
 
   const [isAutoAtendimentoOpen, setIsAutoAtendimentoOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isCrmOpen, setIsCrmOpen] = useState(false);
   const [isReservationsOpen, setIsReservationsOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
+  const [isLoadingTours, setIsLoadingTours] = useState(false);
+
+  // Objeto 'student' persistido entre sessões para salvar o progresso do InfraChecklist
+  const [student, setStudent] = useState<StudentProfile>(() => {
+    try {
+      const saved = localStorage.getItem('natal_vip_student_profile');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            id: parsed.id || 'student-default',
+            name: parsed.name || 'Viajante VIP',
+            checklistProgress: parsed.checklistProgress || {},
+            lastActiveTab: parsed.lastActiveTab || 'todos',
+            notes: parsed.notes || '',
+            updatedAt: parsed.updatedAt || new Date().toISOString(),
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load student profile from localStorage:', e);
+    }
+    return {
+      id: 'student-default',
+      name: 'Viajante VIP',
+      checklistProgress: {},
+      lastActiveTab: 'todos',
+      notes: '',
+      updatedAt: new Date().toISOString(),
+    };
+  });
+
+  const handleUpdateStudent = (updatedStudent: StudentProfile) => {
+    setStudent(updatedStudent);
+    try {
+      localStorage.setItem('natal_vip_student_profile', JSON.stringify(updatedStudent));
+    } catch (e) {
+      console.warn('Could not persist student profile to localStorage:', e);
+    }
+  };
+
+  // Monitora alterações na tábua de marés e novas vagas em tempo real para os clientes
+  useRealTimeTideAndVacancyMonitor(tours);
+
+  // Registra Service Worker para suporte à Push API em segundo plano
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
 
   // Detect URL containing /admin or #admin to open the admin panel
   useEffect(() => {
@@ -62,6 +116,14 @@ export function App() {
       window.removeEventListener('hashchange', checkAdminRoute);
     };
   }, []);
+
+  const handleOpenAdmin = () => {
+    setIsAdminOpen(true);
+    const path = window.location.pathname.toLowerCase();
+    if (!path.startsWith('/admin')) {
+      window.history.pushState({}, '', '/admin');
+    }
+  };
 
   const handleCloseAdmin = () => {
     setIsAdminOpen(false);
@@ -124,8 +186,9 @@ export function App() {
         onOpenAutoAtendimento={() => setIsAutoAtendimentoOpen(true)}
         onOpenChat={() => setIsChatOpen(true)}
         onOpenMyReservations={() => setIsReservationsOpen(true)}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
         onNavigateSection={handleNavigateSection}
-        onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenAdmin={handleOpenAdmin}
       />
 
       <main>
@@ -137,7 +200,10 @@ export function App() {
         />
 
         {/* 3. Intelligent Tide Calendar 2026 (Maracajaú & Rio do Fogo) */}
-        <TideCalendar onSelectDayForBooking={handleSelectDayForBooking} />
+        <TideCalendar
+          onSelectDayForBooking={handleSelectDayForBooking}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
+        />
 
         {/* 4. Roteiros com Mergulho (Maracajaú e Rio do Fogo em destaque) */}
         <DivingSection
@@ -146,10 +212,19 @@ export function App() {
           tours={tours}
         />
 
-        {/* 5. Pacotes VIP em Destaque com Gatilhos Mentais */}
+        {/* 5. Carrossel Interativo de Passeios Indispensáveis de Natal RN */}
+        <MustSeeToursCarousel
+          onSelectTour={(tourId) => handleOpenBooking(tourId)}
+          onOpenChat={() => setIsChatOpen(true)}
+          tours={tours}
+          isLoading={isLoadingTours}
+        />
+
+        {/* 6. Pacotes VIP em Destaque com Gatilhos Mentais */}
         <FeaturedPackages
           onSelectTour={(tourId) => handleOpenBooking(tourId)}
           tours={tours}
+          isLoading={isLoadingTours}
         />
 
         {/* 6. Depoimentos de Clientes VIP (Avaliações Reais com Fotos e Estrelas) */}
@@ -159,6 +234,13 @@ export function App() {
         <NightlifeBlogSection
           onSelectSuggestedTour={(tourId) => handleOpenBooking(tourId)}
         />
+
+        {/* 8. Checklist Interativo de Infraestrutura (Vistos, Seguro, Conectividade, Finanças) - Salvo no objeto student */}
+        <InfraChecklist
+          student={student}
+          onUpdateStudent={handleUpdateStudent}
+          onOpenBooking={() => handleOpenBooking()}
+        />
       </main>
 
       {/* 8. Comprehensive Footer */}
@@ -166,46 +248,19 @@ export function App() {
         onOpenBooking={handleOpenBooking}
         onOpenCalendar={scrollToCalendar}
         onOpenAutoAtendimento={() => setIsAutoAtendimentoOpen(true)}
-        onOpenCrm={() => setIsCrmOpen(true)}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenCookies={() => {
           localStorage.removeItem('natal_vip_cookie_consent');
           window.location.reload();
         }}
       />
 
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3">
-        {/* CRM Marketing / Follow-up Agency Quick Button */}
-        <button
-          onClick={() => setIsCrmOpen(true)}
-          className="p-3 rounded-full bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-400 shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center group"
-          title="Central de Leads & Follow-up de Marketing"
-        >
-          <Users className="w-5 h-5" />
-        </button>
-
-        {/* WhatsApp VIP Quick Direct */}
-        <a
-          href="https://wa.me/5584988256545?text=Ol%C3%A1%20Natal%20Vip%20Turismo!%20Gostaria%20de%20consultar%20a%20t%C3%A1bua%20de%20mar%C3%A9%20e%20fazer%20uma%20reserva."
-          target="_blank"
-          rel="noopener noreferrer"
-          className="p-3.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center group"
-          title="WhatsApp VIP (84) 98825-6545"
-        >
-          <MessageCircle className="w-6 h-6 text-white" />
-        </a>
-
-        {/* Gemini AI Bot Floating Toggle */}
-        <button
-          onClick={() => setIsChatOpen(!isChatOpen)}
-          className="relative p-3.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-500 hover:from-amber-300 hover:to-amber-200 text-slate-950 shadow-[0_4px_25px_rgba(245,158,11,0.5)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center group cursor-pointer border border-amber-200"
-          title="Abrir Chatbot Gemini"
-        >
-          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#050C16] animate-ping" />
-          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#050C16]" />
-          <Sparkles className="w-6 h-6 text-slate-950" />
-        </button>
-      </div>
+      {/* Rodapé Fixo de Suporte VIP com Atendimento Marcelo & Autoatendimento Seguro */}
+      <FixedSupportFooter
+        onOpenChat={() => setIsChatOpen(true)}
+        onOpenAutoAtendimento={() => setIsAutoAtendimentoOpen(true)}
+        onOpenBooking={() => handleOpenBooking()}
+      />
 
       {/* Modern Booking Drawer with Intuitive Gateway */}
       <BookingDrawer
@@ -225,7 +280,7 @@ export function App() {
         onOpenBooking={() => handleOpenBooking()}
       />
 
-      {/* Gemini AI Concierge Window */}
+      {/* Janela de Atendimento do Consultor Marcelo */}
       <GeminiChatbot
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
@@ -233,11 +288,9 @@ export function App() {
         onOpenCalendar={scrollToCalendar}
       />
 
-      {/* Sistema de Marketing, Captação de Leads & Follow-up CRM */}
+      {/* Sistema de Marketing, Captação de Leads Oculta em Segundo Plano */}
       <FollowUpSystem
         onOpenBookingWithTour={(tourId) => handleOpenBooking(tourId)}
-        isCrmOpen={isCrmOpen}
-        setIsCrmOpen={setIsCrmOpen}
       />
 
       {/* Banner de Consentimento de Cookies & LGPD para Rastreamento e Marketing */}
@@ -254,6 +307,25 @@ export function App() {
       <AdminToursModal
         isOpen={isAdminOpen}
         onClose={handleCloseAdmin}
+        onTourUpdated={() => {
+          // Revalida tours em tempo real
+          window.dispatchEvent(new CustomEvent('natal-vip-tours-updated'));
+        }}
+      />
+
+      {/* Central de Notificações Push (Alertas de Maré e Novas Vagas) */}
+      <NotificationCenterModal
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        onOpenBooking={(tourId) => handleOpenBooking(tourId)}
+        onOpenCalendar={scrollToCalendar}
+      />
+
+      {/* Floating In-App Toast de Notificações em Tempo Real */}
+      <InAppNotificationToast
+        onOpenBooking={(tourId) => handleOpenBooking(tourId)}
+        onOpenCalendar={scrollToCalendar}
+        onOpenNotificationCenter={() => setIsNotificationsOpen(true)}
       />
     </div>
   );
