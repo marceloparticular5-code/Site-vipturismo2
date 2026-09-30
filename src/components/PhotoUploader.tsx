@@ -38,6 +38,8 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [previewModalUrl, setPreviewModalUrl] = useState<string | null>(null);
@@ -78,19 +80,32 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       }
 
       setIsProcessing(true);
+      setUploadProgress(10);
+      setUploadStage('Validando e preparando imagens...');
 
       try {
         const processedList: ProcessedImage[] = [];
+        const totalFiles = files.length;
 
-        for (const file of files) {
+        for (let i = 0; i < totalFiles; i++) {
+          const file = files[i];
+          setUploadStage(`Otimizando foto ${i + 1} de ${totalFiles} (máx 1200px)...`);
+          setUploadProgress(10 + Math.round(((i + 1) / totalFiles) * 40));
           const processed = await compressAndResizeImage(file, 1200, 0.85);
           processedList.push(processed);
         }
 
-        // Upload to server
+        // Upload to server with real-time XHR progress tracking
+        setUploadStage('Gravando no servidor e gerando URLs internas...');
         const uploadedUrls = await uploadImagesToServer(
-          processedList.map((p) => ({ filename: p.name, dataUrl: p.dataUrl }))
+          processedList.map((p) => ({ filename: p.name, dataUrl: p.dataUrl })),
+          (percent) => {
+            setUploadProgress(50 + Math.round((percent / 100) * 50));
+          }
         );
+
+        setUploadProgress(100);
+        setUploadStage('Concluído com sucesso!');
 
         if (uploadedUrls.length > 0) {
           const newMain = uploadedUrls[0];
@@ -252,6 +267,26 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         </div>
       )}
 
+      {/* Real-time Upload & Optimization Progress Bar */}
+      {isProcessing && (
+        <div className="p-3.5 rounded-2xl bg-[#09172B] border border-amber-500/40 shadow-xl space-y-2 animate-fadeIn">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-amber-300 flex items-center gap-2">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+              <span>{uploadStage || 'Processando arquivos...'}</span>
+            </span>
+            <span className="font-mono font-extrabold text-white text-xs">{uploadProgress}%</span>
+          </div>
+
+          <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden p-0.5 border border-slate-700/60">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-amber-400 to-yellow-400 transition-all duration-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Drag & Drop Upload Zone */}
       <div
         onDragOver={handleDragOver}
@@ -267,7 +302,7 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
           multiple={allowMultiple}
           className="hidden"
           onChange={(e) => {
@@ -294,17 +329,17 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
             <p className="text-sm font-bold text-white">
               {isProcessing
                 ? 'Comprimindo e enviando fotos...'
-                : 'Arraste e solte fotos aqui ou clique para escolher'}
+                : 'Arraste e solte fotos aqui ou clique para enviar arquivos'}
             </p>
             <p className="text-xs text-slate-400">
-              Formatos aceitos: <strong className="text-amber-300">JPG, JPEG e PNG</strong> até 5 MB.
+              Formatos aceitos: <strong className="text-amber-300">JPG, JPEG, PNG e WEBP</strong> até 5 MB.
               Redimensionamento automático para máx. 1200 px.
             </p>
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs shadow hover:bg-amber-300 transition-colors mt-1">
-            <FileImage className="w-3.5 h-3.5" />
-            <span>Escolher foto{allowMultiple ? 's' : ''} do dispositivo</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow hover:scale-105 transition-all mt-1">
+            <FileImage className="w-4 h-4" />
+            <span>Enviar arquivo(s) / Escolher fotos</span>
           </div>
         </div>
       </div>

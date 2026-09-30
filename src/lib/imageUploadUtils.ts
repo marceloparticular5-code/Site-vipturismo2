@@ -21,7 +21,7 @@ export interface ImageValidationResult {
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 const MAX_DIMENSION_PX = 1200; // max 1200px width/height
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 export function validateImageFile(file: File): ImageValidationResult {
   if (!file) {
@@ -33,12 +33,13 @@ export function validateImageFile(file: File): ImageValidationResult {
   const hasAllowedExt =
     fileName.endsWith('.jpg') ||
     fileName.endsWith('.jpeg') ||
-    fileName.endsWith('.png');
+    fileName.endsWith('.png') ||
+    fileName.endsWith('.webp');
 
   if (!ALLOWED_TYPES.includes(fileType) && !hasAllowedExt) {
     return {
       valid: false,
-      error: `Formato de arquivo inválido (${file.name}). Por favor selecione fotos nos formatos JPG, JPEG ou PNG.`,
+      error: `Formato de arquivo inválido (${file.name}). Por favor selecione fotos nos formatos JPG, JPEG, PNG ou WEBP.`,
     };
   }
 
@@ -128,36 +129,53 @@ export async function compressAndResizeImage(
 }
 
 /**
- * Uploads processed base64 images to server /api/upload
+ * Uploads processed base64 images to server /api/upload with real-time progress reporting
  */
 export async function uploadImagesToServer(
-  images: Array<{ filename: string; dataUrl: string }>
+  images: Array<{ filename: string; dataUrl: string }>,
+  onProgress?: (percent: number) => void
 ): Promise<string[]> {
-  try {
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ files: images }),
-    });
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload');
+    xhr.setRequestHeader('Content-Type', 'application/json');
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Erro de upload no servidor (Status ${response.status})`);
+    if (onProgress && xhr.upload) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          onProgress(percentComplete);
+        }
+      };
     }
 
-    const result = await response.json();
-    if (result.success && Array.isArray(result.files)) {
-      return result.files.map((f: { url: string }) => f.url);
-    }
-    if (result.url) {
-      return [result.url];
-    }
-  } catch (err: any) {
-    console.warn('[Server Upload Fallback]:', err?.message);
-  }
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const result = JSON.parse(xhr.responseText);
+          if (result.success && Array.isArray(result.files)) {
+            if (onProgress) onProgress(100);
+            resolve(result.files.map((f: { url: string }) => f.url));
+            return;
+          }
+          if (result.url) {
+            if (onProgress) onProgress(100);
+            resolve([result.url]);
+            return;
+          }
+        } catch (e) {
+          console.warn('[Upload parse error]:', e);
+        }
+      }
+      // Fallback
+      resolve(images.map((img) => img.dataUrl));
+    };
 
-  // Graceful standalone fallback: return compressed base64 data URLs
-  return images.map((img) => img.dataUrl);
+    xhr.onerror = () => {
+      console.warn('[Upload XHR error, fallback to dataUrl]');
+      resolve(images.map((img) => img.dataUrl));
+    };
+
+    xhr.send(JSON.stringify({ files: images }));
+  });
 }

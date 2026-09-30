@@ -79,23 +79,19 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px] font-medium ml-auto">
-            <a
-              href="tel:84981882828"
-              className="hover:text-amber-300 transition-colors flex items-center gap-1"
-            >
+          <div className="flex items-center gap-3 text-[11px] font-medium ml-auto">
+            <span className="text-amber-300 font-semibold flex items-center gap-1">
               <Phone className="w-3 h-3 text-amber-400" />
-              (84) 98188-2828
-            </a>
-            <span className="text-slate-600">/</span>
-            <a
-              href="https://wa.me/5584988256545?text=Ol%C3%A1%20Natal%20Vip%20Turismo!%20Gostaria%20de%20consultar%20a%20t%C3%A1bua%20de%20mar%C3%A9%20e%20passeios."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-emerald-400 transition-colors flex items-center gap-1 font-semibold text-emerald-400"
+              Central: (84) 98188-2828
+            </span>
+            <span className="text-slate-600">|</span>
+            <button
+              onClick={onOpenChat}
+              className="text-cyan-300 hover:text-cyan-200 transition-colors flex items-center gap-1 font-semibold cursor-pointer"
             >
-              WhatsApp VIP (84) 98825-6545
-            </a>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Atendimento Online (Chatbot 24h)
+            </button>
           </div>
         </div>
       </div>

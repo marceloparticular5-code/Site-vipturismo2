@@ -11,7 +11,7 @@ import { NightlifeBlogSection } from './components/NightlifeBlogSection';
 import { InfraChecklist } from './components/InfraChecklist';
 import { BookingDrawer } from './components/BookingDrawer';
 import { AutoAtendimentoModal } from './components/AutoAtendimentoModal';
-import { GeminiChatbot } from './components/GeminiChatbot';
+import { FloatingChatbot } from './components/FloatingChatbot';
 import { FollowUpSystem } from './components/FollowUpSystem';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { UserReservationsModal } from './components/UserReservationsModal';
@@ -301,12 +301,11 @@ export function App() {
         onOpenBooking={() => handleOpenBooking()}
       />
 
-      {/* Janela de Atendimento do Consultor Marcelo */}
-      <GeminiChatbot
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-        onOpenBooking={handleOpenBooking}
-        onOpenCalendar={scrollToCalendar}
+      {/* Chatbot Flutuante Natal Vip Turismo (Ponta Negra, botão redondo, azul turquesa & dourado, fluxo guiado e WhatsApp) */}
+      <FloatingChatbot
+        isOpenControlled={isChatOpen}
+        onToggleControlled={setIsChatOpen}
+        onOpenBookingModal={handleOpenBooking}
       />
 
       {/* Sistema de Marketing, Captação de Leads Oculta em Segundo Plano */}

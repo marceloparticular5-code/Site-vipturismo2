@@ -240,7 +240,7 @@ export interface FirebaseLead {
   phone: string;
   tourInterest: string;
   travelMonth: string;
-  couponCode: string;
+  couponCode?: string;
   status: 'new' | 'contacted' | 'booked';
   createdAt: string;
 }
