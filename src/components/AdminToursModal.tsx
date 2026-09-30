@@ -20,6 +20,7 @@ import {
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { TourPackage } from '../types';
 import { VIP_TOURS } from '../data/toursData';
+import { PhotoUploader } from './PhotoUploader';
 import {
   Shield,
   ShieldCheck,
@@ -94,6 +95,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
   const [formUrgencyText, setFormUrgencyText] = useState('Vagas concorridas para este fim de semana');
   const [formDescription, setFormDescription] = useState('');
   const [formImageUrl, setFormImageUrl] = useState('');
+  const [formGalleryImages, setFormGalleryImages] = useState<string[]>([]);
   const [formHighlights, setFormHighlights] = useState<string[]>([]);
   const [formIncluded, setFormIncluded] = useState<string[]>([]);
   const [highlightInput, setHighlightInput] = useState('');
@@ -273,6 +275,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
     setFormUrgencyText('Poucas vagas disponíveis para este período');
     setFormDescription('Viva momentos inesquecíveis com transporte com ar-condicionado, guias credenciados Cadastur e atendimento de excelência.');
     setFormImageUrl('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80');
+    setFormGalleryImages([]);
     setFormHighlights([
       'Transporte executivo com ar-condicionado direto no hotel',
       'Paradas fotográficas nos melhores mirantes',
@@ -304,6 +307,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
     setFormUrgencyText(tour.urgencyText || '');
     setFormDescription(tour.description || '');
     setFormImageUrl(tour.imageUrl || '');
+    setFormGalleryImages(tour.galleryImages || []);
     setFormHighlights(tour.highlights || []);
     setFormIncluded(tour.included || []);
     setActiveTab('editor');
@@ -403,6 +407,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
         urgencyText: formUrgencyText.trim(),
         description: formDescription.trim(),
         imageUrl: formImageUrl.trim(),
+        galleryImages: formGalleryImages,
         highlights: formHighlights,
         included: formIncluded,
         updatedAt: new Date().toISOString(),
@@ -1207,31 +1212,16 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                     />
                   </div>
 
-                  {/* Image URL with visual preview */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-300 block">
-                      URL da Imagem de Capa *
-                    </label>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <input
-                        type="url"
-                        required
-                        value={formImageUrl}
-                        onChange={(e) => setFormImageUrl(e.target.value)}
-                        placeholder="https://images.unsplash.com/..."
-                        className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 text-xs focus:outline-none focus:border-amber-400"
-                      />
-                      {formImageUrl && (
-                        <div className="w-20 h-14 rounded-xl overflow-hidden border border-slate-700 shrink-0">
-                          <img
-                            src={formImageUrl}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-                      )}
-                    </div>
+                  {/* Photo Uploader (Upload files from computer/phone, drag & drop, resize/compress, multiple photos) */}
+                  <div className="pt-1 pb-1">
+                    <PhotoUploader
+                      currentImageUrl={formImageUrl}
+                      galleryImages={formGalleryImages}
+                      onMainImageChange={setFormImageUrl}
+                      onGalleryChange={setFormGalleryImages}
+                      label="Fotos do Passeio VIP *"
+                      allowMultiple={true}
+                    />
                   </div>
 
                   {/* Description */}

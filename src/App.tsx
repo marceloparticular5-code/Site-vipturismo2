@@ -3,6 +3,7 @@ import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { TideCalendar } from './components/TideCalendar';
 import { DivingSection } from './components/DivingSection';
+import { InteractiveToursMap } from './components/InteractiveToursMap';
 import { FeaturedPackages } from './components/FeaturedPackages';
 import { MustSeeToursCarousel } from './components/MustSeeToursCarousel';
 import { TestimonialsSection } from './components/TestimonialsSection';
@@ -224,6 +225,12 @@ export function App() {
           onBookTour={(tourId) => handleOpenBooking(tourId)}
           onScrollToCalendar={scrollToCalendar}
           tours={tours}
+        />
+
+        {/* 4.1 Mapa Interativo dos Roteiros de Maracajaú e Rio do Fogo com Busca Instantânea */}
+        <InteractiveToursMap
+          onOpenBooking={(tourId) => handleOpenBooking(tourId)}
+          onOpenCalendar={scrollToCalendar}
         />
 
         {/* 5. Carrossel Interativo de Passeios Indispensáveis de Natal RN */}

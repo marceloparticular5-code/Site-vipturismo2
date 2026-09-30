@@ -1,12 +1,21 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { processChat } from './src/server/conciergeService';
 
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+
+// Static uploads folder for locally uploaded photos
+const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
 
 app.get('/api/health', (req, res) => {
   res.json({
@@ -95,6 +104,69 @@ app.post('/api/leads', (req, res) => {
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message });
+  }
+});
+
+app.post('/api/upload', (req, res) => {
+  try {
+    const { files, dataUrl, filename } = req.body;
+    const uploadedFiles: Array<{ name: string; url: string; size: number }> = [];
+
+    const processItem = (fileDataUrl: string, origName?: string) => {
+      // Data URL format: data:image/jpeg;base64,...
+      const match = fileDataUrl.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
+      if (!match) {
+        throw new Error('Formato de imagem não suportado. Utilize JPG, JPEG ou PNG.');
+      }
+      const ext = match[1].toLowerCase() === 'jpeg' ? 'jpg' : match[1].toLowerCase();
+      const base64Data = match[2];
+      const buffer = Buffer.from(base64Data, 'base64');
+
+      // Max 5MB check
+      if (buffer.length > 5 * 1024 * 1024) {
+        throw new Error('O arquivo excede o limite máximo permitido de 5 MB.');
+      }
+
+      const safeBaseName = (origName || 'foto')
+        .replace(/[^a-zA-Z0-9_-]/g, '_')
+        .substring(0, 30);
+      const uniqueFilename = `tour-${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${safeBaseName}.${ext}`;
+      const filePath = path.join(uploadsDir, uniqueFilename);
+      fs.writeFileSync(filePath, buffer);
+
+      const fileUrl = `/uploads/${uniqueFilename}`;
+      return {
+        name: uniqueFilename,
+        url: fileUrl,
+        size: buffer.length,
+      };
+    };
+
+    if (Array.isArray(files) && files.length > 0) {
+      for (const item of files) {
+        if (item && item.dataUrl) {
+          uploadedFiles.push(processItem(item.dataUrl, item.filename));
+        }
+      }
+    } else if (dataUrl) {
+      uploadedFiles.push(processItem(dataUrl, filename));
+    } else {
+      res.status(400).json({ success: false, error: 'Nenhum dado de imagem recebido.' });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: `${uploadedFiles.length} foto(s) enviada(s) e salva(s) com sucesso no servidor!`,
+      files: uploadedFiles,
+      url: uploadedFiles[0]?.url,
+    });
+  } catch (error: any) {
+    console.error('[Upload Error]:', error);
+    res.status(400).json({
+      success: false,
+      error: error?.message || 'Falha ao processar o upload da imagem.',
+    });
   }
 });
 

@@ -17,6 +17,7 @@ import {
   Bell,
   Sparkles,
   Luggage,
+  MapPin,
 } from 'lucide-react';
 import { auth, loginWithGoogle, logoutUser, isUserAdmin } from '../lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -152,6 +153,14 @@ export const Header: React.FC<HeaderProps> = ({
               className="text-slate-200 hover:text-amber-300 transition-colors py-1"
             >
               Maracajaú & Rio do Fogo
+            </button>
+
+            <button
+              onClick={() => onNavigateSection('mapa-interativo')}
+              className="text-slate-200 hover:text-amber-300 transition-colors flex items-center gap-1.5 py-1"
+            >
+              <MapPin className="w-3.5 h-3.5 text-amber-400" />
+              <span>Mapa de Roteiros</span>
             </button>
 
             <button
@@ -342,6 +351,17 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-900 text-slate-200"
             >
               Roteiros com Mergulho (Maracajaú & Rio do Fogo)
+            </button>
+
+            <button
+              onClick={() => {
+                onNavigateSection('mapa-interativo');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-900 text-slate-200 flex items-center gap-2"
+            >
+              <MapPin className="w-4 h-4 text-amber-400" />
+              <span>Mapa Interativo (Maracajaú & Rio do Fogo)</span>
             </button>
 
             <button
