@@ -148,29 +148,6 @@ export const FixedSupportFooter: React.FC<FixedSupportFooterProps> = ({
                     <div className="text-[8px] text-amber-300/80">Agente Pessoal Marcelo</div>
                   </div>
                 </button>
-
-                {/* 3. Third Option: WhatsApp da Empresa - ÚLTIMA OPÇÃO */}
-                <div className="relative group/wp">
-                  <a
-                    href="https://wa.me/5584988256545?text=Ol%C3%A1%20Natal%20Vip%20Turismo!%20Verifiquei%20o%20autoatendimento%20e%20gostaria%20de%20um%20suporte%20adicional%20para%20minha%20reserva."
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-300 text-[11px] font-semibold transition-all cursor-pointer"
-                    title="WhatsApp da Empresa (Última opção - Priorize o autoatendimento seguro acima)"
-                  >
-                    <MessageSquareText className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>WhatsApp Empresa</span>
-                    <span className="text-[9px] uppercase font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
-                      Última opção
-                    </span>
-                  </a>
-
-                  {/* Clarification Tooltip */}
-                  <div className="absolute bottom-full right-0 mb-2 pointer-events-none hidden group-hover/wp:block w-64 p-2.5 rounded-xl bg-[#091527] border border-slate-700 shadow-2xl text-[10px] text-slate-300 leading-snug">
-                    <p className="font-bold text-amber-300 mb-0.5">⚠️ Direcionamento WhatsApp:</p>
-                    Recomendamos o <strong>Autoatendimento Online</strong> acima para emissão instantânea com confirmação imediata no seu e-mail. Utilize o WhatsApp apenas para suporte complementar.
-                  </div>
-                </div>
               </div>
             </div>
           </div>

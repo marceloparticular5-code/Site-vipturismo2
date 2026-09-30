@@ -34,6 +34,7 @@ export interface TourPackage {
   highlights: string[];
   included: string[];
   imageUrl: string;
+  galleryImages?: string[];
   remainingSlots?: number;
   category?: 'combo' | 'aventura' | 'mergulho' | 'cultural' | 'transfer' | string;
   active?: boolean;
@@ -201,4 +202,3 @@ export interface StudentProfile {
   notes?: string;
   updatedAt: string;
 }
-

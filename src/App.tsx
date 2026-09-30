@@ -19,6 +19,7 @@ import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { InAppNotificationToast } from './components/InAppNotificationToast';
 import { Footer } from './components/Footer';
 import { FixedSupportFooter } from './components/FixedSupportFooter';
+import { Breadcrumbs } from './components/Breadcrumbs';
 import { TourPackage, StudentProfile } from './types';
 import { VIP_TOURS } from './data/toursData';
 import { subscribeToTours } from './lib/firebase';
@@ -189,6 +190,19 @@ export function App() {
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onNavigateSection={handleNavigateSection}
         onOpenAdmin={handleOpenAdmin}
+      />
+
+      {/* Sistema de Breadcrumbs (Migalhas de Pão) para SEO e Navegação em Ponta Negra e Praia do Forte */}
+      <Breadcrumbs
+        currentSection="Parrachos, Maracajaú e Roteiros 2026"
+        onSelectArea={(area) => {
+          if (area === 'ponta-negra') {
+            handleNavigateSection('pacotes-destaque');
+          } else if (area === 'praia-do-forte') {
+            handleNavigateSection('passeios-indispensaveis');
+          }
+        }}
+        onOpenTour={handleOpenBooking}
       />
 
       <main>

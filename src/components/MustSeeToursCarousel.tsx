@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TourPackage } from '../types';
 import { VIP_TOURS } from '../data/toursData';
-import { TourShowcaseSkeleton } from './TourCardSkeleton';
+import { TourShowcaseSkeleton } from './TourShowcaseSkeleton';
 import { TourVacancyIndicator } from './TourVacancyIndicator';
 import {
   ChevronLeft,

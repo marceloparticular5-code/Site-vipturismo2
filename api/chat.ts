@@ -1,4 +1,4 @@
-import { processChat } from '../src/server/conciergeService.ts';
+import { processChat } from '../src/server/conciergeService';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json');
@@ -15,20 +15,16 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const { message } = body;
-
+    const { message } = req.body || {};
     if (!message || typeof message !== 'string') {
-      return res.status(400).json({ error: 'Mensagem inválida ou ausente.' });
+      return res.status(400).json({ error: 'Mensagem inválida' });
     }
-
     const result = await processChat(message);
     return res.status(200).json(result);
   } catch (error: any) {
-    console.error('Error in /api/chat:', error);
     return res.status(500).json({
-      error: 'Erro ao processar mensagem do concierge',
-      message: error?.message || 'Erro interno',
+      error: 'Erro interno ao consultar o Consultor Marcelo',
+      message: error?.message || 'Erro desconhecido',
     });
   }
 }

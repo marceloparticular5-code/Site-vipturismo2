@@ -141,4 +141,3 @@ export function getInitialBookingDate(): string {
 export function getTodayISO(): string {
   return formatDateToISO(getTodayDate());
 }
-
