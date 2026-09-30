@@ -215,12 +215,12 @@ export const AutoAtendimentoModal: React.FC<AutoAtendimentoModalProps> = ({
 
                   <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
                     <a
-                      href={`https://wa.me/5584988256545?text=Ol%C3%A1%20Natal%20Vip!%20Gostaria%20de%20alterar%20ou%20confirmar%20minha%20reserva%20${foundVoucher.voucherCode}.`}
+                      href={`https://wa.me/5584988722044?text=Ol%C3%A1%20Natal%20Vip!%20Gostaria%20de%20alterar%20ou%20confirmar%20minha%20reserva%20${foundVoucher.voucherCode}.`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5"
                     >
-                      <Send className="w-3.5 h-3.5" /> Falar com Suporte VIP
+                      <Send className="w-3.5 h-3.5" /> Falar no WhatsApp Oficial
                     </a>
 
                     <button
@@ -314,7 +314,14 @@ export const AutoAtendimentoModal: React.FC<AutoAtendimentoModalProps> = ({
 
         {/* Modal Footer Contacts */}
         <div className="p-4 border-t border-slate-800 bg-[#081220] flex items-center justify-between text-xs text-slate-400">
-          <span>Plantão Telefônico: (84) 98188-2828</span>
+          <a
+            href="https://wa.me/5584988722044?text=Ol%C3%A1%20Natal%20Vip!%20Gostaria%20de%20atendimento%20pelo%20Autoatendimento."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1"
+          >
+            WhatsApp Oficial: +55 (84) 98872-2044
+          </a>
           <span className="text-emerald-400 font-bold">Empresa Nº 1 em Satisfação</span>
         </div>
       </div>

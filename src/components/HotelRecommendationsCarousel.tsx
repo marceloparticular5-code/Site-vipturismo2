@@ -106,7 +106,7 @@ export const HotelRecommendationsCarousel: React.FC<HotelRecommendationsCarousel
 
   const handleTalkToMarcelo = (hotel: HotelPartner) => {
     const text = `Olá Marcelo! Vou me hospedar no *${hotel.name}* em Natal e gostaria de verificar a logística de embarque para os Parrachos de Maracajaú e reservar os passeios da Natal Vip Turismo!`;
-    window.open(`https://wa.me/5584988256545?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/5584988722044?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (
@@ -416,7 +416,7 @@ export const HotelRecommendationsCarousel: React.FC<HotelRecommendationsCarousel
                   onOpenChat('Gostaria de verificar se a van passa no meu hotel em Natal');
                 } else {
                   window.open(
-                    'https://wa.me/5584988256545?text=Ol%C3%A1%20Marcelo!%20Gostaria%20de%20saber%20o%20hor%C3%A1rio%20de%20embarque%20no%20meu%20hotel%20em%20Natal.',
+                    'https://wa.me/5584988722044?text=Ol%C3%A1%20Marcelo!%20Gostaria%20de%20saber%20o%20hor%C3%A1rio%20de%20embarque%20no%20meu%20hotel%20em%20Natal.',
                     '_blank'
                   );
                 }

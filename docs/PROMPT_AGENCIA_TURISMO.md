@@ -101,7 +101,32 @@ Substituição completa de inserção de links externos por gerenciamento nativo
 
 ---
 
-## 8. Painel Administrativo VIP
+## 8. Integração de Avaliações (Google + TripAdvisor) em Slide
+Implemente uma seção de **carrossel/slide de avaliações** na home do site, exibindo os depoimentos reais dos clientes vindos do Google e do TripAdvisor:
+
+- **Carrossel Automático (Autoplay)**:
+  - Transição suave, pausa inteligente ao passar o mouse ou toque (*touch*), e setas/dots para navegação manual.
+- **Estrutura dos Slides**:
+  - Nome do cliente, foto/avatar (ou inicial estilizada), nota em estrelas (4 ou 5 estrelas), texto do depoimento e ícone da plataforma de origem (**Google Reviews** ou **TripAdvisor**).
+- **Busca e Sincronização via API**:
+  - **Google**: Google Places API (*Place Details* – campo `reviews`).
+  - **TripAdvisor**: TripAdvisor Content API.
+- **Atualização Periódica em Cache**:
+  - Cache de 24 horas no servidor para otimização de requisições e evitar sobrecarga nas APIs.
+- **Filtro de Qualidade**:
+  - Exibição exclusiva de avaliações de **4 e 5 estrelas**.
+- **Badge Consolidado de Prova Social**:
+  - Nota média consolidada (ex: **4.9 ★**), volume total de avaliações e selo de *"Avaliação Verificada"*.
+- **Ações de Conversão (CTAs)**:
+  - *"Veja todas as avaliações no Google"*, *"Ver perfil no TripAdvisor"* e modal interativo *"Deixe sua avaliação"*.
+- **Totalmente Responsivo**:
+  - Carrossel horizontal multi-card no desktop e swipe fluido no mobile.
+- **Fallback Resiliente**:
+  - Exibição de avaliações auditadas e verificadas caso ocorra qualquer indisponibilidade temporária de rede ou APIs externas.
+
+---
+
+## 9. Painel Administrativo VIP
 - **Dashboard de Gestão**:
   - Controle de passeios cadastrados, preços originais e promocionais, lotação de vagas e disponibilidade.
   - Tabela de reservas recebidas e lista de leads do chatbot para remarketing.
@@ -110,7 +135,7 @@ Substituição completa de inserção de links externos por gerenciamento nativo
 
 ---
 
-## 9. Stack Tecnológica Recomendada
+## 10. Stack Tecnológica Recomendada
 - **Frontend**: React 19 / Next.js com Vite e Tailwind CSS 4.
 - **Mapas**: Leaflet / OpenStreetMap com tiles CartoDB Voyager.
 - **Backend**: Node.js / Express integrado.

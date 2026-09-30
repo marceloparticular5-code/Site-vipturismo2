@@ -6,6 +6,7 @@ import { isDateStringInPast } from '../lib/dateUtils';
 import { triggerBookingEmailConfirmation, BookingEmailConfirmationPayload } from '../lib/emailService';
 import { generateGoogleCalendarUrl, downloadIcsFile } from '../lib/googleCalendarSync';
 import { EmailConfirmationModal } from './EmailConfirmationModal';
+import { NATIONALITIES, formatCurrencyValue, SupportedCurrency } from '../lib/i18n';
 import {
   X,
   Calendar,
@@ -26,6 +27,7 @@ import {
   AlertTriangle,
   Eye,
   ExternalLink,
+  Globe,
 } from 'lucide-react';
 
 interface BookingDrawerProps {
@@ -58,6 +60,9 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [hotelPickup, setHotelPickup] = useState('');
+  const [selectedNatCode, setSelectedNatCode] = useState<string>('BR');
+  const [customerDocument, setCustomerDocument] = useState<string>('');
+  const [displayCurrency, setDisplayCurrency] = useState<SupportedCurrency>('BRL');
 
   const [paymentTab, setPaymentTab] = useState<'pix' | 'card'>('pix');
   const [cardNumber, setCardNumber] = useState('4532 •••• •••• 8892');
@@ -86,7 +91,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
           const abandonedLead = {
             id: `lead-abandoned-${Date.now()}`,
             name: customerName || 'Visitante Interessado',
-            phone: customerPhone || '(84) 98825-6545',
+            phone: customerPhone || '+55 (84) 98872-2044',
             email: customerEmail || 'contato@cliente.com',
             travelMonth: bookingDate,
             tourInterest: currentTour.title,
@@ -156,7 +161,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       childrenCount: children,
       addons: selectedAddons,
       customerName: customerName || 'Passageiro VIP',
-      customerPhone: customerPhone || '(84) 98825-6545',
+      customerPhone: customerPhone || '+55 (84) 98872-2044',
       customerEmail: customerEmail || 'contato@cliente.com',
       hotelPickup: hotelPickup || 'Hotel em Ponta Negra',
       paymentMethod: paymentTab,
@@ -497,11 +502,62 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 </div>
               </div>
 
-              {/* Responsible Customer Data */}
+              {/* Responsible Customer Data & Nationality */}
               <div className="space-y-3 pt-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                  Dados do Responsável & Local de Embarque
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Dados do Responsável & Nacionalidade</span>
+                  </label>
+                  <span className="text-[10px] text-cyan-300 font-semibold bg-cyan-950/70 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+                    Todas as Nacionalidades
+                  </span>
+                </div>
+
+                {/* Country/Nationality Selector */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-slate-400 font-semibold block mb-1">
+                      Nacionalidade / País de Origem:
+                    </label>
+                    <select
+                      value={selectedNatCode}
+                      onChange={(e) => {
+                        const code = e.target.value;
+                        setSelectedNatCode(code);
+                        const nat = NATIONALITIES.find((n) => n.code === code) || NATIONALITIES[0];
+                        setDisplayCurrency(nat.currency);
+                        if (!customerPhone || customerPhone.startsWith('+')) {
+                          setCustomerPhone(`${nat.dialCode} `);
+                        }
+                      }}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 cursor-pointer"
+                    >
+                      {NATIONALITIES.map((nat) => (
+                        <option key={nat.code} value={nat.code}>
+                          {nat.flag} {nat.namePt} ({nat.dialCode})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-slate-400 font-semibold block mb-1">
+                      {NATIONALITIES.find((n) => n.code === selectedNatCode)?.documentType || 'Documento / Passport'}:
+                    </label>
+                    <input
+                      type="text"
+                      value={customerDocument}
+                      onChange={(e) => setCustomerDocument(e.target.value)}
+                      placeholder={
+                        NATIONALITIES.find((n) => n.code === selectedNatCode)?.documentPlaceholder ||
+                        'Número do Documento / Passport'
+                      }
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input
                     type="text"
@@ -515,7 +571,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     type="tel"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="WhatsApp / Telefone *"
+                    placeholder="Telefone / WhatsApp com DDI *"
                     required
                     className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
                   />
@@ -625,11 +681,38 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     <span>- R$ {pixDiscount.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="pt-2 border-t border-slate-800 flex justify-between items-baseline">
-                  <span className="font-bold text-white text-sm">Total Final:</span>
-                  <span className="font-black text-amber-300 text-2xl">
-                    R$ {finalTotal.toFixed(2)}
-                  </span>
+                <div className="pt-2 border-t border-slate-800 flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-2">
+                  <div>
+                    <span className="font-bold text-white text-sm block">Total Final:</span>
+                    {displayCurrency !== 'BRL' && (
+                      <span className="text-xs text-cyan-300 font-bold block">
+                        Equivalente: {formatCurrencyValue(finalTotal, displayCurrency)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="sm:text-right">
+                    <span className="font-black text-amber-300 text-2xl block">
+                      R$ {finalTotal.toFixed(2)}
+                    </span>
+                    <div className="flex items-center sm:justify-end gap-1 text-[10px] text-slate-400 mt-0.5">
+                      <span>Ver moeda:</span>
+                      {(['BRL', 'USD', 'EUR', 'ARS'] as SupportedCurrency[]).map((cur) => (
+                        <button
+                          key={cur}
+                          type="button"
+                          onClick={() => setDisplayCurrency(cur)}
+                          className={`px-1.5 py-0.5 rounded cursor-pointer ${
+                            displayCurrency === cur
+                              ? 'bg-amber-400 text-slate-950 font-bold'
+                              : 'bg-slate-800 text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          {cur}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1002,7 +1085,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
-                  href={`https://wa.me/5584988256545?text=Ol%C3%A1%20Natal%20Vip%20Turismo!%20Acabei%20de%20emitir%20meu%20Voucher%20${generatedVoucher.voucherCode}%20para%20o%20passeio%20${encodeURIComponent(
+                  href={`https://wa.me/5584988722044?text=Ol%C3%A1%20Natal%20Vip%20Turismo!%20Acabei%20de%20emitir%20meu%20Voucher%20${generatedVoucher.voucherCode}%20para%20o%20passeio%20${encodeURIComponent(
                     generatedVoucher.booking.tourName
                   )}%20no%20dia%20${generatedVoucher.booking.date}.`}
                   target="_blank"

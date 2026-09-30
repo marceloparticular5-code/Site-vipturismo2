@@ -18,6 +18,8 @@ import {
   Sparkles,
   Luggage,
   MapPin,
+  Instagram,
+  Globe,
 } from 'lucide-react';
 import { auth, loginWithGoogle, logoutUser, isUserAdmin } from '../lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -46,6 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(auth.currentUser);
+  const [currentLang, setCurrentLang] = useState<'pt' | 'es' | 'en'>('pt');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -80,17 +83,61 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="flex items-center gap-3 text-[11px] font-medium ml-auto">
-            <span className="text-amber-300 font-semibold flex items-center gap-1">
-              <Phone className="w-3 h-3 text-amber-400" />
-              Central: (84) 98188-2828
-            </span>
+            {/* Multilingual / All Nationalities Selector */}
+            <div className="flex items-center gap-1 bg-[#050C16] px-2 py-0.5 rounded-lg border border-slate-700/80 text-[10px]">
+              <Globe className="w-3 h-3 text-cyan-400 shrink-0" />
+              <button
+                type="button"
+                onClick={() => setCurrentLang('pt')}
+                className={`px-1 py-0.2 rounded transition-colors cursor-pointer ${
+                  currentLang === 'pt' ? 'bg-amber-400 text-slate-950 font-black' : 'text-slate-300 hover:text-white'
+                }`}
+                title="Português (Brasil)"
+              >
+                🇧🇷 PT
+              </button>
+              <span className="text-slate-600">|</span>
+              <button
+                type="button"
+                onClick={() => setCurrentLang('es')}
+                className={`px-1 py-0.2 rounded transition-colors cursor-pointer ${
+                  currentLang === 'es' ? 'bg-amber-400 text-slate-950 font-black' : 'text-slate-300 hover:text-white'
+                }`}
+                title="Español (Argentina, Uruguay, Chile, etc.)"
+              >
+                🇦🇷 ES
+              </button>
+              <span className="text-slate-600">|</span>
+              <button
+                type="button"
+                onClick={() => setCurrentLang('en')}
+                className={`px-1 py-0.2 rounded transition-colors cursor-pointer ${
+                  currentLang === 'en' ? 'bg-amber-400 text-slate-950 font-black' : 'text-slate-300 hover:text-white'
+                }`}
+                title="English (US, Europe & Global)"
+              >
+                🇺🇸 EN
+              </button>
+            </div>
+
+            <span className="text-slate-600 hidden sm:inline">|</span>
+
+            <a
+              href="https://wa.me/5584988722044?text=Ol%C3%A1%20Natal%20Vip%20Turismo!%20Gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20os%20passeios."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-400 font-bold hover:text-emerald-300 hidden sm:flex items-center gap-1 transition-colors"
+            >
+              <Phone className="w-3 h-3 text-emerald-400" />
+              WhatsApp: +55 (84) 98872-2044
+            </a>
             <span className="text-slate-600">|</span>
             <button
               onClick={onOpenChat}
               className="text-cyan-300 hover:text-cyan-200 transition-colors flex items-center gap-1 font-semibold cursor-pointer"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Atendimento Online (Chatbot 24h)
+              Atendimento Online (24h)
             </button>
           </div>
         </div>
@@ -164,6 +211,14 @@ export const Header: React.FC<HeaderProps> = ({
               className="text-slate-200 hover:text-amber-300 transition-colors py-1"
             >
               Dicas & Noite em Natal
+            </button>
+
+            <button
+              onClick={() => onNavigateSection('instagram-feed')}
+              className="text-slate-200 hover:text-pink-300 transition-colors flex items-center gap-1.5 py-1"
+            >
+              <Instagram className="w-3.5 h-3.5 text-pink-400" />
+              <span>Instagram</span>
             </button>
 
             <button
@@ -368,6 +423,17 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-900 text-slate-200"
             >
               Blog: Dicas Noturnas & Gastronomia
+            </button>
+
+            <button
+              onClick={() => {
+                onNavigateSection('instagram-feed');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-900 text-slate-200 flex items-center gap-2"
+            >
+              <Instagram className="w-4 h-4 text-pink-400" />
+              <span>Galeria Instagram @natalvipturismo</span>
             </button>
 
             <button

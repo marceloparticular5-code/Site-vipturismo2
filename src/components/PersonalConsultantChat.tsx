@@ -67,7 +67,7 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
     const text = encodeURIComponent(
       'Olá Marcelo! Estou no site da Natal Vip Turismo e gostaria de uma consultoria pessoal para os passeios da minha viagem!'
     );
-    window.open(`https://wa.me/5584988256545?text=${text}`, '_blank');
+    window.open(`https://wa.me/5584988722044?text=${text}`, '_blank');
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -112,7 +112,7 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
       const botMessage: ChatMessage = {
         id: `marcelo-${Date.now()}`,
         role: 'assistant',
-        content: data.reply || 'Estou à disposição! Se preferir, pode também me chamar diretamente no WhatsApp (84) 98825-6545.',
+        content: data.reply || 'Estou à disposição! Se preferir, pode também me chamar diretamente no WhatsApp +55 (84) 98872-2044.',
         timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         suggestedTourId: data.suggestedTourId || undefined,
       };

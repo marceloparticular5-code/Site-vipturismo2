@@ -419,7 +419,7 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <a
-                    href={`https://wa.me/5584988256545?text=Ol%C3%A1%20Marcelo!%20Meu%20nome%20%C3%A9%20${encodeURIComponent(
+                    href={`https://wa.me/5584988722044?text=Ol%C3%A1%20Marcelo!%20Meu%20nome%20%C3%A9%20${encodeURIComponent(
                       leadName
                     )}.%20Acabei%20de%20ativar%20meu%20cupom%20VIPNATAL30%20para%20${encodeURIComponent(
                       tourInterest
@@ -439,7 +439,7 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
                         const guideText = `NATAL VIP TURISMO - GUIA EXCLUSIVO DE MARÉ & PARRACHOS
 =====================================================
 CONSULTOR VIP: Marcelo - Agente de Turismo Pessoal
-WHATSAPP DIRETO: (84) 98825-6545
+WHATSAPP OFICIAL: +55 (84) 98872-2044
 SITE OFICIAL: https://www.natalvipturismo.com.br
 =====================================================
 CUPOM DE DESCONTO ATIVADO: VIPNATAL30 (R$ 30,00 OFF)
@@ -453,7 +453,7 @@ REGRAS DE OURO DA MARÉ BAIXA:
 3. Reserve com a lancha rápida VIP para navegar com segurança e chegar antes dos grupos grandes.
 
 ATENDIMENTO E AGENDAMENTOS:
-Fale com o Marcelo no WhatsApp: (84) 98825-6545
+Fale com o Marcelo no WhatsApp: +55 (84) 98872-2044
 Natal / Rio Grande do Norte - Brasil
 =====================================================`;
 

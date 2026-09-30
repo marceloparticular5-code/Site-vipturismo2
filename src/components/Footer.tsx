@@ -220,6 +220,14 @@ export const Footer: React.FC<FooterProps> = ({
                 </a>
               </li>
               <li>
+                <a
+                  href="#instagram-feed"
+                  className="hover:text-pink-300 transition-colors block text-pink-400 font-semibold"
+                >
+                  📷 Galeria Instagram @natalvipturismo
+                </a>
+              </li>
+              <li>
                 <button
                   onClick={onOpenCookies}
                   className="hover:text-amber-300 transition-colors text-left"
@@ -248,14 +256,17 @@ export const Footer: React.FC<FooterProps> = ({
             </h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-2.5">
-                <Phone className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <Phone className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <a href="tel:84981882828" className="hover:text-white block font-medium">
-                    (84) 98188-2828
+                  <a
+                    href="https://wa.me/5584988722044?text=Ol%C3%A1%20Natal%20Vip%20Turismo!%20Gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20os%20passeios."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-emerald-300 block font-bold text-emerald-400 text-xs"
+                  >
+                    WhatsApp VIP: +55 (84) 98872-2044
                   </a>
-                  <a href="https://wa.me/5584988256545" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 block font-semibold text-emerald-400">
-                    WhatsApp: (84) 98825-6545
-                  </a>
+                  <span className="text-[10px] text-slate-400 block">Atendimento oficial direto</span>
                 </div>
               </li>
               <li className="flex items-start gap-2.5">

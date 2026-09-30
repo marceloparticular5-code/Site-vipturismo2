@@ -6,7 +6,8 @@ import { DivingSection } from './components/DivingSection';
 import { InteractiveToursMap } from './components/InteractiveToursMap';
 import { FeaturedPackages } from './components/FeaturedPackages';
 import { MustSeeToursCarousel } from './components/MustSeeToursCarousel';
-import { TestimonialsSection } from './components/TestimonialsSection';
+import { ReviewsCarouselSection } from './components/ReviewsCarouselSection';
+import { InstagramFeedSection } from './components/InstagramFeedSection';
 import { NightlifeBlogSection } from './components/NightlifeBlogSection';
 import { InfraChecklist } from './components/InfraChecklist';
 import { BookingDrawer } from './components/BookingDrawer';
@@ -248,8 +249,11 @@ export function App() {
           isLoading={isLoadingTours}
         />
 
-        {/* 6. Depoimentos de Clientes VIP (Avaliações Reais com Fotos e Estrelas) */}
-        <TestimonialsSection onOpenBooking={() => handleOpenBooking()} />
+        {/* 6. Carrossel Automático de Avaliações Reais (Google + TripAdvisor) com Slide */}
+        <ReviewsCarouselSection onOpenBooking={(tourId) => handleOpenBooking(tourId)} />
+
+        {/* 6.1 Feed do Instagram Oficial (@natalvipturismo) com Fotos Recentes de Clientes nos Passeios */}
+        <InstagramFeedSection onOpenBooking={(tourId) => handleOpenBooking(tourId)} />
 
         {/* 7. Blog Card: Onde Sair à Noite & Gastronomia com Apontamento para a Natal Vip Turismo */}
         <NightlifeBlogSection
