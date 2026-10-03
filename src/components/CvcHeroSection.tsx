@@ -52,28 +52,28 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
   };
 
   return (
-    <section className="relative w-full bg-[#0E3B43] pt-6 pb-16 sm:pb-20 text-white overflow-hidden">
+    <section className="relative w-full bg-[#0A192F] pt-6 pb-16 sm:pb-20 text-white overflow-hidden">
       {/* Background Subtle Gradient & Tropical Elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#08252B]/80 via-[#0E3B43]/90 to-[#0E3B43] pointer-events-none" />
-      <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#F28C28]/10 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#FFC857]/10 blur-3xl pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#060D17]/90 via-[#0A192F]/95 to-[#0A192F] pointer-events-none" />
+      <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#FBBF24]/10 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#F59E0B]/10 blur-3xl pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
         {/* Top Kicker & Main Headline (CVC Style with Boutique Tone) */}
         <div className="text-center max-w-3xl mx-auto space-y-3 pt-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[#FFC857] text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[#FBBF24] text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Turismo Boutique em Ponta Negra · Natal - RN</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight font-['Playfair_Display',serif]">
             Passeios em promoção pra você conhecer{' '}
-            <span className="text-[#FFC857] underline decoration-[#F28C28] decoration-wavy decoration-2">
+            <span className="text-[#FBBF24] underline decoration-[#F59E0B] decoration-wavy decoration-2">
               Natal e o Litoral do RN!
             </span>
           </h1>
 
-          <p className="text-sm sm:text-base text-[#F6EBDD]/90 max-w-2xl mx-auto leading-relaxed font-light">
+          <p className="text-sm sm:text-base text-slate-200 max-w-2xl mx-auto leading-relaxed font-light">
             Mergulho nos Parrachos de Maracajaú com lancha rápida, Buggy com emoção em Genipabu,
             Pipa VIP e Litoral Sul 4x4 com conforto de agência credenciada Cadastur.
           </p>
@@ -104,11 +104,11 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
                   }}
                   className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-t-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
                     isActive
-                      ? 'bg-white text-[#0E3B43] shadow-lg'
-                      : 'bg-white/10 hover:bg-white/20 text-[#F6EBDD] backdrop-blur-sm'
+                      ? 'bg-white text-[#0A192F] shadow-lg'
+                      : 'bg-white/10 hover:bg-white/20 text-slate-200 backdrop-blur-sm'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#F28C28]' : 'text-[#FFC857]'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#F59E0B]' : 'text-[#FBBF24]'}`} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -116,20 +116,20 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
           </div>
 
           {/* In-Line Search Container (White Card with Smooth Shadows) */}
-          <div className="bg-white rounded-b-2xl rounded-tr-2xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl border border-white/20 text-[#1F2A2E]">
+          <div className="bg-white rounded-b-2xl rounded-tr-2xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl border border-white/20 text-[#0F172A]">
             <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4 items-end">
               
               {/* 1. Destino / Passeio */}
               <div className="lg:col-span-5 space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-[#F28C28]" />
+                  <MapPin className="w-3.5 h-3.5 text-[#F59E0B]" />
                   <span>Qual passeio ou destino você deseja?</span>
                 </label>
                 <div className="relative">
                   <select
                     value={selectedTour}
                     onChange={(e) => setSelectedTour(e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#F28C28] text-sm font-semibold text-[#1F2A2E] focus:outline-none focus:ring-2 focus:ring-[#F28C28]/20 transition-all cursor-pointer"
+                    className="w-full px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#FBBF24] text-sm font-semibold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#FBBF24]/30 transition-all cursor-pointer"
                   >
                     <optgroup label="Passeios em Destaque">
                       <option value="maracajau-vip">Passeio Maracajaú (R$ 170 · Caribe Brasileiro)</option>
@@ -150,7 +150,7 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
               {/* 2. Data da Viagem */}
               <div className="lg:col-span-3 space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-[#0E3B43]" />
+                  <Calendar className="w-3.5 h-3.5 text-[#0A192F]" />
                   <span>Quando deseja ir?</span>
                 </label>
                 <input
@@ -158,20 +158,20 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
                   min={getTodayISO()}
                   value={travelDate}
                   onChange={(e) => setTravelDate(e.target.value)}
-                  className="w-full px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#0E3B43] text-sm font-semibold text-[#1F2A2E] focus:outline-none focus:ring-2 focus:ring-[#0E3B43]/20 transition-all cursor-pointer"
+                  className="w-full px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#0A192F] text-sm font-semibold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/20 transition-all cursor-pointer"
                 />
               </div>
 
               {/* 3. Número de Pessoas */}
               <div className="lg:col-span-2 space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-[#0E3B43]" />
+                  <Users className="w-3.5 h-3.5 text-[#0A192F]" />
                   <span>Viajantes</span>
                 </label>
                 <select
                   value={guestsCount}
                   onChange={(e) => setGuestsCount(e.target.value)}
-                  className="w-full px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#0E3B43] text-sm font-semibold text-[#1F2A2E] focus:outline-none focus:ring-2 focus:ring-[#0E3B43]/20 transition-all cursor-pointer"
+                  className="w-full px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#0A192F] text-sm font-semibold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/20 transition-all cursor-pointer"
                 >
                   <option value="1">1 Pessoa</option>
                   <option value="2">2 Pessoas (Casal)</option>
@@ -181,11 +181,11 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
                 </select>
               </div>
 
-              {/* 4. Botão "Buscar" (Laranja Pôr do Sol #F28C28) */}
+              {/* 4. Botão "Buscar" (Amarelo Solar #FBBF24 & Dark Blue #0A192F) */}
               <div className="lg:col-span-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 px-5 rounded-xl bg-[#F28C28] hover:bg-[#D97514] text-white font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  className="w-full py-3.5 px-5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
                   <Search className="w-4 h-4 stroke-[3]" />
                   <span>Buscar</span>
@@ -195,35 +195,35 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
 
             {/* Quick Chips dos Mais Buscados */}
             <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              <span className="font-bold text-[#0E3B43] flex items-center gap-1">
-                <Flame className="w-3.5 h-3.5 text-[#F28C28]" />
+              <span className="font-bold text-[#0A192F] flex items-center gap-1">
+                <Flame className="w-3.5 h-3.5 text-[#F59E0B]" />
                 <span>Mais buscados:</span>
               </span>
               <button
                 type="button"
                 onClick={() => handleQuickChip('maracajau-vip')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#F6EBDD] text-slate-700 hover:text-[#0E3B43] font-medium transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-[#0A192F] font-medium transition-colors cursor-pointer"
               >
                 Parrachos de Maracajaú (R$ 170)
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickChip('pipa-praia-do-amor')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#F6EBDD] text-slate-700 hover:text-[#0E3B43] font-medium transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-[#0A192F] font-medium transition-colors cursor-pointer"
               >
                 Pipa + Praia do Amor (R$ 80)
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickChip('pacote-casal-vip', 'pacotes')}
-                className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-[#0E3B43] font-bold border border-amber-200 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-[#0A192F] font-bold border border-amber-200 transition-colors cursor-pointer"
               >
                 Pacote Casal VIP (R$ 1.320)
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickChip('transfer-vip-aeroporto', 'transfer')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#F6EBDD] text-slate-700 hover:text-[#0E3B43] font-medium transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-[#0A192F] font-medium transition-colors cursor-pointer"
               >
                 Transfer Aeroporto (R$ 160)
               </button>
@@ -232,9 +232,9 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
         </div>
 
         {/* Trust Badges (Mental Triggers: Segurança, Facilidade, Cadastur) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto pt-2 text-[#F6EBDD] text-xs">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto pt-2 text-slate-200 text-xs">
           <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-            <ShieldCheck className="w-5 h-5 text-[#FFC857] shrink-0" />
+            <ShieldCheck className="w-5 h-5 text-[#FBBF24] shrink-0" />
             <div>
               <div className="font-bold text-white">Cadastur Oficial</div>
               <div className="text-[11px] text-slate-300">Reg. 39.456.551/0001-08</div>
@@ -242,7 +242,7 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-            <CreditCard className="w-5 h-5 text-[#F28C28] shrink-0" />
+            <CreditCard className="w-5 h-5 text-[#FBBF24] shrink-0" />
             <div>
               <div className="font-bold text-white">Até 3x Sem Juros</div>
               <div className="text-[11px] text-slate-300">Ou 5% de desconto no Pix</div>
@@ -250,7 +250,7 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-            <Clock className="w-5 h-5 text-[#FFC857] shrink-0" />
+            <Clock className="w-5 h-5 text-[#FBBF24] shrink-0" />
             <div>
               <div className="font-bold text-white">Tábua de Maré 2026</div>
               <div className="text-[11px] text-slate-300">Saídas no momento ideal</div>

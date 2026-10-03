@@ -1,21 +1,203 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #0E3B43;
-  --primary-dark: #08252B;
-  --primary-light: #165662;
-  --accent: #F28C28;
-  --accent-hover: #D97514;
-  --sand: #F6EBDD;
-  --sand-light: #FBF6EF;
-  --highlight: #FFC857;
-  --text: #1F2A2E;
-  --text-muted: #5A6D74;
-  --white: #FFFFFF;
+  /* ==========================================================================
+     PALETA OFICIAL NATAL VIP TURISMO - LUXURY DARK BLUE, AMARELO SOLAR & BRANCO
+     Conceito: Turismo Receptivo Boutique, Sofisticação Oceânica & Alta Conversão
+     ========================================================================== */
+
+  /* 1. Escala Dark Blue Profundo (Oceano Noturno & Safira VIP) */
+  --color-dark-blue-950: #030712; /* Midnight abyss / Fundo ultra-escuro de máximo contraste */
+  --color-dark-blue-900: #050D1A; /* Base dark blue / Header, microbar e topbar */
+  --color-dark-blue-850: #071224; /* Azul marinho nobre profundo */
+  --color-dark-blue-800: #0A192F; /* Dark blue principal de marca Natal VIP */
+  --color-dark-blue-750: #0E2442; /* Azul safira noturno intermediário */
+  --color-dark-blue-700: #133056; /* Royal navy / Destaques e cartões escuros */
+  --color-dark-blue-600: #1A3F70; /* Azul safira / Realces e hover states */
+  --color-dark-blue-500: #1E4E85; /* Azul costeiro / Acentos secundários */
+  --color-dark-blue-border: #1E3A5F; /* Borda técnica de separação elegante */
+  --color-dark-blue-border-subtle: rgba(30, 58, 95, 0.45);
+
+  /* 2. Gradientes de Assinatura Dark Blue */
+  --gradient-dark-blue-hero: linear-gradient(180deg, #030712 0%, #050D1A 35%, #0A192F 100%);
+  --gradient-dark-blue-card: linear-gradient(135deg, #0A192F 0%, #0E2442 55%, #071224 100%);
+  --gradient-dark-blue-surface: linear-gradient(145deg, #0C213D 0%, #050D1A 100%);
+  --gradient-dark-blue-header: linear-gradient(90deg, #050D1A 0%, #0A192F 50%, #071224 100%);
+  --gradient-dark-blue-glow: radial-gradient(circle at 50% 0%, rgba(30, 78, 133, 0.25) 0%, transparent 75%);
+
+  /* 3. Escala Amarelo Solar & Dourado VIP (Acento de Conversão Máxima) */
+  --color-yellow-lightest: #FFFBEB; /* Amarelo brando para fundos de destaque */
+  --color-yellow-light: #FEF08A;    /* Amarelo radiante para brilhos e badges */
+  --color-yellow-gold: #FBBF24;     /* Amarelo Solar oficial - Destaques, badges e 5 estrelas */
+  --color-yellow-cta: #F59E0B;      /* Amarelo Âmbar - Botões de ação, reserva e busca */
+  --color-yellow-hover: #D97706;    /* Amarelo Quente escurecido para hover */
+  --color-yellow-glow: rgba(251, 191, 36, 0.32); /* Halo de iluminação para CTAs */
+  --color-yellow-glow-lg: 0 12px 30px -4px rgba(251, 191, 36, 0.38);
+
+  /* 4. Gradientes Amarelo Solar / Dourado VIP */
+  --gradient-vip-yellow: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  --gradient-vip-yellow-hover: linear-gradient(135deg, #FCD34D 0%, #D97706 100%);
+  --gradient-vip-gold-sheen: linear-gradient(90deg, rgba(251, 191, 36, 0) 0%, rgba(251, 191, 36, 0.25) 50%, rgba(251, 191, 36, 0) 100%);
+
+  /* 5. Escala Branco Puro & Neutros Luxuosos (Clareza, Contraste e Elegância) */
+  --color-white: #FFFFFF;        /* Branco Puro - Máxima legibilidade e elegância */
+  --color-ice-white: #F8FAFC;    /* Fundo de seções alternadas (Slate 50) */
+  --color-pearl-white: #F1F5F9;  /* Superfícies suaves (Slate 100) */
+  --color-slate-card: #FFFFFF;   /* Superfícies brancas para cards e formulários */
+  --color-text-dark: #071224;    /* Tipografia de alto contraste para fundos brancos (14:1) */
+  --color-text-body: #1E293B;    /* Texto de parágrafo fluído e nítido */
+  --color-text-muted: #64748B;   /* Textos secundários, legendas e metadados */
+  --color-text-light: #F8FAFC;   /* Texto branco para superfícies Dark Blue */
+  --color-text-light-muted: #94A3B8; /* Texto secundário para superfícies Dark Blue */
+
+  /* Tokens semânticos para compatibilidade */
+  --primary: var(--color-dark-blue-800);
+  --primary-dark: var(--color-dark-blue-950);
+  --primary-light: var(--color-dark-blue-700);
+  --primary-border: var(--color-dark-blue-border);
+  --accent: var(--color-yellow-cta);
+  --accent-hover: var(--color-yellow-hover);
+  --highlight: var(--color-yellow-gold);
+  --sand: var(--color-ice-white);
+  --sand-light: var(--color-white);
+  --text: var(--color-text-dark);
+  --text-muted: var(--color-text-muted);
+  --white: var(--color-white);
 }
 
 @layer base {
+  *, ::before, ::after {
+    box-sizing: border-box;
+  }
+
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    background-color: var(--color-dark-blue-950);
+  }
+
+  body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-white);
+    color: var(--color-text-dark);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  img, picture, video, canvas, svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Seleção com contraste perfeito na identidade visual */
+  ::selection {
+    background-color: var(--color-yellow-gold);
+    color: var(--color-dark-blue-950);
+  }
+
+  /* Scrollbar estilizada Dark Blue & Dourado VIP */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #050D1A;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1A3F70;
+    border-radius: 5px;
+    border: 2px solid #050D1A;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #FBBF24;
+  }
+
+  /* Área mínima de toque em telas móveis */
+  @media (max-width: 767px) {
+    button, a[role="button"], input[type="button"], input[type="submit"] {
+      min-height: 44px;
+    }
   }
 }
+
+/* Utilitários especializados da marca Natal VIP Turismo */
+@layer utilities {
+  .bg-dark-blue-hero {
+    background: var(--gradient-dark-blue-hero);
+  }
+
+  .bg-dark-blue-card {
+    background: var(--gradient-dark-blue-card);
+  }
+
+  .bg-dark-blue-surface {
+    background: var(--gradient-dark-blue-surface);
+  }
+
+  .bg-dark-blue-header {
+    background: var(--gradient-dark-blue-header);
+  }
+
+  .bg-yellow-vip {
+    background: var(--gradient-vip-yellow);
+  }
+
+  .bg-yellow-vip-hover:hover {
+    background: var(--gradient-vip-yellow-hover);
+  }
+
+  .text-yellow-vip {
+    color: var(--color-yellow-gold);
+  }
+
+  .text-yellow-cta {
+    color: var(--color-yellow-cta);
+  }
+
+  .shadow-yellow-glow {
+    box-shadow: 0 10px 25px -5px var(--color-yellow-glow), 0 8px 10px -6px var(--color-yellow-glow);
+  }
+
+  .shadow-yellow-glow-lg {
+    box-shadow: var(--color-yellow-glow-lg);
+  }
+
+  .border-dark-blue-subtle {
+    border-color: var(--color-dark-blue-border);
+  }
+
+  .border-dark-blue-soft {
+    border-color: var(--color-dark-blue-border-subtle);
+  }
+
+  /* Botão de ação VIP padronizado */
+  .btn-vip-gold {
+    background: var(--gradient-vip-yellow);
+    color: var(--color-dark-blue-950);
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-vip-gold:hover {
+    background: var(--gradient-vip-yellow-hover);
+    box-shadow: 0 10px 25px -5px var(--color-yellow-glow);
+    transform: translateY(-1px);
+  }
+
+  /* Badge VIP dourado de alta distinção */
+  .badge-vip-gold {
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    color: var(--color-yellow-gold);
+    font-weight: 700;
+  }
+}
+

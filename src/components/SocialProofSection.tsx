@@ -43,26 +43,26 @@ export const SocialProofSection: React.FC<SocialProofSectionProps> = ({ onOpenBo
   ];
 
   return (
-    <section className="py-14 sm:py-20 bg-white text-[#1F2A2E]">
+    <section className="py-14 sm:py-20 bg-white text-[#0F172A]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
         {/* Rating Summary Header */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-3xl bg-[#0E3B43] text-white shadow-xl">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-3xl bg-[#0A192F] text-white shadow-xl border border-[#1E3A5F]">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-[#FFC857] text-[#0E3B43] flex flex-col items-center justify-center font-black shadow shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-[#FBBF24] text-[#0A192F] flex flex-col items-center justify-center font-black shadow shrink-0">
               <span className="text-2xl leading-none">4.98</span>
               <span className="text-[10px] tracking-wider uppercase">de 5.0</span>
             </div>
             <div>
-              <div className="flex items-center gap-1 text-[#FFC857]">
+              <div className="flex items-center gap-1 text-[#FBBF24]">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-[#FFC857]" />
+                  <Star key={i} className="w-4 h-4 fill-[#FBBF24]" />
                 ))}
                 <span className="text-xs font-bold text-white ml-1">Excepcional</span>
               </div>
               <h3 className="font-extrabold text-base sm:text-lg text-white font-['Playfair_Display',serif]">
                 Mais de 1.850 viajantes atendidos com nota máxima
               </h3>
-              <p className="text-xs text-[#F6EBDD]/80">
+              <p className="text-xs text-slate-300">
                 Avaliações verificadas de clientes reais no Google Maps e TripAdvisor
               </p>
             </div>
@@ -70,12 +70,12 @@ export const SocialProofSection: React.FC<SocialProofSectionProps> = ({ onOpenBo
 
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <span className="text-xs font-bold text-[#FFC857] block">Cadastur Regular</span>
+              <span className="text-xs font-bold text-[#FBBF24] block">Cadastur Regular</span>
               <span className="text-[11px] text-slate-300">Agência 100% Homologada</span>
             </div>
             <button
               onClick={onOpenBooking}
-              className="px-5 py-2.5 rounded-xl bg-[#F28C28] hover:bg-[#D97514] text-white font-black text-xs uppercase tracking-wider shadow cursor-pointer transition-transform active:scale-95"
+              className="px-5 py-2.5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-xs uppercase tracking-wider shadow cursor-pointer transition-transform active:scale-95"
             >
               Garantir Meu Passeio
             </button>
@@ -87,16 +87,16 @@ export const SocialProofSection: React.FC<SocialProofSectionProps> = ({ onOpenBo
           {testimonials.map((t) => (
             <div
               key={t.id}
-              className="p-6 rounded-3xl bg-[#F6EBDD]/60 border border-[#F6EBDD] hover:border-[#F28C28]/50 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+              className="p-6 rounded-3xl bg-slate-50 border border-slate-200/80 hover:border-[#FBBF24] shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-[#F28C28]">
+                  <div className="flex items-center gap-1 text-[#F59E0B]">
                     {[...Array(t.rating)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-[#F28C28]" />
+                      <Star key={i} className="w-3.5 h-3.5 fill-[#F59E0B]" />
                     ))}
                   </div>
-                  <Quote className="w-6 h-6 text-[#0E3B43]/20" />
+                  <Quote className="w-6 h-6 text-[#0A192F]/20" />
                 </div>
 
                 <p className="text-xs sm:text-sm text-slate-700 leading-relaxed italic">
@@ -107,14 +107,21 @@ export const SocialProofSection: React.FC<SocialProofSectionProps> = ({ onOpenBo
               <div className="pt-3 border-t border-slate-200/80 flex items-center gap-3">
                 <img
                   src={t.avatar}
-                  alt={t.name}
-                  className="w-10 h-10 rounded-full object-cover border border-[#0E3B43]/20"
+                  alt={`Foto de ${t.name}, cliente da Natal VIP Turismo`}
+                  width="40"
+                  height="40"
                   loading="lazy"
+                  decoding="async"
+                  className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80';
+                  }}
                 />
                 <div className="min-w-0">
-                  <h4 className="font-extrabold text-xs text-[#0E3B43] truncate">{t.name}</h4>
+                  <h4 className="font-extrabold text-xs text-[#0A192F] truncate">{t.name}</h4>
                   <p className="text-[11px] text-slate-500">{t.city}</p>
-                  <p className="text-[10px] text-[#F28C28] font-bold truncate">{t.tour}</p>
+                  <p className="text-[10px] text-[#D97706] font-bold truncate">{t.tour}</p>
                 </div>
               </div>
             </div>

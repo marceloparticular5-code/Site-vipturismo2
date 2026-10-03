@@ -32,13 +32,13 @@ export const NewsletterSection: React.FC = () => {
   };
 
   return (
-    <section id="promocoes" className="py-14 sm:py-16 bg-[#0E3B43] text-white">
+    <section id="promocoes" className="py-14 sm:py-16 bg-[#0A192F] text-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="rounded-3xl bg-gradient-to-r from-[#08252B] via-[#0E3B43] to-[#0A2F36] p-6 sm:p-10 border border-[#165662] shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-[#F28C28]/10 blur-3xl pointer-events-none" />
+        <div className="rounded-3xl bg-gradient-to-r from-[#060D17] via-[#0A192F] to-[#172A45] p-6 sm:p-10 border border-[#1E3A5F] shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-[#FBBF24]/10 blur-3xl pointer-events-none" />
 
           <div className="relative max-w-2xl mx-auto text-center space-y-4">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F28C28]/20 border border-[#F28C28]/40 text-[#FFC857] text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBBF24]/20 border border-[#FBBF24]/40 text-[#FBBF24] text-xs font-bold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Clube VIP de Vantagens</span>
             </div>
@@ -47,9 +47,9 @@ export const NewsletterSection: React.FC = () => {
               Receba Promoções Secretas & Dicas de Maré em Natal
             </h2>
 
-            <p className="text-xs sm:text-sm text-[#F6EBDD]/90 leading-relaxed font-light">
+            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-light">
               Cadastre-se para receber em primeira mão as melhores datas da tábua de maré e um{' '}
-              <strong className="text-[#FFC857]">cupom com desconto especial</strong> para sua reserva.
+              <strong className="text-[#FBBF24]">cupom com desconto especial</strong> para sua reserva.
             </p>
 
             {submitted ? (
@@ -66,7 +66,7 @@ export const NewsletterSection: React.FC = () => {
                   placeholder="Seu primeiro nome"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#F28C28] flex-1"
+                  className="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#FBBF24] flex-1"
                 />
                 <input
                   type="email"
@@ -74,11 +74,11 @@ export const NewsletterSection: React.FC = () => {
                   placeholder="Seu melhor e-mail"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#F28C28] flex-1"
+                  className="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#FBBF24] flex-1"
                 />
                 <button
                   type="submit"
-                  className="py-3 px-6 rounded-xl bg-[#F28C28] hover:bg-[#D97514] text-white font-black text-xs uppercase tracking-wider shadow-lg transition-transform active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="py-3 px-6 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-xs uppercase tracking-wider shadow-lg transition-transform active:scale-95 cursor-pointer whitespace-nowrap"
                 >
                   Quero Desconto VIP
                 </button>

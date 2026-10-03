@@ -528,7 +528,13 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                     <img
                       src="/imagens/logovip.jpg"
                       alt="Natal VIP Turismo"
+                      width="40"
+                      height="40"
+                      decoding="async"
                       className="w-full h-full object-cover scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
                     />
                   </div>
                   <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-900" />
@@ -911,9 +917,16 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                         <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-950">
                           <img
                             src={tour.imageUrl}
-                            alt={tour.title}
-                            className="w-full h-full object-cover"
+                            alt={`Passeio ${tour.title} Natal RN`}
+                            width="360"
+                            height="202"
                             loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80';
+                            }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
 
@@ -1337,8 +1350,16 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                   <div className="relative aspect-[16/9] w-full overflow-hidden">
                     <img
                       src={focusedTour.imageUrl}
-                      alt={focusedTour.title}
+                      alt={`Detalhes do passeio ${focusedTour.title} em Natal RN`}
+                      width="380"
+                      height="214"
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80';
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
                     <div className="absolute bottom-3 left-3 text-white">

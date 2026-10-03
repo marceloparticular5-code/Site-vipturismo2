@@ -32,14 +32,14 @@ export const FaqSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-14 sm:py-20 bg-white text-[#1F2A2E]">
+    <section className="py-14 sm:py-20 bg-white text-[#0F172A]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-8">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#F28C28]">
-            <HelpCircle className="w-4 h-4 text-[#F28C28]" />
+          <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#F59E0B]">
+            <HelpCircle className="w-4 h-4 text-[#F59E0B]" />
             <span>Tire Suas Dúvidas</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0E3B43] font-['Playfair_Display',serif]">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0A192F] font-['Playfair_Display',serif]">
             Perguntas Frequentes dos Viajantes
           </h2>
           <p className="text-xs sm:text-sm text-slate-600">
@@ -60,11 +60,11 @@ export const FaqSection: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
-                  className="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base text-[#0E3B43] hover:text-[#F28C28] flex items-center justify-between gap-4 bg-slate-50 hover:bg-[#F6EBDD]/40 transition-colors cursor-pointer"
+                  className="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base text-[#0A192F] hover:text-[#D97706] flex items-center justify-between gap-4 bg-slate-50 hover:bg-slate-100/80 transition-colors cursor-pointer"
                 >
                   <span>{faq.q}</span>
                   {isOpen ? (
-                    <ChevronUp className="w-5 h-5 text-[#F28C28] shrink-0" />
+                    <ChevronUp className="w-5 h-5 text-[#F59E0B] shrink-0" />
                   ) : (
                     <ChevronDown className="w-5 h-5 text-slate-400 shrink-0" />
                   )}
@@ -81,9 +81,9 @@ export const FaqSection: React.FC = () => {
         </div>
 
         {/* Still have questions banner */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#F6EBDD] border border-[#0E3B43]/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">
-            <h4 className="font-bold text-sm text-[#0E3B43]">Ainda ficou com alguma dúvida sobre seu roteiro?</h4>
+            <h4 className="font-bold text-sm text-[#0A192F]">Ainda ficou com alguma dúvida sobre seu roteiro?</h4>
             <p className="text-xs text-slate-600">Nossa equipe em Ponta Negra responde em poucos minutos.</p>
           </div>
           <a

@@ -80,6 +80,22 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailBookingPayload, setEmailBookingPayload] = useState<BookingEmailConfirmationPayload | null>(null);
 
+  const tourList = (tours && tours.length > 0 ? tours : VIP_TOURS).filter((t) => t.active !== false);
+  const currentTour = tourList.find((t) => t.id === selectedTourId) || tourList[0] || VIP_TOURS[0];
+
+  // Price calculations
+  const baseTourPrice = currentTour.priceDiscounted;
+  const adultsTotal = adults * baseTourPrice;
+  const childrenTotal = children * (baseTourPrice * 0.5); // 50% discount for children
+  const addonsTotal = selectedAddons.reduce((sum, addonId) => {
+    const found = AVAILABLE_ADDONS.find((a) => a.id === addonId);
+    return sum + (found ? found.price : 0);
+  }, 0);
+
+  const grossTotal = adultsTotal + childrenTotal + addonsTotal;
+  const pixDiscount = paymentTab === 'pix' ? grossTotal * 0.05 : 0;
+  const finalTotal = grossTotal - pixDiscount;
+
   // Capture abandoned reservation if customer filled info but closed drawer without completing
   const handleCloseDrawer = () => {
     if ((customerName || customerPhone) && step !== 'voucher') {
@@ -127,22 +143,6 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   }, [step, paymentTab, pixTimer]);
 
   if (!isOpen) return null;
-
-  const tourList = (tours && tours.length > 0 ? tours : VIP_TOURS).filter((t) => t.active !== false);
-  const currentTour = tourList.find((t) => t.id === selectedTourId) || tourList[0] || VIP_TOURS[0];
-
-  // Price calculations
-  const baseTourPrice = currentTour.priceDiscounted;
-  const adultsTotal = adults * baseTourPrice;
-  const childrenTotal = children * (baseTourPrice * 0.5); // 50% discount for children
-  const addonsTotal = selectedAddons.reduce((sum, addonId) => {
-    const found = AVAILABLE_ADDONS.find((a) => a.id === addonId);
-    return sum + (found ? found.price : 0);
-  }, 0);
-
-  const grossTotal = adultsTotal + childrenTotal + addonsTotal;
-  const pixDiscount = paymentTab === 'pix' ? grossTotal * 0.05 : 0;
-  const finalTotal = grossTotal - pixDiscount;
 
   const handleToggleAddon = (addonId: string) => {
     setSelectedAddons((prev) =>

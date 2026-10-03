@@ -66,14 +66,14 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
   ];
 
   return (
-    <section id="destinos-incriveis" className="py-14 sm:py-20 bg-[#F6EBDD] text-[#1F2A2E]">
+    <section id="destinos-incriveis" className="py-14 sm:py-20 bg-[#F8FAFC] text-[#0F172A]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#F28C28]">
-            <Compass className="w-4 h-4 text-[#F28C28]" />
+          <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#F59E0B]">
+            <Compass className="w-4 h-4 text-[#F59E0B]" />
             <span>Inspiração para suas Férias</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0E3B43] font-['Playfair_Display',serif]">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0A192F] font-['Playfair_Display',serif]">
             Conheça Destinos Incríveis no RN
           </h2>
           <p className="text-xs sm:text-sm text-slate-600">
@@ -91,30 +91,37 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
             >
               <img
                 src={dest.imageUrl}
-                alt={dest.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                alt={`Destino turístico ${dest.name} em Natal e Litoral do RN`}
+                width="400"
+                height="300"
                 loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+                }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#08252B] via-[#08252B]/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#060D17] via-[#060D17]/50 to-transparent" />
 
               {/* Destination Badge */}
-              <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-[#0E3B43]/90 text-[#FFC857] text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm border border-[#165662]">
+              <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-[#0A192F]/90 text-[#FBBF24] text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm border border-[#1E3A5F]">
                 {dest.badge}
               </div>
 
               {/* Bottom Info Overlay */}
               <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 text-white space-y-1">
-                <span className="text-[10px] font-bold text-[#F28C28] uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-[#FBBF24] uppercase tracking-wider block">
                   {dest.priceNotice}
                 </span>
-                <h3 className="font-extrabold text-lg sm:text-xl font-['Playfair_Display',serif] group-hover:text-[#FFC857] transition-colors leading-snug">
+                <h3 className="font-extrabold text-lg sm:text-xl font-['Playfair_Display',serif] group-hover:text-[#FBBF24] transition-colors leading-snug">
                   {dest.name}
                 </h3>
                 <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
                   {dest.subtitle}
                 </p>
 
-                <div className="pt-2 flex items-center gap-1 text-xs font-bold text-[#FFC857] group-hover:translate-x-1 transition-transform">
+                <div className="pt-2 flex items-center gap-1 text-xs font-bold text-[#FBBF24] group-hover:translate-x-1 transition-transform">
                   <span>Ver roteiros para este destino</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </div>

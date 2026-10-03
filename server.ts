@@ -10,11 +10,20 @@ const PORT = 3000;
 app.use(express.json({ limit: '75mb' }));
 app.use(express.urlencoded({ extended: true, limit: '75mb' }));
 
-// Static uploads folder for locally uploaded photos
-const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+// Static uploads and public assets with caching
+const publicDir = path.join(process.cwd(), 'public');
+const uploadsDir = path.join(publicDir, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+app.use(express.static(publicDir, {
+  maxAge: '1d',
+  setHeaders: (res, filePath) => {
+    if (/\.(jpg|jpeg|png|webp|avif|svg|ico)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    }
+  }
+}));
 app.use('/uploads', express.static(uploadsDir));
 
 app.get('/api/health', (req, res) => {

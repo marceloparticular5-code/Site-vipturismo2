@@ -146,7 +146,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF6EF] text-[#1F2A2E] font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#F28C28] selection:text-white">
+    <div className="min-h-screen bg-white text-[#0F172A] font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#FBBF24] selection:text-[#0A192F]">
       {/* 1. Header Fixo com Logo e Categorias CVC-Style */}
       <Header
         onOpenBooking={() => handleOpenBooking()}
