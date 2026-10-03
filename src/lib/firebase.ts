@@ -216,6 +216,7 @@ export interface FirebaseLead {
   id?: string;
   name: string;
   phone: string;
+  email?: string;
   tourInterest: string;
   travelMonth: string;
   couponCode?: string;

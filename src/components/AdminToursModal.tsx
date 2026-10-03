@@ -11,12 +11,14 @@ import {
   deleteTourFromFirestore,
   seedDefaultToursToFirestore,
   subscribeAllBookingsForAdmin,
+  subscribeAllLeadsForAdmin,
   FirebaseBooking,
 } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { TourPackage } from '../types';
+import { TourPackage, LeadFollowUp } from '../types';
 import { VIP_TOURS } from '../data/toursData';
 import { PhotoUploader } from './PhotoUploader';
+import { LeadConversionDashboard } from './LeadConversionDashboard';
 import {
   Shield,
   ShieldCheck,
@@ -48,6 +50,7 @@ import {
   Copy,
   Info,
   FolderOpen,
+  BarChart3,
 } from 'lucide-react';
 import { MediaLibraryModal } from './MediaLibraryModal';
 
@@ -68,7 +71,8 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
 
   const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
   const [bookings, setBookings] = useState<FirebaseBooking[]>([]);
-  const [activeTab, setActiveTab] = useState<'tours' | 'editor' | 'bookings'>('tours');
+  const [leads, setLeads] = useState<LeadFollowUp[]>([]);
+  const [activeTab, setActiveTab] = useState<'tours' | 'editor' | 'bookings' | 'analytics'>('tours');
   const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<'all' | 'diving' | 'active'>('all');
@@ -130,6 +134,19 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
     try {
       const unsubscribe = subscribeAllBookingsForAdmin((allBookings) => {
         setBookings(allBookings);
+      });
+      return () => unsubscribe();
+    } catch {
+      // ignore
+    }
+  }, [isOpen, isAdmin]);
+
+  // Listen to Firestore & LocalStorage Leads for Conversion Dashboard (BI)
+  useEffect(() => {
+    if (!isOpen || !isAdmin) return;
+    try {
+      const unsubscribe = subscribeAllLeadsForAdmin((allLeads) => {
+        setLeads(allLeads);
       });
       return () => unsubscribe();
     } catch {
@@ -745,6 +762,18 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                   >
                     <Calendar className="w-3.5 h-3.5" />
                     <span>Reservas ({bookings.length})</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('analytics')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+                      activeTab === 'analytics'
+                        ? 'bg-amber-400 text-slate-950 shadow-md'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    <span>Conversão & BI ({leads.length})</span>
                   </button>
 
                   <button
@@ -1376,6 +1405,15 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                     )}
                   </div>
                 </div>
+              )}
+
+              {/* TAB 4: LEAD CONVERSION & CAMPAIGN BI (RECHARTS) */}
+              {activeTab === 'analytics' && (
+                <LeadConversionDashboard
+                  leads={leads}
+                  bookings={bookings}
+                  tours={tours}
+                />
               )}
 
             </div>

@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+:root {
+  --primary: #0E3B43;
+  --primary-dark: #08252B;
+  --primary-light: #165662;
+  --accent: #F28C28;
+  --accent-hover: #D97514;
+  --sand: #F6EBDD;
+  --sand-light: #FBF6EF;
+  --highlight: #FFC857;
+  --text: #1F2A2E;
+  --text-muted: #5A6D74;
+  --white: #FFFFFF;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

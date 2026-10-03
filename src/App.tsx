@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
-import { HeroSection } from './components/HeroSection';
+import { CvcHeroSection } from './components/CvcHeroSection';
+import { OffersShowcase } from './components/OffersShowcase';
+import { CoupleVipBanner } from './components/CoupleVipBanner';
+import { IncredibleDestinations } from './components/IncredibleDestinations';
+import { SocialProofSection } from './components/SocialProofSection';
+import { TravelTipsSection } from './components/TravelTipsSection';
 import { TideCalendar } from './components/TideCalendar';
-import { DivingSection } from './components/DivingSection';
 import { InteractiveToursMap } from './components/InteractiveToursMap';
-import { FeaturedPackages } from './components/FeaturedPackages';
-import { MustSeeToursCarousel } from './components/MustSeeToursCarousel';
-import { ReviewsCarouselSection } from './components/ReviewsCarouselSection';
-import { InstagramFeedSection } from './components/InstagramFeedSection';
-import { NightlifeBlogSection } from './components/NightlifeBlogSection';
-import { InfraChecklist } from './components/InfraChecklist';
+import { FaqSection } from './components/FaqSection';
+import { NewsletterSection } from './components/NewsletterSection';
+import { ComprehensiveFooter } from './components/ComprehensiveFooter';
 import { BookingDrawer } from './components/BookingDrawer';
 import { AutoAtendimentoModal } from './components/AutoAtendimentoModal';
 import { FloatingChatbot } from './components/FloatingChatbot';
@@ -19,10 +20,7 @@ import { UserReservationsModal } from './components/UserReservationsModal';
 import { AdminToursModal } from './components/AdminToursModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { InAppNotificationToast } from './components/InAppNotificationToast';
-import { Footer } from './components/Footer';
-import { FixedSupportFooter } from './components/FixedSupportFooter';
-import { Breadcrumbs } from './components/Breadcrumbs';
-import { TourPackage, StudentProfile } from './types';
+import { TourPackage } from './types';
 import { VIP_TOURS } from './data/toursData';
 import { subscribeToTours } from './lib/firebase';
 import { getInitialBookingDate } from './lib/dateUtils';
@@ -42,56 +40,24 @@ export function App() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
-  const [isLoadingTours, setIsLoadingTours] = useState(false);
 
-  // Objeto 'student' persistido entre sessões para salvar o progresso do InfraChecklist
-  const [student, setStudent] = useState<StudentProfile>(() => {
-    try {
-      const saved = localStorage.getItem('natal_vip_student_profile');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') {
-          return {
-            id: parsed.id || 'student-default',
-            name: parsed.name || 'Viajante VIP',
-            checklistProgress: parsed.checklistProgress || {},
-            lastActiveTab: parsed.lastActiveTab || 'todos',
-            notes: parsed.notes || '',
-            updatedAt: parsed.updatedAt || new Date().toISOString(),
-          };
-        }
-      }
-    } catch (e) {
-      console.warn('Could not load student profile from localStorage:', e);
-    }
-    return {
-      id: 'student-default',
-      name: 'Viajante VIP',
-      checklistProgress: {},
-      lastActiveTab: 'todos',
-      notes: '',
-      updatedAt: new Date().toISOString(),
-    };
-  });
-
-  const handleUpdateStudent = (updatedStudent: StudentProfile) => {
-    setStudent(updatedStudent);
-    try {
-      localStorage.setItem('natal_vip_student_profile', JSON.stringify(updatedStudent));
-    } catch (e) {
-      console.warn('Could not persist student profile to localStorage:', e);
-    }
-  };
-
-  // Monitora alterações na tábua de marés e novas vagas em tempo real para os clientes
+  // Monitor real-time tide and vacancy alerts
   useRealTimeTideAndVacancyMonitor(tours);
 
-  // Registra Service Worker para suporte à Push API em segundo plano
+  // Register Service Worker for Push notifications
   useEffect(() => {
     registerServiceWorker();
   }, []);
 
-  // Detect URL containing /admin or #admin to open the admin panel
+  // Sync tours from Firestore
+  useEffect(() => {
+    const unsubscribe = subscribeToTours((allTours) => {
+      setTours(allTours);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Admin route detection
   useEffect(() => {
     const checkAdminRoute = () => {
       const path = window.location.pathname.toLowerCase();
@@ -141,13 +107,6 @@ export function App() {
     }
   };
 
-  useEffect(() => {
-    const unsubscribe = subscribeToTours((allTours) => {
-      setTours(allTours);
-    });
-    return () => unsubscribe();
-  }, []);
-
   const handleOpenBooking = (tourId?: string) => {
     if (tourId) setSelectedTourId(tourId);
     setIsBookingOpen(true);
@@ -180,9 +139,15 @@ export function App() {
     }
   };
 
+  const handleHeroSearch = (criteria: { tourId: string; date: string; guests: string; category: string }) => {
+    if (criteria.tourId) setSelectedTourId(criteria.tourId);
+    if (criteria.date) setSelectedDate(criteria.date);
+    setIsBookingOpen(true);
+  };
+
   return (
-    <div className="min-h-screen bg-[#050C16] text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] selection:bg-amber-400 selection:text-slate-950">
-      {/* 1. Fixed Header with Preserved Logo */}
+    <div className="min-h-screen bg-[#FBF6EF] text-[#1F2A2E] font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#F28C28] selection:text-white">
+      {/* 1. Header Fixo com Logo e Categorias CVC-Style */}
       <Header
         onOpenBooking={() => handleOpenBooking()}
         onOpenCalendar={scrollToCalendar}
@@ -194,97 +159,62 @@ export function App() {
         onOpenAdmin={handleOpenAdmin}
       />
 
-      {/* Sistema de Breadcrumbs (Migalhas de Pão) para SEO e Navegação em Ponta Negra e Praia do Forte */}
-      <Breadcrumbs
-        currentSection="Parrachos, Maracajaú e Roteiros 2026"
-        onSelectArea={(area) => {
-          if (area === 'ponta-negra') {
-            handleNavigateSection('pacotes-destaque');
-          } else if (area === 'praia-do-forte') {
-            handleNavigateSection('passeios-indispensaveis');
-          }
-        }}
-        onOpenTour={handleOpenBooking}
-      />
-
       <main>
-        {/* 2. Modern Hero with Mental Triggers */}
-        <HeroSection
-          onOpenBooking={() => handleOpenBooking()}
+        {/* 2. Hero Grande com Título Forte e Busca em Linha CVC */}
+        <CvcHeroSection
+          onSearch={handleHeroSearch}
+          onOpenBooking={handleOpenBooking}
           onOpenCalendar={scrollToCalendar}
-          onOpenChat={() => setIsChatOpen(true)}
         />
 
-        {/* 3. Intelligent Tide Calendar 2026 (Maracajaú & Rio do Fogo) */}
+        {/* 3. Vitrine de Ofertas em Cards Horizontais */}
+        <OffersShowcase
+          tours={tours}
+          onSelectTour={handleOpenBooking}
+          onOpenBooking={handleOpenBooking}
+        />
+
+        {/* 4. Pacote Casal VIP em Destaque Especial */}
+        <CoupleVipBanner onOpenBooking={handleOpenBooking} />
+
+        {/* 5. Conheça Destinos Incríveis */}
+        <IncredibleDestinations
+          onSelectDestination={(_name, tourId) => handleOpenBooking(tourId)}
+        />
+
+        {/* 6. Prova Social (Avaliações Reais, Selo Google/TripAdvisor) */}
+        <SocialProofSection onOpenBooking={() => handleOpenBooking()} />
+
+        {/* 7. Dicas de Viagem & Conteúdo Útil */}
+        <TravelTipsSection
+          onOpenBooking={() => handleOpenBooking()}
+          onOpenCalendar={scrollToCalendar}
+        />
+
+        {/* 7.1 Tábua de Maré Inteligente 2026 Integrada */}
         <TideCalendar
           onSelectDayForBooking={handleSelectDayForBooking}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
         />
 
-        {/* 4. Roteiros com Mergulho (Maracajaú e Rio do Fogo em destaque) */}
-        <DivingSection
-          onBookTour={(tourId) => handleOpenBooking(tourId)}
-          onScrollToCalendar={scrollToCalendar}
-          tours={tours}
-        />
-
-        {/* 4.1 Mapa Interativo dos Roteiros de Maracajaú e Rio do Fogo com Busca Instantânea */}
+        {/* 7.2 Mapa Interativo de Roteiros */}
         <InteractiveToursMap
           onOpenBooking={(tourId) => handleOpenBooking(tourId)}
           onOpenCalendar={scrollToCalendar}
         />
 
-        {/* 5. Carrossel Interativo de Passeios Indispensáveis de Natal RN */}
-        <MustSeeToursCarousel
-          onSelectTour={(tourId) => handleOpenBooking(tourId)}
-          onOpenChat={() => setIsChatOpen(true)}
-          tours={tours}
-          isLoading={isLoadingTours}
-        />
+        {/* 8. FAQ com Sanfona Interativa */}
+        <FaqSection />
 
-        {/* 6. Pacotes VIP em Destaque com Gatilhos Mentais */}
-        <FeaturedPackages
-          onSelectTour={(tourId) => handleOpenBooking(tourId)}
-          tours={tours}
-          isLoading={isLoadingTours}
-        />
-
-        {/* 6. Carrossel Automático de Avaliações Reais (Google + TripAdvisor) com Slide */}
-        <ReviewsCarouselSection onOpenBooking={(tourId) => handleOpenBooking(tourId)} />
-
-        {/* 6.1 Feed do Instagram Oficial (@natalvipturismo) com Fotos Recentes de Clientes nos Passeios */}
-        <InstagramFeedSection onOpenBooking={(tourId) => handleOpenBooking(tourId)} />
-
-        {/* 7. Blog Card: Onde Sair à Noite & Gastronomia com Apontamento para a Natal Vip Turismo */}
-        <NightlifeBlogSection
-          onSelectSuggestedTour={(tourId) => handleOpenBooking(tourId)}
-        />
-
-        {/* 8. Checklist Interativo de Infraestrutura (Vistos, Seguro, Conectividade, Finanças) - Salvo no objeto student */}
-        <InfraChecklist
-          student={student}
-          onUpdateStudent={handleUpdateStudent}
-          onOpenBooking={() => handleOpenBooking()}
-        />
+        {/* 9. Newsletter com Selo de Desconto VIP */}
+        <NewsletterSection />
       </main>
 
-      {/* 8. Comprehensive Footer */}
-      <Footer
+      {/* 10. Rodapé Completo */}
+      <ComprehensiveFooter
         onOpenBooking={handleOpenBooking}
         onOpenCalendar={scrollToCalendar}
-        onOpenAutoAtendimento={() => setIsAutoAtendimentoOpen(true)}
-        onOpenNotifications={() => setIsNotificationsOpen(true)}
-        onOpenCookies={() => {
-          localStorage.removeItem('natal_vip_cookie_consent');
-          window.location.reload();
-        }}
-      />
-
-      {/* Rodapé Fixo de Suporte VIP com Atendimento Marcelo & Autoatendimento Seguro */}
-      <FixedSupportFooter
-        onOpenChat={() => setIsChatOpen(true)}
-        onOpenAutoAtendimento={() => setIsAutoAtendimentoOpen(true)}
-        onOpenBooking={() => handleOpenBooking()}
+        onOpenMyReservations={() => setIsReservationsOpen(true)}
       />
 
       {/* Modern Booking Drawer with Intuitive Gateway */}
@@ -317,7 +247,7 @@ export function App() {
         onOpenBookingWithTour={(tourId) => handleOpenBooking(tourId)}
       />
 
-      {/* Banner de Consentimento de Cookies & LGPD para Rastreamento e Marketing */}
+      {/* Banner de Consentimento de Cookies & LGPD */}
       <CookieConsentBanner />
 
       {/* Modal Minhas Reservas sincronizado com Firebase */}
@@ -327,17 +257,7 @@ export function App() {
         onOpenBooking={() => handleOpenBooking()}
       />
 
-      {/* Painel Administrativo de Gestão de Passeios VIP (Acesso via URL /admin) */}
-      <AdminToursModal
-        isOpen={isAdminOpen}
-        onClose={handleCloseAdmin}
-        onTourUpdated={() => {
-          // Revalida tours em tempo real
-          window.dispatchEvent(new CustomEvent('natal-vip-tours-updated'));
-        }}
-      />
-
-      {/* Central de Notificações Push (Alertas de Maré e Novas Vagas) */}
+      {/* Central de Notificações Push & Alertas de Maré */}
       <NotificationCenterModal
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
@@ -345,12 +265,21 @@ export function App() {
         onOpenCalendar={scrollToCalendar}
       />
 
-      {/* Floating In-App Toast de Notificações em Tempo Real */}
+      {/* Toast flutuante de novidades e maré baixa em tempo real */}
       <InAppNotificationToast
-        onOpenBooking={(tourId) => handleOpenBooking(tourId)}
+        onOpenBooking={(tourId?: string) => handleOpenBooking(tourId)}
         onOpenCalendar={scrollToCalendar}
         onOpenNotificationCenter={() => setIsNotificationsOpen(true)}
       />
+
+      {/* Modal Painel Administrativo */}
+      {isAdminOpen && (
+        <AdminToursModal
+          isOpen={isAdminOpen}
+          onClose={handleCloseAdmin}
+          onTourUpdated={() => {}}
+        />
+      )}
     </div>
   );
 }
