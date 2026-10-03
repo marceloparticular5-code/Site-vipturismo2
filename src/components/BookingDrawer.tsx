@@ -7,6 +7,7 @@ import { triggerBookingEmailConfirmation, BookingEmailConfirmationPayload } from
 import { generateGoogleCalendarUrl, downloadIcsFile } from '../lib/googleCalendarSync';
 import { EmailConfirmationModal } from './EmailConfirmationModal';
 import { NATIONALITIES, formatCurrencyValue, SupportedCurrency } from '../lib/i18n';
+import { trackBookingComplete } from '../lib/tracking';
 import {
   X,
   Calendar,
@@ -200,6 +201,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
     // Persist to Cloud Firestore
     try {
+      trackBookingComplete(bookingCode, currentTour.title, finalTotal);
       const activeUid = auth.currentUser?.uid || `guest_${Date.now()}`;
       saveBookingToFirestore({
         userId: activeUid,

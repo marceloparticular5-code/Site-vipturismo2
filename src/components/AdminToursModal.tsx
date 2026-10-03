@@ -5,10 +5,6 @@ import {
   logoutUser,
   isUserAdmin,
   ADMIN_EMAIL,
-  ADMIN_MASTER_PINS,
-  isPinAdminAuthenticated,
-  setPinAdminAuthenticated,
-  verifyAdminPin,
   isRunningInIframe,
   subscribeToTours,
   saveTourToFirestore,
@@ -25,7 +21,6 @@ import {
   Shield,
   ShieldCheck,
   Lock,
-  KeyRound,
   LogIn,
   LogOut,
   Plus,
@@ -52,7 +47,9 @@ import {
   ExternalLink,
   Copy,
   Info,
+  FolderOpen,
 } from 'lucide-react';
+import { MediaLibraryModal } from './MediaLibraryModal';
 
 interface AdminToursModalProps {
   isOpen: boolean;
@@ -63,8 +60,6 @@ interface AdminToursModalProps {
 export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClose, onTourUpdated }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
   const [isAdmin, setIsAdmin] = useState<boolean>(() => isUserAdmin(auth.currentUser));
-  const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleErrorCode, setGoogleErrorCode] = useState<string | null>(null);
@@ -74,6 +69,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
   const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
   const [bookings, setBookings] = useState<FirebaseBooking[]>([]);
   const [activeTab, setActiveTab] = useState<'tours' | 'editor' | 'bookings'>('tours');
+  const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<'all' | 'diving' | 'active'>('all');
 
@@ -215,18 +211,6 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
 
   if (!isOpen) return null;
 
-  const handlePinLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setPinError(null);
-    if (verifyAdminPin(pinInput)) {
-      setIsAdmin(true);
-      setPinInput('');
-      setPinError(null);
-    } else {
-      setPinError('Código PIN incorreto. Use o PIN mestre vip2026 ou sua conta Google.');
-    }
-  };
-
   const handleGoogleLogin = async () => {
     setAuthLoading(true);
     setGoogleError(null);
@@ -248,7 +232,6 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
   };
 
   const handleLogout = async () => {
-    setPinAdminAuthenticated(false);
     await logoutUser();
     setCurrentUser(null);
     setIsAdmin(false);
@@ -660,42 +643,14 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                     </div>
                   )}
 
-                  {/* Master PIN Login Card */}
-                  <div className="p-4 rounded-2xl bg-slate-900 border border-amber-500/30 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
-                      <KeyRound className="w-4 h-4 text-amber-400" />
-                      <span>Acesso com PIN Master VIP</span>
-                    </div>
-                    <form onSubmit={handlePinLogin} className="flex gap-2">
-                      <input
-                        type="password"
-                        placeholder="Digite seu PIN (ex: vip2026)"
-                        value={pinInput}
-                        onChange={(e) => {
-                          setPinInput(e.target.value);
-                          setPinError(null);
-                        }}
-                        className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs placeholder:text-slate-500 focus:outline-none focus:border-amber-400 font-mono tracking-wider"
-                      />
-                      <button
-                        type="submit"
-                        className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors shrink-0 shadow-sm cursor-pointer"
-                      >
-                        Acessar
-                      </button>
-                    </form>
-                    {pinError && (
-                      <div className="text-[11px] text-rose-400 font-medium">{pinError}</div>
-                    )}
-                    <div className="text-[10px] text-slate-400">
-                      PIN mestre habilitado: <code className="text-amber-300 font-mono">vip2026</code> (permite edição instantânea em qualquer navegador)
-                    </div>
-                  </div>
-
-                  <div className="relative flex py-1 items-center">
-                    <div className="flex-grow border-t border-slate-800"></div>
-                    <span className="flex-shrink mx-3 text-[10px] uppercase font-bold text-slate-500">ou com conta google</span>
-                    <div className="flex-grow border-t border-slate-800"></div>
+                  {/* Clean Email / Google Admin Login Card */}
+                  <div className="p-4 rounded-2xl bg-slate-900 border border-amber-500/30 text-center space-y-2">
+                    <p className="text-xs text-slate-300 font-semibold">
+                      Login Administrativo Oficial por E-mail
+                    </p>
+                    <p className="text-[11px] text-amber-300 font-medium">
+                      E-mail autorizado: <span className="font-mono">{ADMIN_EMAIL}</span>
+                    </p>
                   </div>
 
                   <button
@@ -790,6 +745,15 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                   >
                     <Calendar className="w-3.5 h-3.5" />
                     <span>Reservas ({bookings.length})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsMediaLibraryOpen(true)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-white border border-slate-700 hover:border-amber-400/50 cursor-pointer"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Biblioteca de Mídia</span>
                   </button>
                 </div>
 
@@ -1419,6 +1383,23 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
 
         </div>
       </div>
+
+      {/* Standalone Media Library Modal */}
+      <MediaLibraryModal
+        isOpen={isMediaLibraryOpen}
+        onClose={() => setIsMediaLibraryOpen(false)}
+        selectionMode={activeTab === 'editor'}
+        onSelectMedia={(url, type) => {
+          if (type === 'image') {
+            if (!formImageUrl) {
+              setFormImageUrl(url);
+            } else {
+              setFormGalleryImages((prev) => (prev.includes(url) ? prev : [...prev, url]));
+            }
+          }
+          setIsMediaLibraryOpen(false);
+        }}
+      />
     </div>
   );
 };

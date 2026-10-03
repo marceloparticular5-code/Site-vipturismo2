@@ -37,10 +37,10 @@
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://www.natalvipturismo.com.br" />
-    <meta name="twitter:title" content="Natal Vip Turismo | Passeios em Natal RN, Ponta Negra e Praia do Forte" />
+    <meta name="twitter:title" content="Natal Vip Turismo - Agência de Passeios & Mergulho" />
     <meta
       name="twitter:description"
-      content="Agência de turismo com atendimento em Ponta Negra e Praia do Forte (Natal/RN). Passeios de lancha rápida, buggy com emoção e tábua de maré com o consultor Marcelo."
+      content="Agência de turismo VIP em Natal/RN especializada em mergulho nos Parrachos de Maracajaú e Rio do Fogo, lanchas rápidas, tábua de maré inteligente 2026 e consultoria com Marcelo Agente de Turismo Pessoal."
     />
     <meta name="twitter:image" content="https://www.natalvipturismo.com.br/imagens/logovip.jpg" />
 
@@ -50,11 +50,55 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 
-    <!-- Schema.org Rich Structured Data (JSON-LD) - LocalBusiness & TravelAgency para Google Maps -->
+    <!-- Google Consent Mode v2 (Default: Denied until user consents) -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'denied',
+        'wait_for_update': 500
+      });
+      gtag('set', 'ads_data_redaction', true);
+    </script>
+
+    <!-- Schema.org Rich Structured Data (JSON-LD) - LocalBusiness, TravelAgency, FAQPage & Product -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@graph": [
+          {
+            "@type": "FAQPage",
+            "@id": "https://www.natalvipturismo.com.br/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Vocês buscam nos hotéis de Ponta Negra e Via Costeira?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sim! Todos os nossos passeios VIP incluem transfer executivo com busca e retorno gratuito na recepção do seu hotel ou pousada em Ponta Negra, Via Costeira e Praia do Meio."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Como funciona o mergulho nos Parrachos de Maracajaú?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Navegamos a 7km da costa em lanchas rápidas e catamarãs homologados pela Marinha até a plataforma flutuante exclusiva com piscinas naturais de águas mornas e kit de snorkel incluso."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Qual é a melhor época e horário para os passeios de maré?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Os passeios para as piscinas naturais de Maracajaú e Rio do Fogo acontecem exclusivamente na maré baixa (entre 0.0 e 0.5m), sincronizados diariamente com a tábua de marés da Marinha do Brasil."
+                }
+              }
+            ]
+          },
           {
             "@type": ["TravelAgency", "LocalBusiness", "TouristInformationCenter"],
             "@id": "https://www.natalvipturismo.com.br/#localbusiness",

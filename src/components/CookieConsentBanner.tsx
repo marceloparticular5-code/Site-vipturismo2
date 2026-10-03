@@ -70,18 +70,28 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = () => {
     setIsVisible(false);
     setShowDetails(false);
 
-    // Track simulated marketing tags
-    if (prefs.marketing) {
-      // Simulate Meta Pixel / Google Ads Consent granted
-      if (typeof window !== 'undefined') {
+    // Google Consent Mode v2 Integration & Tag Manager DataLayer Push
+    if (typeof window !== 'undefined') {
+      // @ts-ignore
+      if (typeof window.gtag === 'function') {
         // @ts-ignore
-        window.dataLayer = window.dataLayer || [];
-        // @ts-ignore
-        window.dataLayer.push({
-          event: 'cookie_consent_marketing_granted',
-          timestamp: new Date().toISOString(),
+        window.gtag('consent', 'update', {
+          ad_storage: prefs.marketing ? 'granted' : 'denied',
+          ad_user_data: prefs.marketing ? 'granted' : 'denied',
+          ad_personalization: prefs.marketing ? 'granted' : 'denied',
+          analytics_storage: prefs.analytics ? 'granted' : 'denied',
         });
       }
+
+      // @ts-ignore
+      window.dataLayer = window.dataLayer || [];
+      // @ts-ignore
+      window.dataLayer.push({
+        event: 'consent_updated',
+        analytics_consent: prefs.analytics,
+        marketing_consent: prefs.marketing,
+        timestamp: new Date().toISOString(),
+      });
     }
   };
 

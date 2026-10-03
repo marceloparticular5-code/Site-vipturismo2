@@ -7,8 +7,8 @@ import { processChat } from './src/server/conciergeService';
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: '25mb' }));
-app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+app.use(express.json({ limit: '75mb' }));
+app.use(express.urlencoded({ extended: true, limit: '75mb' }));
 
 // Static uploads folder for locally uploaded photos
 const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
@@ -286,57 +286,222 @@ app.post('/api/reviews', (req, res) => {
   }
 });
 
+// Media registry file path
+const mediaRegistryFile = path.join(uploadsDir, 'media-registry.json');
+
+interface MediaRecord {
+  id: string;
+  name: string;
+  originalName: string;
+  url: string;
+  type: 'image' | 'video';
+  mimeType: string;
+  category: 'images' | 'videos' | 'covers' | 'tours' | 'banners';
+  size: number;
+  uploadedAt: string;
+  thumbnailUrl?: string;
+  tourId?: string;
+}
+
+function loadMediaRegistry(): MediaRecord[] {
+  try {
+    if (fs.existsSync(mediaRegistryFile)) {
+      const data = fs.readFileSync(mediaRegistryFile, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.warn('[Media Registry] Erro ao ler registro:', err);
+  }
+  return [];
+}
+
+function saveMediaRegistry(registry: MediaRecord[]): void {
+  try {
+    fs.writeFileSync(mediaRegistryFile, JSON.stringify(registry, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[Media Registry] Erro ao salvar registro:', err);
+  }
+}
+
+app.get('/api/media', (req, res) => {
+  try {
+    const { category, search } = req.query;
+    let list = loadMediaRegistry();
+
+    if (category && category !== 'all') {
+      list = list.filter((item) => item.category === category || (category === 'videos' && item.type === 'video') || (category === 'images' && item.type === 'image'));
+    }
+
+    if (search && typeof search === 'string') {
+      const term = search.toLowerCase();
+      list = list.filter(
+        (item) => item.originalName.toLowerCase().includes(term) || item.name.toLowerCase().includes(term)
+      );
+    }
+
+    // Sort newest first
+    list.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+
+    res.json({ success: true, count: list.length, media: list });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message });
+  }
+});
+
+app.delete('/api/media/:filename', (req, res) => {
+  try {
+    const { filename } = req.params;
+    const safeFilename = path.basename(filename);
+    const filePath = path.join(uploadsDir, safeFilename);
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    let registry = loadMediaRegistry();
+    const removedItem = registry.find((m) => m.name === safeFilename);
+    if (removedItem && removedItem.thumbnailUrl && removedItem.thumbnailUrl.startsWith('/uploads/')) {
+      const thumbFile = path.join(uploadsDir, path.basename(removedItem.thumbnailUrl));
+      if (fs.existsSync(thumbFile)) {
+        fs.unlinkSync(thumbFile);
+      }
+    }
+
+    registry = registry.filter((m) => m.name !== safeFilename);
+    saveMediaRegistry(registry);
+
+    res.json({ success: true, message: `Arquivo ${safeFilename} excluído com sucesso!` });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message });
+  }
+});
+
+app.patch('/api/media/:filename', (req, res) => {
+  try {
+    const { filename } = req.params;
+    const { category, originalName } = req.body;
+    const safeFilename = path.basename(filename);
+
+    const registry = loadMediaRegistry();
+    const item = registry.find((m) => m.name === safeFilename);
+    if (!item) {
+      res.status(404).json({ success: false, error: 'Arquivo não encontrado no registro.' });
+      return;
+    }
+
+    if (category) item.category = category;
+    if (originalName) item.originalName = originalName;
+
+    saveMediaRegistry(registry);
+    res.json({ success: true, item });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message });
+  }
+});
+
 app.post('/api/upload', (req, res) => {
   try {
-    const { files, dataUrl, filename } = req.body;
-    const uploadedFiles: Array<{ name: string; url: string; size: number }> = [];
+    const { files, dataUrl, filename, category = 'tours', thumbnailUrl } = req.body;
+    const uploadedFiles: Array<{ name: string; url: string; size: number; type: 'image' | 'video'; thumbnailUrl?: string }> = [];
+    const registry = loadMediaRegistry();
 
-    const processItem = (fileDataUrl: string, origName?: string) => {
-      // Data URL format: data:image/jpeg;base64,...
-      const match = fileDataUrl.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
-      if (!match) {
-        throw new Error('Formato de imagem não suportado. Utilize JPG, JPEG ou PNG.');
+    const processItem = (
+      fileDataUrl: string,
+      origName?: string,
+      itemCategory: 'images' | 'videos' | 'covers' | 'tours' | 'banners' = 'tours',
+      itemThumbnailUrl?: string
+    ) => {
+      // Data URL formats:
+      // data:image/jpeg;base64,... OR data:video/mp4;base64,...
+      const imageMatch = fileDataUrl.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
+      const videoMatch = fileDataUrl.match(/^data:video\/(mp4|webm|quicktime|mov);base64,(.+)$/i);
+
+      if (!imageMatch && !videoMatch) {
+        throw new Error('Formato não suportado. Formatos aceitos: Imagens (JPG, PNG, WEBP) e Vídeos (MP4, WEBM, MOV).');
       }
-      const ext = match[1].toLowerCase() === 'jpeg' ? 'jpg' : match[1].toLowerCase();
-      const base64Data = match[2];
+
+      const isVideo = Boolean(videoMatch);
+      const ext = isVideo
+        ? (videoMatch![1].toLowerCase() === 'quicktime' ? 'mov' : videoMatch![1].toLowerCase())
+        : (imageMatch![1].toLowerCase() === 'jpeg' ? 'jpg' : imageMatch![1].toLowerCase());
+
+      const base64Data = isVideo ? videoMatch![2] : imageMatch![2];
       const buffer = Buffer.from(base64Data, 'base64');
 
-      // Max 5MB check
-      if (buffer.length > 5 * 1024 * 1024) {
-        throw new Error('O arquivo excede o limite máximo permitido de 5 MB.');
+      // Max size: 50MB for video, 10MB for image
+      const maxLimit = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+      if (buffer.length > maxLimit) {
+        const limitMb = isVideo ? '50 MB' : '10 MB';
+        throw new Error(`O arquivo excede o limite máximo permitido de ${limitMb}.`);
       }
 
-      const safeBaseName = (origName || 'foto')
+      const safeBaseName = (origName || (isVideo ? 'video' : 'foto'))
         .replace(/[^a-zA-Z0-9_-]/g, '_')
         .substring(0, 30);
-      const uniqueFilename = `tour-${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${safeBaseName}.${ext}`;
+      const prefix = isVideo ? 'video' : 'tour';
+      const uniqueFilename = `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${safeBaseName}.${ext}`;
       const filePath = path.join(uploadsDir, uniqueFilename);
       fs.writeFileSync(filePath, buffer);
 
       const fileUrl = `/uploads/${uniqueFilename}`;
+
+      // Save video thumbnail if provided
+      let savedThumbUrl: string | undefined = undefined;
+      if (itemThumbnailUrl && itemThumbnailUrl.startsWith('data:image/')) {
+        const thumbMatch = itemThumbnailUrl.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
+        if (thumbMatch) {
+          const thumbBuffer = Buffer.from(thumbMatch[2], 'base64');
+          const thumbName = `thumb-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.jpg`;
+          fs.writeFileSync(path.join(uploadsDir, thumbName), thumbBuffer);
+          savedThumbUrl = `/uploads/${thumbName}`;
+        }
+      }
+
+      // Add to registry
+      const mediaItem: MediaRecord = {
+        id: `media-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: uniqueFilename,
+        originalName: origName || uniqueFilename,
+        url: fileUrl,
+        type: isVideo ? 'video' : 'image',
+        mimeType: isVideo ? `video/${ext}` : `image/${ext}`,
+        category: isVideo ? 'videos' : itemCategory,
+        size: buffer.length,
+        uploadedAt: new Date().toISOString(),
+        thumbnailUrl: savedThumbUrl || (isVideo ? undefined : fileUrl),
+      };
+
+      registry.unshift(mediaItem);
+
       return {
         name: uniqueFilename,
         url: fileUrl,
         size: buffer.length,
+        type: (isVideo ? 'video' : 'image') as 'image' | 'video',
+        thumbnailUrl: savedThumbUrl,
       };
     };
 
     if (Array.isArray(files) && files.length > 0) {
       for (const item of files) {
         if (item && item.dataUrl) {
-          uploadedFiles.push(processItem(item.dataUrl, item.filename));
+          uploadedFiles.push(
+            processItem(item.dataUrl, item.filename, item.category || category, item.thumbnailUrl)
+          );
         }
       }
     } else if (dataUrl) {
-      uploadedFiles.push(processItem(dataUrl, filename));
+      uploadedFiles.push(processItem(dataUrl, filename, category, thumbnailUrl));
     } else {
-      res.status(400).json({ success: false, error: 'Nenhum dado de imagem recebido.' });
+      res.status(400).json({ success: false, error: 'Nenhum dado de arquivo de imagem ou vídeo recebido.' });
       return;
     }
 
+    saveMediaRegistry(registry);
+
     res.json({
       success: true,
-      message: `${uploadedFiles.length} foto(s) enviada(s) e salva(s) com sucesso no servidor!`,
+      message: `${uploadedFiles.length} arquivo(s) enviado(s) e salvo(s) com sucesso na Biblioteca de Mídia!`,
       files: uploadedFiles,
       url: uploadedFiles[0]?.url,
     });
@@ -344,7 +509,7 @@ app.post('/api/upload', (req, res) => {
     console.error('[Upload Error]:', error);
     res.status(400).json({
       success: false,
-      error: error?.message || 'Falha ao processar o upload da imagem.',
+      error: error?.message || 'Falha ao processar o upload do arquivo.',
     });
   }
 });

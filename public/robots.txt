@@ -1,0 +1,9 @@
+# robots.txt para Natal VIP Turismo (https://www.natalvipturismo.com.br)
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /uploads/private/
+
+# Sitemaps
+Sitemap: https://www.natalvipturismo.com.br/sitemap.xml

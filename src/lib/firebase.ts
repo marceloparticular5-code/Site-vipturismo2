@@ -28,44 +28,22 @@ import { VIP_TOURS } from '../data/toursData';
 
 // Admin email configured for agency management
 export const ADMIN_EMAIL = 'marceloparticular5@gmail.com';
+export const ADMIN_EMAILS = [
+  'marceloparticular5@gmail.com',
+  'admin@natalvipturismo.com',
+  'contato@natalvipturismo.com',
+];
 
-// Master Admin Passcodes accepted for instant management anywhere (iframe, mobile, direct)
-export const ADMIN_MASTER_PINS = ['vip2026', 'natalvip', 'vipnatal2026'];
-export const ADMIN_AUTH_STORAGE_KEY = 'natal_vip_admin_auth_token';
-
+// Deprecated stubs for backwards compatibility - Master PIN removed
+export const ADMIN_MASTER_PINS: string[] = [];
 export function isPinAdminAuthenticated(): boolean {
-  try {
-    const token =
-      sessionStorage.getItem(ADMIN_AUTH_STORAGE_KEY) ||
-      localStorage.getItem(ADMIN_AUTH_STORAGE_KEY);
-    return token === 'authenticated_admin_vip';
-  } catch {
-    return false;
-  }
+  return false;
 }
-
-export function setPinAdminAuthenticated(value: boolean): void {
-  try {
-    if (value) {
-      sessionStorage.setItem(ADMIN_AUTH_STORAGE_KEY, 'authenticated_admin_vip');
-      localStorage.setItem(ADMIN_AUTH_STORAGE_KEY, 'authenticated_admin_vip');
-    } else {
-      sessionStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
-      localStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
-    }
-  } catch {
-    // ignore
-  }
+export function setPinAdminAuthenticated(_value: boolean): void {
+  // Master PIN removed, login is email-only
 }
-
-export function verifyAdminPin(pin: string): boolean {
-  if (!pin) return false;
-  const clean = pin.trim().toLowerCase();
-  const valid = ADMIN_MASTER_PINS.includes(clean);
-  if (valid) {
-    setPinAdminAuthenticated(true);
-  }
-  return valid;
+export function verifyAdminPin(_pin: string): boolean {
+  return false;
 }
 
 // Initialize Firebase App singleton
@@ -365,11 +343,11 @@ export function subscribeUserBookings(
   }
 }
 
-// Check if a user is an authorized admin via PIN or verified Google Account
+// Check if a user is an authorized admin via verified email Account
 export function isUserAdmin(user: User | null): boolean {
-  if (isPinAdminAuthenticated()) return true;
   if (!user || !user.email) return false;
-  return user.email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const email = user.email.trim().toLowerCase();
+  return ADMIN_EMAILS.some((adm) => adm.toLowerCase() === email);
 }
 
 // Real-time listener for tours collection in Firestore, merged with default VIP_TOURS and local edits

@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import {
   UploadCloud,
   Image as ImageIcon,
+  Film,
   X,
   RefreshCw,
   CheckCircle2,
@@ -11,19 +12,29 @@ import {
   Trash2,
   Eye,
   Star,
+  Play,
+  FolderOpen,
+  ArrowLeft,
+  ArrowRight,
+  Plus,
 } from 'lucide-react';
 import {
   compressAndResizeImage,
-  uploadImagesToServer,
+  processVideoFile,
+  uploadMediaToServer,
   validateImageFile,
+  validateVideoFile,
   ProcessedImage,
 } from '../lib/imageUploadUtils';
+import { MediaLibraryModal } from './MediaLibraryModal';
 
 interface PhotoUploaderProps {
   currentImageUrl?: string;
   galleryImages?: string[];
+  videoUrl?: string;
   onMainImageChange: (url: string) => void;
   onGalleryChange?: (urls: string[]) => void;
+  onVideoChange?: (url: string) => void;
   label?: string;
   allowMultiple?: boolean;
 }
@@ -31,9 +42,11 @@ interface PhotoUploaderProps {
 export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   currentImageUrl,
   galleryImages = [],
+  videoUrl,
   onMainImageChange,
   onGalleryChange,
-  label = 'Fotos do Passeio VIP',
+  onVideoChange,
+  label = 'Fotos e Vídeos do Passeio VIP',
   allowMultiple = true,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -43,10 +56,13 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [previewModalUrl, setPreviewModalUrl] = useState<string | null>(null);
+  const [previewIsVideo, setPreviewIsVideo] = useState(false);
   const [showManualUrlInput, setShowManualUrlInput] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
+  const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Gather current images (main + gallery)
   const allImages = React.useMemo(() => {
@@ -62,15 +78,14 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     return list;
   }, [currentImageUrl, galleryImages]);
 
-  const handleFiles = useCallback(
+  // Handle Image Uploads
+  const handleImageFiles = useCallback(
     async (fileList: FileList | File[]) => {
       setErrorMessage(null);
       setSuccessNotice(null);
       const files = Array.from(fileList);
-
       if (files.length === 0) return;
 
-      // Validate each file first
       for (const file of files) {
         const val = validateImageFile(file);
         if (!val.valid) {
@@ -89,20 +104,26 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
 
         for (let i = 0; i < totalFiles; i++) {
           const file = files[i];
-          setUploadStage(`Otimizando foto ${i + 1} de ${totalFiles} (máx 1200px)...`);
+          setUploadStage(`Otimizando foto ${i + 1} de ${totalFiles} (máx 1200px / WEBP)...`);
           setUploadProgress(10 + Math.round(((i + 1) / totalFiles) * 40));
           const processed = await compressAndResizeImage(file, 1200, 0.85);
           processedList.push(processed);
         }
 
-        // Upload to server with real-time XHR progress tracking
         setUploadStage('Gravando no servidor e gerando URLs internas...');
-        const uploadedUrls = await uploadImagesToServer(
-          processedList.map((p) => ({ filename: p.name, dataUrl: p.dataUrl })),
+        const uploadedMedia = await uploadMediaToServer(
+          processedList.map((p) => ({
+            filename: p.name,
+            dataUrl: p.dataUrl,
+            type: 'image',
+            category: 'tours',
+          })),
           (percent) => {
             setUploadProgress(50 + Math.round((percent / 100) * 50));
           }
         );
+
+        const uploadedUrls = uploadedMedia.map((m) => m.url);
 
         setUploadProgress(100);
         setUploadStage('Concluído com sucesso!');
@@ -117,7 +138,6 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
               onGalleryChange([...galleryImages, ...remainingNew]);
             }
           } else {
-            // Already has main image; if multiple, add to gallery or replace
             if (allowMultiple && onGalleryChange) {
               onGalleryChange([...galleryImages, ...uploadedUrls]);
             } else {
@@ -126,7 +146,7 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
           }
 
           setSuccessNotice(
-            `${uploadedUrls.length} foto(s) carregada(s), comprimida(s) a 1200px e salvas com sucesso!`
+            `${uploadedUrls.length} imagem(ns) otimizada(s) e adicionada(s) ao passeio!`
           );
           setTimeout(() => setSuccessNotice(null), 4000);
         }
@@ -135,12 +155,66 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         setErrorMessage(err?.message || 'Falha ao processar e salvar a imagem.');
       } finally {
         setIsProcessing(false);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
+        if (imageInputRef.current) imageInputRef.current.value = '';
       }
     },
     [currentImageUrl, galleryImages, allowMultiple, onMainImageChange, onGalleryChange]
+  );
+
+  // Handle Video Upload
+  const handleVideoFile = useCallback(
+    async (fileList: FileList | File[]) => {
+      setErrorMessage(null);
+      setSuccessNotice(null);
+      const files = Array.from(fileList);
+      if (files.length === 0) return;
+
+      const file = files[0];
+      const val = validateVideoFile(file);
+      if (!val.valid) {
+        setErrorMessage(val.error || 'Arquivo de vídeo inválido.');
+        return;
+      }
+
+      setIsProcessing(true);
+      setUploadProgress(10);
+      setUploadStage('Gerando miniatura e processando vídeo...');
+
+      try {
+        const processed = await processVideoFile(file);
+        setUploadProgress(40);
+        setUploadStage('Enviando vídeo para o servidor (MP4/WEBM)...');
+
+        const uploadedMedia = await uploadMediaToServer(
+          [
+            {
+              filename: processed.name,
+              dataUrl: processed.dataUrl,
+              type: 'video',
+              category: 'videos',
+              thumbnailUrl: processed.thumbnailUrl,
+            },
+          ],
+          (percent) => {
+            setUploadProgress(40 + Math.round((percent / 100) * 60));
+          }
+        );
+
+        if (uploadedMedia.length > 0 && uploadedMedia[0].url) {
+          const videoUrlResult = uploadedMedia[0].url;
+          onVideoChange?.(videoUrlResult);
+          setSuccessNotice('Vídeo enviado com sucesso e vinculado ao passeio!');
+          setTimeout(() => setSuccessNotice(null), 4000);
+        }
+      } catch (err: any) {
+        console.error('[Video Upload Error]:', err);
+        setErrorMessage(err?.message || 'Falha ao processar o vídeo.');
+      } finally {
+        setIsProcessing(false);
+        if (videoInputRef.current) videoInputRef.current.value = '';
+      }
+    },
+    [onVideoChange]
   );
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -159,25 +233,14 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFiles(e.dataTransfer.files);
-    }
-  };
 
-  const handleRemoveImage = (urlToRemove: string) => {
-    if (urlToRemove === currentImageUrl) {
-      // If we remove the main image, make the first gallery image the main, or empty
-      if (galleryImages.length > 0) {
-        const nextMain = galleryImages[0];
-        const nextGallery = galleryImages.slice(1);
-        onMainImageChange(nextMain);
-        if (onGalleryChange) onGalleryChange(nextGallery);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const files = Array.from(e.dataTransfer.files);
+      const hasVideos = files.some((f) => f.type.startsWith('video/'));
+      if (hasVideos) {
+        handleVideoFile(files);
       } else {
-        onMainImageChange('');
-      }
-    } else {
-      if (onGalleryChange) {
-        onGalleryChange(galleryImages.filter((u) => u !== urlToRemove));
+        handleImageFiles(files);
       }
     }
   };
@@ -186,52 +249,100 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     if (url === currentImageUrl) return;
     const oldMain = currentImageUrl;
     onMainImageChange(url);
-    if (onGalleryChange) {
-      const filtered = galleryImages.filter((u) => u !== url);
-      if (oldMain && oldMain.trim()) {
-        filtered.unshift(oldMain);
+
+    if (onGalleryChange && oldMain && oldMain.trim() !== '') {
+      const updatedGallery = galleryImages.filter((img) => img !== url);
+      if (!updatedGallery.includes(oldMain)) {
+        updatedGallery.unshift(oldMain);
       }
-      onGalleryChange(filtered);
+      onGalleryChange(updatedGallery);
     }
+    setSuccessNotice('Imagem definida como Capa Principal!');
+    setTimeout(() => setSuccessNotice(null), 2500);
+  };
+
+  const handleRemoveImage = (urlToRemove: string) => {
+    if (urlToRemove === currentImageUrl) {
+      if (galleryImages.length > 0) {
+        const [newMain, ...remaining] = galleryImages;
+        onMainImageChange(newMain);
+        onGalleryChange?.(remaining);
+      } else {
+        onMainImageChange('');
+      }
+    } else {
+      onGalleryChange?.(galleryImages.filter((img) => img !== urlToRemove));
+    }
+  };
+
+  const handleMoveImage = (index: number, direction: 'left' | 'right') => {
+    if (!onGalleryChange) return;
+    const newGallery = [...galleryImages];
+    const targetIdx = direction === 'left' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= newGallery.length) return;
+
+    const temp = newGallery[index];
+    newGallery[index] = newGallery[targetIdx];
+    newGallery[targetIdx] = temp;
+    onGalleryChange(newGallery);
   };
 
   const handleApplyManualUrl = () => {
     if (!manualUrl.trim()) return;
-    if (!currentImageUrl) {
-      onMainImageChange(manualUrl.trim());
-    } else if (onGalleryChange) {
-      onGalleryChange([...galleryImages, manualUrl.trim()]);
+    const url = manualUrl.trim();
+
+    if (!currentImageUrl || currentImageUrl.trim() === '') {
+      onMainImageChange(url);
+    } else if (allowMultiple && onGalleryChange) {
+      onGalleryChange([...galleryImages, url]);
+    } else {
+      onMainImageChange(url);
     }
     setManualUrl('');
     setShowManualUrlInput(false);
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <label className="block text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-          <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
+    <div className="space-y-4">
+      {/* Header and Action Buttons */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+          <ImageIcon className="w-4 h-4 text-amber-400" />
           <span>{label}</span>
-          <span className="text-slate-400 font-normal lowercase">(JPG, JPEG, PNG · máx. 5MB)</span>
+          <span className="text-amber-300 font-mono text-[11px] ml-1">
+            ({allImages.length} fotos {videoUrl ? '+ 1 vídeo' : ''})
+          </span>
         </label>
 
-        <button
-          type="button"
-          onClick={() => setShowManualUrlInput(!showManualUrlInput)}
-          className="text-[10px] text-slate-400 hover:text-amber-300 underline transition-colors cursor-pointer"
-        >
-          {showManualUrlInput ? 'Ocultar inserção por URL' : 'Colar link externo (opcional)'}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Media Library Button */}
+          <button
+            type="button"
+            onClick={() => setIsMediaLibraryOpen(true)}
+            className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-white border border-slate-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+          >
+            <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+            <span>Biblioteca de Mídia</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowManualUrlInput(!showManualUrlInput)}
+            className="text-[11px] text-cyan-300 hover:text-cyan-200 underline cursor-pointer"
+          >
+            {showManualUrlInput ? 'Ocultar URL' : 'Colar link URL'}
+          </button>
+        </div>
       </div>
 
-      {/* Manual URL input fallback for full backwards compatibility */}
+      {/* Manual URL Input Bar */}
       {showManualUrlInput && (
-        <div className="p-3 rounded-xl bg-slate-900 border border-slate-700/80 flex gap-2 animate-fadeIn">
+        <div className="flex gap-2 p-2.5 rounded-xl bg-slate-900 border border-slate-700 animate-fadeIn">
           <input
             type="url"
             value={manualUrl}
             onChange={(e) => setManualUrl(e.target.value)}
-            placeholder="https://images.unsplash.com/..."
+            placeholder="Cole o link da imagem (https://...)..."
             className="flex-1 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
           />
           <button
@@ -267,13 +378,13 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         </div>
       )}
 
-      {/* Real-time Upload & Optimization Progress Bar */}
+      {/* Real-time Upload Progress Bar */}
       {isProcessing && (
         <div className="p-3.5 rounded-2xl bg-[#09172B] border border-amber-500/40 shadow-xl space-y-2 animate-fadeIn">
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold text-amber-300 flex items-center gap-2">
               <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
-              <span>{uploadStage || 'Processando arquivos...'}</span>
+              <span>{uploadStage || 'Processando arquivo...'}</span>
             </span>
             <span className="font-mono font-extrabold text-white text-xs">{uploadProgress}%</span>
           </div>
@@ -287,32 +398,45 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         </div>
       )}
 
-      {/* Drag & Drop Upload Zone */}
+      {/* Drag & Drop Zone */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`relative group border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center cursor-pointer transition-all duration-200 ${
+        className={`relative group border-2 border-dashed rounded-2xl p-5 sm:p-7 text-center transition-all duration-200 ${
           isDragging
             ? 'border-amber-400 bg-amber-500/10 scale-[1.01]'
             : 'border-slate-700 hover:border-amber-400/60 bg-[#07111F]/70 hover:bg-[#07111F]'
         }`}
       >
+        {/* Hidden Input for Images */}
         <input
-          ref={fileInputRef}
+          ref={imageInputRef}
           type="file"
-          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,image/*"
           multiple={allowMultiple}
           className="hidden"
           onChange={(e) => {
             if (e.target.files && e.target.files.length > 0) {
-              handleFiles(e.target.files);
+              handleImageFiles(e.target.files);
             }
           }}
         />
 
-        <div className="flex flex-col items-center justify-center gap-2.5">
+        {/* Hidden Input for Videos */}
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/mp4,video/webm,video/quicktime,video/*"
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              handleVideoFile(e.target.files);
+            }
+          }}
+        />
+
+        <div className="flex flex-col items-center justify-center gap-3">
           <div
             className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-lg ${
               isDragging ? 'bg-amber-400 text-slate-950' : 'bg-amber-500/20 text-amber-400 border border-amber-400/30'
@@ -327,43 +451,85 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
 
           <div className="space-y-1">
             <p className="text-sm font-bold text-white">
-              {isProcessing
-                ? 'Comprimindo e enviando fotos...'
-                : 'Arraste e solte fotos aqui ou clique para enviar arquivos'}
+              Arraste e solte fotos ou vídeos aqui
             </p>
-            <p className="text-xs text-slate-400">
-              Formatos aceitos: <strong className="text-amber-300">JPG, JPEG, PNG e WEBP</strong> até 5 MB.
-              Redimensionamento automático para máx. 1200 px.
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              Selecione diretamente da <strong>galeria do celular</strong>, <strong>arquivos</strong> ou <strong>câmera</strong>.
             </p>
           </div>
 
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow hover:scale-105 transition-all mt-1">
-            <FileImage className="w-4 h-4" />
-            <span>Enviar arquivo(s) / Escolher fotos</span>
+          {/* Action Upload Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => imageInputRef.current?.click()}
+              disabled={isProcessing}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow hover:scale-105 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Adicionar Imagem</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => videoInputRef.current?.click()}
+              disabled={isProcessing}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-cyan-500/50 text-cyan-300 hover:text-white font-bold text-xs uppercase tracking-wider shadow hover:scale-105 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <Film className="w-4 h-4" />
+              <span>+ Adicionar Vídeo</span>
+            </button>
           </div>
+
+          <p className="text-[11px] text-slate-400 mt-1">
+            Formatos aceitos: <strong className="text-amber-300">JPG, PNG, WEBP</strong> (até 10 MB) e <strong className="text-cyan-300">MP4, WEBM, MOV</strong> (até 50 MB)
+          </p>
         </div>
       </div>
 
-      {/* Image Gallery & Previews */}
+      {/* Video Preview Card if present */}
+      {videoUrl && (
+        <div className="p-3.5 rounded-2xl bg-slate-950 border border-cyan-500/40 space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-cyan-300 flex items-center gap-1.5">
+              <Film className="w-4 h-4 text-cyan-400" />
+              <span>Vídeo do Passeio Vinculado</span>
+            </span>
+
+            <button
+              type="button"
+              onClick={() => onVideoChange?.('')}
+              className="text-rose-400 hover:text-rose-300 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Remover vídeo</span>
+            </button>
+          </div>
+
+          <div className="relative rounded-xl overflow-hidden bg-black max-h-48 flex items-center justify-center">
+            <video src={videoUrl} controls className="max-h-48 max-w-full rounded-lg" />
+          </div>
+        </div>
+      )}
+
+      {/* Images Grid with Management Actions */}
       {allImages.length > 0 && (
         <div className="space-y-2 pt-2">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Fotos anexadas ({allImages.length})</span>
-            <span className="text-[11px] text-amber-300/80">
-              ★ Primeira foto é a Principal do card
-            </span>
-          </div>
+          <p className="text-xs text-slate-400 font-semibold">
+            Galeria do Passeio ({allImages.length} fotos) · A primeira foto com estrela dourada é a <strong>Capa Principal</strong>
+          </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {allImages.map((imgUrl, index) => {
               const isMain = imgUrl === currentImageUrl;
+
               return (
                 <div
                   key={`${imgUrl}-${index}`}
-                  className={`group relative rounded-xl overflow-hidden border bg-slate-900 aspect-video sm:aspect-4/3 transition-all ${
+                  className={`group relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-900 border-2 transition-all duration-200 shadow-md ${
                     isMain
-                      ? 'border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.35)] ring-1 ring-amber-400'
-                      : 'border-slate-700/80 hover:border-slate-500'
+                      ? 'border-amber-400 ring-2 ring-amber-400/30'
+                      : 'border-slate-800 hover:border-slate-600'
                   }`}
                 >
                   <img
@@ -371,63 +537,79 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
                     alt={`Foto ${index + 1}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
-                    onError={(e) => {
-                      // Fallback broken image indicator
-                      (e.target as HTMLImageElement).src =
-                        'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80';
-                    }}
                   />
 
-                  {/* Badges */}
-                  <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10">
-                    {isMain && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black text-[9px] uppercase shadow">
-                        <Star className="w-2.5 h-2.5 fill-current" />
-                        Principal
-                      </span>
-                    )}
-                  </div>
+                  {/* Main Cover Badge */}
+                  {isMain && (
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[9px] uppercase tracking-wider flex items-center gap-1 shadow">
+                      <Star className="w-3 h-3 fill-slate-950" />
+                      <span>Capa Principal</span>
+                    </div>
+                  )}
 
-                  {/* Hover Overlay Controls */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
-                    <div className="flex justify-end gap-1">
+                  {/* Quick Action Overlay on Hover / Mobile */}
+                  <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-between">
+                    <div className="flex items-center justify-between">
+                      {/* Set as main button */}
+                      {!isMain ? (
+                        <button
+                          type="button"
+                          onClick={() => handleSetAsMain(imgUrl)}
+                          className="px-2 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-[10px] flex items-center gap-1 cursor-pointer shadow"
+                          title="Definir como foto de capa"
+                        >
+                          <Star className="w-3 h-3" />
+                          <span>Definir Capa</span>
+                        </button>
+                      ) : (
+                        <span className="text-[10px] font-bold text-amber-300">Capa do Card</span>
+                      )}
+
+                      {/* Remove button */}
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPreviewModalUrl(imgUrl);
-                        }}
-                        className="p-1 rounded-md bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-white transition-colors cursor-pointer"
-                        title="Ver foto em tela cheia"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveImage(imgUrl);
-                        }}
-                        className="p-1 rounded-md bg-rose-900/80 hover:bg-rose-700 text-rose-200 hover:text-white transition-colors cursor-pointer"
+                        onClick={() => handleRemoveImage(imgUrl)}
+                        className="p-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white cursor-pointer transition-colors"
                         title="Remover foto"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between gap-1 pt-1">
-                      {!isMain && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSetAsMain(imgUrl);
-                          }}
-                          className="w-full text-center py-1 rounded bg-amber-400/90 hover:bg-amber-300 text-slate-950 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer shadow"
-                        >
-                          Definir Principal
-                        </button>
+                    <div className="flex items-center justify-between pt-1">
+                      {/* Fullscreen Preview */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewModalUrl(imgUrl);
+                          setPreviewIsVideo(false);
+                        }}
+                        className="p-1 rounded-lg bg-slate-800 text-slate-200 hover:text-white cursor-pointer"
+                        title="Ver foto ampliada"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Order shift */}
+                      {onGalleryChange && galleryImages.length > 1 && !isMain && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveImage(index - 1, 'left')}
+                            className="p-1 rounded bg-slate-800 text-slate-300 hover:text-white cursor-pointer"
+                            title="Mover para esquerda"
+                          >
+                            <ArrowLeft className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveImage(index - 1, 'right')}
+                            className="p-1 rounded bg-slate-800 text-slate-300 hover:text-white cursor-pointer"
+                            title="Mover para direita"
+                          >
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -438,38 +620,49 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         </div>
       )}
 
-      {/* Fullscreen Preview Modal */}
+      {/* Lightbox Preview */}
       {previewModalUrl && (
         <div
-          role="dialog"
-          aria-label="Prévia da foto ampliada"
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
+          className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
           onClick={() => setPreviewModalUrl(null)}
         >
           <div
-            className="relative max-w-4xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col"
+            className="relative max-w-4xl max-h-[85vh] bg-slate-950 rounded-3xl overflow-hidden border border-slate-700 p-2"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-3 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-300">Prévia da Foto em Alta Definição</span>
-              <button
-                type="button"
-                onClick={() => setPreviewModalUrl(null)}
-                className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="overflow-auto p-2 flex items-center justify-center max-h-[80vh]">
-              <img
-                src={previewModalUrl}
-                alt="Foto em alta resolução"
-                className="max-h-[75vh] w-auto object-contain rounded-lg"
-              />
-            </div>
+            <button
+              type="button"
+              onClick={() => setPreviewModalUrl(null)}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-900/80 text-white hover:bg-slate-800"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={previewModalUrl}
+              alt="Prévia ampliada"
+              className="max-h-[80vh] w-auto mx-auto rounded-2xl object-contain"
+            />
           </div>
         </div>
       )}
+
+      {/* Media Library Modal Picker */}
+      <MediaLibraryModal
+        isOpen={isMediaLibraryOpen}
+        onClose={() => setIsMediaLibraryOpen(false)}
+        selectionMode={true}
+        onSelectMedia={(url, type) => {
+          if (type === 'video') {
+            onVideoChange?.(url);
+          } else {
+            if (!currentImageUrl || currentImageUrl.trim() === '') {
+              onMainImageChange(url);
+            } else if (onGalleryChange) {
+              onGalleryChange([...galleryImages, url]);
+            }
+          }
+        }}
+      />
     </div>
   );
 };
