@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { motion } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
@@ -77,14 +78,19 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
           ref={carouselRef}
           className="flex gap-5 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scrollbar-none"
         >
-          {tours.map((tour) => {
+          {tours.map((tour, index) => {
             const hasPrice = tour.priceDiscounted > 0;
             const installmentPrice = hasPrice ? (tour.priceDiscounted / 3).toFixed(2) : null;
 
             return (
-              <div
+              <motion.div
                 key={tour.id}
-                className="w-[280px] sm:w-[320px] md:w-[350px] shrink-0 snap-start bg-white rounded-2xl overflow-hidden border border-slate-200/90 hover:border-[#FBBF24] shadow-md hover:shadow-xl transition-all duration-300 flex flex-col group"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.45, delay: Math.min(index * 0.08, 0.4) }}
+                whileHover={{ y: -5 }}
+                className="w-[280px] sm:w-[320px] md:w-[350px] shrink-0 snap-start bg-white rounded-2xl overflow-hidden border border-slate-200/90 hover:border-[#FBBF24] shadow-md hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer"
               >
                 {/* Image & Badges */}
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
@@ -179,13 +185,19 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
         {/* Banner de Garantia & Vantagens */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#0A192F] text-white flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg border border-[#1E3A5F]">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="p-4 sm:p-5 rounded-2xl bg-[#0A192F] text-white flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg border border-[#1E3A5F]"
+        >
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-[#FBBF24]/20 border border-[#FBBF24]/40 flex items-center justify-center text-[#FBBF24] shrink-0">
               <ShieldCheck className="w-6 h-6" />
@@ -208,7 +220,7 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
               Falar com Concierge VIP
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

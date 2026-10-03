@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import {
   Heart,
   CheckCircle2,
@@ -20,7 +21,13 @@ export const CoupleVipBanner: React.FC<CoupleVipBannerProps> = ({ onOpenBooking 
   return (
     <section id="pacote-casal-vip" className="py-14 sm:py-20 bg-white text-[#0F172A] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="relative rounded-3xl bg-gradient-to-br from-[#0A192F] via-[#0F2744] to-[#060D17] text-white p-6 sm:p-10 lg:p-12 shadow-2xl overflow-hidden border border-[#1E3A5F]">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="relative rounded-3xl bg-gradient-to-br from-[#0A192F] via-[#0F2744] to-[#060D17] text-white p-6 sm:p-10 lg:p-12 shadow-2xl overflow-hidden border border-[#1E3A5F]"
+        >
           {/* Subtle Decorative Elements */}
           <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#FBBF24]/10 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-[#F59E0B]/10 blur-3xl pointer-events-none" />
@@ -141,7 +148,7 @@ export const CoupleVipBanner: React.FC<CoupleVipBannerProps> = ({ onOpenBooking 
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, Variants } from 'framer-motion';
 import { Header } from './components/Header';
 import { CvcHeroSection } from './components/CvcHeroSection';
 import { OffersShowcase } from './components/OffersShowcase';
@@ -145,6 +146,18 @@ export function App() {
     setIsBookingOpen(true);
   };
 
+  const fadeUpVariants: Variants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: 'easeOut',
+      },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-white text-[#0F172A] font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#FBBF24] selection:text-[#0A192F]">
       {/* 1. Header Fixo com Logo e Categorias CVC-Style */}
@@ -161,53 +174,122 @@ export function App() {
 
       <main>
         {/* 2. Hero Grande com Título Forte e Busca em Linha CVC */}
-        <CvcHeroSection
-          onSearch={handleHeroSearch}
-          onOpenBooking={handleOpenBooking}
-          onOpenCalendar={scrollToCalendar}
-        />
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeUpVariants}
+        >
+          <CvcHeroSection
+            onSearch={handleHeroSearch}
+            onOpenBooking={handleOpenBooking}
+            onOpenCalendar={scrollToCalendar}
+          />
+        </motion.div>
 
         {/* 3. Vitrine de Ofertas em Cards Horizontais */}
-        <OffersShowcase
-          tours={tours}
-          onSelectTour={handleOpenBooking}
-          onOpenBooking={handleOpenBooking}
-        />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpVariants}
+        >
+          <OffersShowcase
+            tours={tours}
+            onSelectTour={handleOpenBooking}
+            onOpenBooking={handleOpenBooking}
+          />
+        </motion.div>
 
         {/* 4. Pacote Casal VIP em Destaque Especial */}
-        <CoupleVipBanner onOpenBooking={handleOpenBooking} />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpVariants}
+        >
+          <CoupleVipBanner onOpenBooking={handleOpenBooking} />
+        </motion.div>
 
         {/* 5. Conheça Destinos Incríveis */}
-        <IncredibleDestinations
-          onSelectDestination={(_name, tourId) => handleOpenBooking(tourId)}
-        />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpVariants}
+        >
+          <IncredibleDestinations
+            onSelectDestination={(_name, tourId) => handleOpenBooking(tourId)}
+          />
+        </motion.div>
 
         {/* 6. Prova Social (Avaliações Reais, Selo Google/TripAdvisor) */}
-        <SocialProofSection onOpenBooking={() => handleOpenBooking()} />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpVariants}
+        >
+          <SocialProofSection onOpenBooking={() => handleOpenBooking()} />
+        </motion.div>
 
         {/* 7. Dicas de Viagem & Conteúdo Útil */}
-        <TravelTipsSection
-          onOpenBooking={() => handleOpenBooking()}
-          onOpenCalendar={scrollToCalendar}
-        />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpVariants}
+        >
+          <TravelTipsSection
+            onOpenBooking={() => handleOpenBooking()}
+            onOpenCalendar={scrollToCalendar}
+          />
+        </motion.div>
 
         {/* 7.1 Tábua de Maré Inteligente 2026 Integrada */}
-        <TideCalendar
-          onSelectDayForBooking={handleSelectDayForBooking}
-          onOpenNotifications={() => setIsNotificationsOpen(true)}
-        />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpVariants}
+        >
+          <TideCalendar
+            onSelectDayForBooking={handleSelectDayForBooking}
+            onOpenNotifications={() => setIsNotificationsOpen(true)}
+          />
+        </motion.div>
 
         {/* 7.2 Mapa Interativo de Roteiros */}
-        <InteractiveToursMap
-          onOpenBooking={(tourId) => handleOpenBooking(tourId)}
-          onOpenCalendar={scrollToCalendar}
-        />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpVariants}
+        >
+          <InteractiveToursMap
+            onOpenBooking={(tourId) => handleOpenBooking(tourId)}
+            onOpenCalendar={scrollToCalendar}
+          />
+        </motion.div>
 
         {/* 8. FAQ com Sanfona Interativa */}
-        <FaqSection />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpVariants}
+        >
+          <FaqSection />
+        </motion.div>
 
         {/* 9. Newsletter com Selo de Desconto VIP */}
-        <NewsletterSection />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpVariants}
+        >
+          <NewsletterSection />
+        </motion.div>
       </main>
 
       {/* 10. Rodapé Completo */}
