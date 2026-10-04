@@ -37,10 +37,10 @@ export const VIP_TOURS: TourPackage[] = [
       'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1200&q=80',
   },
 
-  // 2. Passeio Maracajaú
+  // 2. Passeio Maracajaú + Dayuse
   {
     id: 'maracajau-vip',
-    title: 'Passeio Maracajaú (Caribe Brasileiro)',
+    title: 'Maracajaú + Dayuse (Caribe Brasileiro)',
     subtitle: 'Mergulho nas piscinas naturais a 7km da costa com lancha rápida e plataforma flutuante',
     badge: 'Mais Vendido',
     location: 'Maxaranguape / Parrachos de Maracajaú',
@@ -53,18 +53,18 @@ export const VIP_TOURS: TourPackage[] = [
     isVip: true,
     category: 'passeios',
     remainingSlots: 4,
-    urgencyText: 'R$ 170 por pessoa · Opcional: Trilha de Quadriciclo 4x4',
+    urgencyText: 'R$ 170,00 por pessoa · Dayuse incluso à beira-mar',
     description:
       'Navegue em lancha rápida até as piscinas de corais cristalinas mais famosas do Nordeste. Águas mornas repletas de peixes tropicais com apoio de plataforma VIP. Opção de quadriciclo pelas dunas e lagoas da região.',
     highlights: [
       'Embarque veloz em lanchas homologadas pela Capitania dos Portos',
       'Kit completo de mergulho (máscara, snorkel e colete flutuador)',
       'Plataforma flutuante com apoio, segurança e sombra',
-      'Opcional: Trilha ecológica de Quadriciclo pelas dunas',
-      'Acesso ao clube de praia parceiro à beira-mar',
+      'Dayuse em clube à beira-mar com piscinas e restaurante',
+      'Busca e retorno no hotel',
     ],
     included: [
-      'Busca e retorno na porta do hotel em Ponta Negra ou Via Costeira',
+      'Busca e retorno na porta do hotel em Ponta Negra, Via Costeira ou Praia dos Artistas',
       'Passeio de lancha rápida até os arrecifes de corais',
       'Kit de mergulho higienizado e instrutor de bordo',
       'Seguro passageiro náutico integral',
@@ -73,10 +73,10 @@ export const VIP_TOURS: TourPackage[] = [
       'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80',
   },
 
-  // 3. Passeio Rio do Fogo
+  // 3. Passeio Rio do Fogo + Punaú
   {
     id: 'rio-do-fogo-vip',
-    title: 'Passeio Rio do Fogo (Piscinas Preservadas)',
+    title: 'Rio do Fogo + Punaú (Piscinas & Banco de Areia)',
     subtitle: 'Piscinas naturais paradisíacas e o famoso banco de areia dourado em alto-mar',
     badge: 'Águas Cristalinas',
     location: 'Rio do Fogo (Litoral Norte de Natal)',
@@ -89,7 +89,7 @@ export const VIP_TOURS: TourPackage[] = [
     isVip: true,
     category: 'passeios',
     remainingSlots: 2,
-    urgencyText: 'R$ 170 por pessoa · Vagas limitadas para preservação ambiental',
+    urgencyText: 'R$ 170,00 por pessoa · Vagas limitadas para preservação ambiental',
     description:
       'Um refúgio preservado de águas transparentes e calmas. Além das piscinas de corais, na maré baixa surge um incrível banco de areia no meio do oceano para fotos espetaculares.',
     highlights: [
@@ -108,10 +108,10 @@ export const VIP_TOURS: TourPackage[] = [
       'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
   },
 
-  // 4. Passeio Pipa + Praia do Amor
+  // 4. Passeio Pipa + Praia do Amor (VAN)
   {
     id: 'pipa-praia-do-amor',
-    title: 'Passeio Pipa + Praia do Amor',
+    title: 'Pipa + Praia do Amor (VAN)',
     subtitle: 'Falésias vermelhas do Chapadão, Baía dos Golfinhos e a icônica Praia do Amor',
     badge: 'Preço Imbatível',
     location: 'Tibau do Sul / Praia da Pipa',
@@ -124,7 +124,7 @@ export const VIP_TOURS: TourPackage[] = [
     isVip: true,
     category: 'passeios',
     remainingSlots: 5,
-    urgencyText: 'R$ 80 por pessoa · Opcional: Passeio de lancha com golfinhos (+R$ 75)',
+    urgencyText: 'R$ 80,00 por pessoa - (VAN Executiva Climatizada)',
     description:
       'Visite a praia mais famosa e charmosa do Rio Grande do Norte. Mirante do Chapadão com vista panorâmica da Praia do Amor, banho de mar, tempo livre na vila de Pipa e opção de lancha para observar golfinhos de perto.',
     highlights: [
@@ -144,10 +144,10 @@ export const VIP_TOURS: TourPackage[] = [
       'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
   },
 
-  // 5. Pipa By Night
+  // 5. Pipa By-Night
   {
     id: 'pipa-by-night',
-    title: 'Pipa By Night (Noite Charmosa)',
+    title: 'Pipa by-Night (Noite Charmosa)',
     subtitle: 'Gastronomia sofisticada, música ao vivo e o charme das ruelas iluminadas de Pipa',
     badge: 'Sextas & Sábados',
     location: 'Vila de Pipa / Rua do Céu e Av. Baía dos Golfinhos',
@@ -160,7 +160,7 @@ export const VIP_TOURS: TourPackage[] = [
     isVip: true,
     category: 'passeios',
     remainingSlots: 6,
-    urgencyText: 'R$ 100 por pessoa · Saídas exclusivas nas noites de sextas e sábados',
+    urgencyText: 'R$ 100,00 por pessoa · Retorno seguro direto no hotel',
     description:
       'Viva a efervescência noturna de Pipa sem se preocupar com trânsito ou direção. Transporte executivo de ida e volta, tempo livre para jantar nos melhores restaurantes, curtir bares com música ao vivo e passear pela badalada Rua do Céu.',
     highlights: [
@@ -178,23 +178,23 @@ export const VIP_TOURS: TourPackage[] = [
       'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80',
   },
 
-  // 6. Off-Road Litoral Sul 4x4 Premium
+  // 6. Off-Road Litoral Sul 4x4
   {
     id: 'off-road-litoral-sul',
-    title: 'Off-Road Litoral Sul 4x4 Premium',
+    title: 'Litoral Sul 4X4 (Lagoas & Falésias)',
     subtitle: 'Expedição em veículos 4x4 Pajero Dakar pelas lagoas cristalinas, falésias e dunas',
     badge: 'Experiência 4x4 VIP',
     location: 'Litoral Sul (Nísia Floresta, Camurupim e Búzios)',
     rating: 4.99,
     reviewsCount: 1890,
-    priceOriginal: 0,
-    priceDiscounted: 0, // Sob consulta
+    priceOriginal: 190,
+    priceDiscounted: 150,
     duration: 'Dia inteiro (Aprox. 8h)',
     includesDiving: false,
     isVip: true,
     category: 'passeios',
     remainingSlots: 2,
-    urgencyText: 'Sob Consulta · Veículo 4x4 exclusivo e climatizado para sua família',
+    urgencyText: 'R$ 150,00 por pessoa · Veículo 4x4 exclusivo e climatizado',
     description:
       'Uma expedição fascinante por caminhos rurais e praias desertas. Inclui Barreira do Inferno, Maior Cajueiro do Mundo, banho na Lagoa do Carcará de águas transparentes, arrecifes de Camurupim e o pôr do sol nas Dunas Douradas de Búzios.',
     highlights: [
@@ -214,23 +214,23 @@ export const VIP_TOURS: TourPackage[] = [
       'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=80',
   },
 
-  // 7. Buggy VIP Premium Privativo
+  // 7. Litoral Norte de Buggy (Genipabu)
   {
     id: 'buggy-vip-privativo',
-    title: 'Buggy VIP Premium Privativo (Genipabu)',
-    subtitle: 'O lendário passeio de buggy pelas dunas móveis do Litoral Norte com balsa e lagoas',
+    title: 'Litoral Norte de Buggy (Genipabu)',
+    subtitle: 'O lendário passeio de buggy pelas dunas móveis com balsa e lagoas',
     badge: 'Privativo Exclusivo',
     location: 'Dunas de Genipabu / Extremoz (Litoral Norte)',
     rating: 5.0,
     reviewsCount: 2750,
-    priceOriginal: 0,
-    priceDiscounted: 0, // Sob consulta
+    priceOriginal: 950,
+    priceDiscounted: 820,
     duration: 'Dia inteiro (Aprox. 7h)',
     includesDiving: false,
     isVip: true,
     category: 'passeios',
     remainingSlots: 3,
-    urgencyText: 'Sob Consulta · Buggy 100% exclusivo com saída direta da recepção do hotel',
+    urgencyText: 'R$ 820,00 Privativo ou (÷ 2 Casais: R$ 205/pessoa)',
     description:
       'O passeio mais clássico do Nordeste feito sob medida: buggy privativo apenas para você e seus acompanhantes (até 4 pessoas). Travessia de balsa rústica, dunas móveis com emoção dosada por você, lagoas de Pitangui e Jacumã com esquibunda e kamikaze.',
     highlights: [
@@ -241,7 +241,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Lagoas de Pitangui e Jacumã com opções de lazer',
     ],
     included: [
-      'Embarque e desembarque na porta do hotel em Ponta Negra',
+      'Embarque e desembarque na porta do hotel em Ponta Negra, Via Costeira ou Praia dos Artistas',
       'Taxa de balsa artesanal ecológica inclusa',
       'Roteiro sem pressa com tempo livre nas lagoas',
       'Seguro atividade e assistência total',
@@ -250,39 +250,108 @@ export const VIP_TOURS: TourPackage[] = [
       'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
   },
 
-  // 8. Transfer VIP Aeroporto
+  // 8. Transfer Aeroporto Promocional
   {
     id: 'transfer-vip-aeroporto',
-    title: 'Transfer VIP Aeroporto de Natal (NAT)',
-    subtitle: 'Recepção executiva no saguão, veículo 100% climatizado e pontualidade garantida',
-    badge: 'Conforto & Pontualidade',
+    title: 'Transfer Aeroporto Promocional (2 Trajetos)',
+    subtitle: 'Na contratação de 1 ou mais passeios, de R$ 250 fica por apenas R$ 160 (Ida e Volta)',
+    badge: 'Promoção VIP',
     location: 'Aeroporto Internacional de Natal (NAT) ⇄ Hotéis de Natal',
     rating: 5.0,
     reviewsCount: 3900,
-    priceOriginal: 200,
+    priceOriginal: 250,
     priceDiscounted: 160,
     duration: 'Aprox. 45 min direto',
     includesDiving: false,
     isVip: true,
     category: 'transfer',
     remainingSlots: 5,
-    urgencyText: 'R$ 160 até 4 passageiros com bagagens · Monitoramento de voo em tempo real',
+    urgencyText: 'R$ 160,00 "2 Trajetos" na contratação de 1 ou mais passeios',
     description:
-      'Comece e termine suas férias em Natal sem estresse. Motorista receptivo aguardando no desembarque com placa nominal, auxílio com malas e viagem direta em veículo moderno e higienizado até seu hotel em Ponta Negra ou Via Costeira.',
+      'Comece e termine suas férias em Natal sem estresse. Motorista receptivo aguardando no desembarque com placa nominal, auxílio com malas e viagem direta em veículo moderno e higienizado até seu hotel em Ponta Negra, Via Costeira ou Praia dos Artistas.',
     highlights: [
       'Recepção no portão de desembarque com identificação nominal',
-      'Valor fixo de R$ 160 para até 4 passageiros com malas',
+      'Valor promocional de R$ 160 para 2 trajetos (chegada e retorno)',
       'Monitoramento de voo em tempo real (sem taxa em caso de atrasos)',
       'Veículos modernos com ar-condicionado de alta potência',
     ],
     included: [
-      'Transfer executivo Aeroporto ➔ Hotel ou Hotel ➔ Aeroporto',
+      'Transfer executivo Aeroporto ➔ Hotel e Hotel ➔ Aeroporto (2 trajetos)',
       'Seguro passageiro',
       'Disponibilidade de cadeirinha infantil gratuita sob solicitação',
       'Suporte direto via WhatsApp para confirmação de voo',
     ],
     imageUrl:
       'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1200&q=80',
+  },
+
+  // 9. Quadriciclo Aventura
+  {
+    id: 'quadriciclo-aventura',
+    title: 'Passeio de Quadriciclo (Até 2 Pessoas)',
+    subtitle: 'Pilotagem de quadriciclo 4x4 automático por dunas, lagoas e trilhas ecológicas',
+    badge: 'Aventura 4x4',
+    location: 'Litoral Norte e Sul (Lagoa de Alcaçuz / Barra de Tabatinga)',
+    rating: 4.95,
+    reviewsCount: 890,
+    priceOriginal: 350,
+    priceDiscounted: 280,
+    duration: 'Aprox. 2h30 de trilha',
+    includesDiving: false,
+    isVip: true,
+    category: 'passeios',
+    remainingSlots: 4,
+    urgencyText: 'R$ 280,00 "Quadriciclo até 2 pessoas"',
+    description:
+      'Sinta a emoção de pilotar seu próprio quadriciclo 4x4 por trilhas rurais, dunas e lagoas deslumbrantes. O veículo suporta até 2 pessoas com total estabilidade e instrutor guia acompanhante.',
+    highlights: [
+      'Quadriciclos 4x4 automáticos e fáceis de pilotar',
+      'Trilha em lagoas de água doce para banho',
+      'Equipamentos de segurança (capacetes e óculos) inclusos',
+      'Paradas fotográficas em mirantes naturais',
+    ],
+    included: [
+      'Locação do quadriciclo para até 2 passageiros',
+      'Instrutor guia em quadriciclo líder',
+      'Combustível e equipamentos de proteção',
+      'Instrução prática antes da partida',
+    ],
+    imageUrl:
+      'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80',
+  },
+
+  // 10. Auto do Potengi + City-Tour
+  {
+    id: 'auto-do-potengi',
+    title: 'Auto do Potengi + City-Tour Histórico',
+    subtitle: 'Fortaleza dos Reis Magos, Centro Histórico, Cajueiro e pôr do sol no Rio Potengi',
+    badge: 'Cultura & Pôr do Sol',
+    location: 'Natal / Rio Potengi e Fortaleza dos Reis Magos',
+    rating: 4.94,
+    reviewsCount: 760,
+    priceOriginal: 190,
+    priceDiscounted: 150,
+    duration: 'Tarde e pôr do sol (Aprox. 6h)',
+    includesDiving: false,
+    isVip: true,
+    category: 'passeios',
+    remainingSlots: 3,
+    urgencyText: 'R$ 150,00 por pessoa · Inclui contemplação do pôr do sol no Potengi',
+    description:
+      'Conheça a história e os marcos culturais da Cidade do Sol: Fortaleza dos Reis Magos, Centro Histórico com casario colonial e navegação com o espetáculo do pôr do sol nas águas do Rio Potengi ao som do saxofone.',
+    highlights: [
+      'Visita guiada à histórica Fortaleza dos Reis Magos',
+      'Tour panorâmico pelo Centro Histórico e Ponte Newton Navarro',
+      'Pôr do sol cinematográfico no Rio Potengi',
+      'Guia historiador credenciado pelo Cadastur',
+    ],
+    included: [
+      'Transporte executivo climatizado com busca no hotel',
+      'Guia credenciado Cadastur',
+      'Ingressos e seguro viagem inclusos',
+    ],
+    imageUrl:
+      'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80',
   },
 ];
 

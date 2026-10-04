@@ -848,6 +848,17 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                         ))}
                       </select>
                     </div>
+
+                    <a
+                      href="https://loja.infinitepay.io/natalvipturismo"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-3 rounded-xl bg-slate-900/90 border border-emerald-500/40 text-emerald-400 hover:bg-slate-800 text-xs font-bold flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer shadow-sm"
+                    >
+                      <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Ou pagar direto no Link Oficial InfinitePay</span>
+                      <ExternalLink className="w-3 h-3 text-emerald-400" />
+                    </a>
                   </div>
                 </div>
               )}

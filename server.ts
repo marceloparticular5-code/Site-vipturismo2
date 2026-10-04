@@ -36,12 +36,12 @@ app.get('/api/health', (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, history } = req.body;
     if (!message || typeof message !== 'string') {
       res.status(400).json({ error: 'Mensagem inválida' });
       return;
     }
-    const result = await processChat(message);
+    const result = await processChat(message, history);
     res.json(result);
   } catch (error: any) {
     console.error('Error handling /api/chat:', error);

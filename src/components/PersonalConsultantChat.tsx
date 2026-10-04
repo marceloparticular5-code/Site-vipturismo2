@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Phone,
   ShieldCheck,
+  CreditCard,
 } from 'lucide-react';
 
 interface PersonalConsultantChatProps {
@@ -32,7 +33,7 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
       id: 'welcome-msg',
       role: 'assistant',
       content:
-        'Olá! Muito prazer, sou o Marcelo, seu agente de turismo pessoal na Natal Vip Turismo 🌴.\n\nComo posso planejar o seu roteiro perfeito hoje? Posso analisar a tábua de maré oficial 2026 para o melhor mergulho em Maracajaú e Rio do Fogo, indicar as vagas em lancha rápida VIP, buggy em Genipabu e as melhores dicas de gastronomia potiguar!',
+        'Olá! Sou o Marcelo, consultor de vendas virtual da Natal VIP Turismo 🌴\nPara eu te indicar o roteiro perfeito e cuidar de tudo sem complicação, quando você vem a Natal e o que procura na viagem?',
       timestamp: 'Agora',
       suggestedTourId: 'maracajau-vip',
     },
@@ -56,16 +57,16 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
   if (!isOpen) return null;
 
   const quickQuestions = [
-    'Qual o melhor dia de maré para mergulho?',
-    'Diferença entre Maracajaú e Rio do Fogo',
-    'Melhores passeios para fazer com a família',
-    'Onde jantar frutos do mar hoje à noite?',
-    'Como funciona a garantia da maré baixa?',
+    'Quais os passeios e valores?',
+    'Buscam no meu hotel?',
+    'Litoral Norte de Buggy (Genipabu)',
+    'Como funciona o pagamento no Pix?',
+    'Falar com atendente humano',
   ];
 
   const handleOpenWhatsApp = () => {
     const text = encodeURIComponent(
-      'Olá Marcelo! Estou no site da Natal Vip Turismo e gostaria de uma consultoria pessoal para os passeios da minha viagem!'
+      'Olá Marcelo! Estou no site da Natal Vip Turismo e gostaria de atendimento para os passeios da minha viagem!'
     );
     window.open(`https://wa.me/5584988722044?text=${text}`, '_blank');
   };
@@ -74,8 +75,22 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
     const query = textToSend || inputPrompt;
     if (!query.trim() || loading) return;
 
-    if (query.toLowerCase().includes('whatsapp') || query.toLowerCase().includes('zap')) {
-      handleOpenWhatsApp();
+    if (query.toLowerCase().includes('atendente') || query.toLowerCase().includes('humano')) {
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: query,
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      };
+      const botMessage: ChatMessage = {
+        id: `marcelo-${Date.now()}`,
+        role: 'assistant',
+        content:
+          'Com certeza! Vou te transferir agora para o atendimento humano no nosso WhatsApp oficial: (84) 98872-2044.\nNossa equipe já está a postos para te receber!',
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, userMessage, botMessage]);
+      setInputPrompt('');
       return;
     }
 
@@ -112,7 +127,7 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
       const botMessage: ChatMessage = {
         id: `marcelo-${Date.now()}`,
         role: 'assistant',
-        content: data.reply || 'Estou à disposição! Se preferir, pode também me chamar diretamente no WhatsApp +55 (84) 98872-2044.',
+        content: data.reply || 'Estou à disposição! Se preferir, pode também me chamar diretamente no WhatsApp (84) 98872-2044.',
         timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         suggestedTourId: data.suggestedTourId || undefined,
       };
@@ -121,11 +136,14 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
     } catch {
       // Graceful fallback from Marcelo with exact domain knowledge
       let fallback =
-        'Para mergulho nos Parrachos, minha orientação pessoal é priorizar marés de 0.0 a 0.5 (Verde no nosso calendário), quando as piscinas naturais ficam cristalinas e mornas como uma piscina caribenha! De 0.6 a 0.7 ainda aproveitamos muito bem. Se a maré for mais alta (0.8+), eu recomendo agendarmos o Passeio de Buggy em Genipabu com emoção!';
+        'Temos opções incríveis como Maracajaú por R$ 170, Pipa por R$ 80 e o Buggy no Litoral Norte por R$ 820 privativo (ou divide para 2 casais). Todos buscam no seu hotel!\nQual desses estilos você prefere: praia, aventura ou piscinas naturais?';
 
-      if (query.toLowerCase().includes('noite') || query.toLowerCase().includes('jantar') || query.toLowerCase().includes('restaurante')) {
+      if (query.toLowerCase().includes('hotel') || query.toLowerCase().includes('busca')) {
         fallback =
-          'Para sua noite, recomendo com certeza o Camarões Potiguar em Ponta Negra ou o forró do Rastapé! Só recomendo jantar em bom horário, pois no dia seguinte nosso transfer busca você cedinho no hotel para a maré baixa dos Parrachos!';
+          'Sim! Buscamos na porta do seu hotel em Ponta Negra, Via Costeira e Praia dos Artistas, sem custo extra 🚐\nEm qual hotel você vai ficar?';
+      } else if (query.toLowerCase().includes('pagar') || query.toLowerCase().includes('pix') || query.toLowerCase().includes('cartão')) {
+        fallback =
+          'No Pix você só paga uma entrada para reservar e o restante no dia do passeio! Ou no cartão pelo link seguro: https://loja.infinitepay.io/natalvipturismo\nVocê prefere Pix ou cartão?';
       }
 
       setMessages((prev) => [
@@ -239,28 +257,54 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
               <p className="whitespace-pre-line">{msg.content}</p>
 
               {/* Action buttons embedded in assistant answer */}
-              {msg.suggestedTourId && msg.role === 'assistant' && (
+              {msg.role === 'assistant' && (
                 <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => {
-                      onOpenBooking(msg.suggestedTourId);
-                      onClose();
-                    }}
-                    className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-sm transition-all"
-                  >
-                    <span>Reservar este Passeio</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  {msg.suggestedTourId && (
+                    <button
+                      onClick={() => {
+                        onOpenBooking(msg.suggestedTourId);
+                        onClose();
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                    >
+                      <span>Reservar este Passeio</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+
+                  {msg.content.includes('infinitepay.io') && (
+                    <a
+                      href="https://loja.infinitepay.io/natalvipturismo"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow transition-all"
+                    >
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>💳 Pagar no Cartão (InfinitePay)</span>
+                    </a>
+                  )}
+
+                  {(msg.content.includes('98872-2044') || msg.content.includes('WhatsApp')) && (
+                    <a
+                      href="https://wa.me/5584988722044?text=Ol%C3%A1%20Marcelo!%20Gostaria%20de%20tirar%20d%C3%BAvidas%20e%20confirmar%20meu%20passeio."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>Chamar no WhatsApp</span>
+                    </a>
+                  )}
 
                   <button
                     onClick={() => {
                       onOpenCalendar();
                       onClose();
                     }}
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1 transition-all"
+                    className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1 transition-all cursor-pointer"
                   >
                     <Compass className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Ver no Calendário de Maré</span>
+                    <span>Tábua de Maré 2026</span>
                   </button>
                 </div>
               )}

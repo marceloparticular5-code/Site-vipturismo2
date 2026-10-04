@@ -377,15 +377,15 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
     },
     valores: {
       q: 'Quais são os valores?',
-      a: 'Nossos valores são transparentes e sem surpresas! Passeios a partir de R$ 119 por pessoa (Rio Potengi), Buggy por R$ 169 e Parrachos de Maracajaú por R$ 189 com kit de mergulho incluso. Combos completos contam com descontos especiais.',
+      a: 'Valores oficiais com desconto: Pipa + Praia do Amor por R$ 80 (Van); Pipa by-Night por R$ 100; Litoral Sul 4x4 por R$ 150; Rio do Fogo + Punaú por R$ 170; Maracajaú + Dayuse por R$ 170; Litoral Norte de Buggy por R$ 820 privativo (ou divide para 2 casais); Quadriciclo por R$ 280 (até 2 pessoas) e Transfer Aeroporto por R$ 160 (2 trajetos na contratação de 1 passeio)!',
     },
     hotel: {
       q: 'Vocês buscam no hotel?',
-      a: 'Sim! Todos os nossos passeios incluem transfer com busca e retorno gratuito na recepção do seu hotel ou pousada em Ponta Negra, Via Costeira e Praia do Meio.',
+      a: 'Sim! Todos os nossos passeios realizam embarques diretamente na recepção dos hotéis localizados em: Ponta Negra, Via Costeira e Praia dos Artistas.',
     },
     privativo: {
       q: 'O passeio é privativo?',
-      a: 'Temos opções privativas (veículo e guia 100% exclusivos para sua família ou casal) e também pequenos grupos selecionados de alto padrão para quem deseja economia com conforto VIP.',
+      a: 'Temos o Litoral Norte de Buggy por R$ 820 privativo (que pode ser dividido para até 2 casais / 4 pessoas) e opções compartilhadas executivas como Pipa em van por apenas R$ 80 por pessoa.',
     },
     buggy_vagas: {
       q: 'Quantas pessoas cabem no buggy?',
@@ -397,19 +397,19 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
     },
     criancas: {
       q: 'Quais passeios são indicados para crianças?',
-      a: 'Para famílias com crianças pequenas, recomendamos: Parrachos de Maracajaú (piscinas naturais calmas e mornas), Litoral Sul 4x4 (veículo espaçoso climatizado e paradas na Lagoa do Carcará) e Catamarã no Rio Potengi.',
+      a: 'Para famílias com crianças, recomendamos: Maracajaú + Dayuse (piscinas naturais calmas e dayuse com estrutura), Rio do Fogo + Punaú e o Litoral Sul 4x4 em veículo Pajero Dakar climatizado.',
     },
     casal: {
       q: 'Quais passeios são indicados para casal?',
-      a: 'Para casais em lua de mel ou férias românticas, o Pipa VIP com pôr do sol no Chapadão, Maracajaú VIP com lancha rápida e o pôr do sol no Rio Potengi são experiências inesquecíveis.',
+      a: 'Para casais: Pipa + Praia do Amor, Pipa by-Night para jantar romântico, Maracajaú VIP com lancha rápida e o Buggy privativo dividido a dois.',
     },
     reserva: {
       q: 'Como funciona a reserva?',
-      a: 'É super simples: você escolhe o passeio e a data aqui no chat ou pelo autoatendimento. Verificamos a tábua de maré e disponibilidade, confirmamos seus dados e emitimos seu voucher na hora.',
+      a: 'Super simples: você escolhe o passeio, reserva sua vaga no Pix (com entrada e o restante no dia do passeio) ou no cartão pelo link seguro da InfinitePay (https://loja.infinitepay.io/natalvipturismo).',
     },
     pagamento: {
       q: 'Quais formas de pagamento?',
-      a: 'Aceitamos Pix (com confirmação instantânea), Cartões de Crédito (com parcelamento em até 10x sem juros) e Cartão de Débito.',
+      a: 'PIX (com entrada para reserva da vaga e o restante pago nos dias dos respectivos passeios) ou Cartão de crédito pelo link oficial da InfinitePay: https://loja.infinitepay.io/natalvipturismo',
     },
     levar: {
       q: 'O que levar no passeio?',
