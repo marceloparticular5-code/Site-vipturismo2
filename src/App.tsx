@@ -41,6 +41,7 @@ export function App() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
+  const [isLoadingTours, setIsLoadingTours] = useState(true);
 
   // Monitor real-time tide and vacancy alerts
   useRealTimeTideAndVacancyMonitor(tours);
@@ -52,8 +53,13 @@ export function App() {
 
   // Sync tours from Firestore
   useEffect(() => {
+    setIsLoadingTours(true);
     const unsubscribe = subscribeToTours((allTours) => {
       setTours(allTours);
+      // Suave delay para exibição fluida do skeleton/shimmer sem piscar
+      setTimeout(() => {
+        setIsLoadingTours(false);
+      }, 500);
     });
     return () => unsubscribe();
   }, []);
@@ -195,6 +201,7 @@ export function App() {
         >
           <OffersShowcase
             tours={tours}
+            isLoading={isLoadingTours}
             onSelectTour={handleOpenBooking}
             onOpenBooking={handleOpenBooking}
           />
