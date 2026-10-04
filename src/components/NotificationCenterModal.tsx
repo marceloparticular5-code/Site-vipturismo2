@@ -59,6 +59,36 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
     }
   }, [isOpen]);
 
+  // Body and HTML scroll lock/unlock management
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  // ESC key listener to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const supported = isNotificationSupported();
@@ -137,9 +167,19 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
   return (
     <div
       id="notification-center-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      role="dialog"
+      aria-modal="true"
     >
-      <div className="relative w-full max-w-2xl max-h-[90vh] bg-[#071324] border-2 border-amber-400/40 rounded-3xl p-5 sm:p-7 shadow-2xl flex flex-col text-slate-200 overflow-hidden">
+      <div
+        className="relative w-full max-w-2xl max-h-[90vh] bg-[#071324] border-2 border-amber-400/40 rounded-3xl p-5 sm:p-7 shadow-2xl flex flex-col text-slate-200 overflow-hidden cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
@@ -160,9 +200,11 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-full bg-slate-900 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-            title="Fechar"
+            className="w-10 h-10 rounded-full bg-slate-900 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+            aria-label="Fechar"
+            title="Fechar (ESC)"
           >
             <X className="w-5 h-5" />
           </button>

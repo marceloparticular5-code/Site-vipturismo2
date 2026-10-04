@@ -60,12 +60,30 @@ export const getAvailableTravelMonths = (totalMonths = 12): { value: string; lab
   return months;
 };
 
+// Check if promo modal has already been dismissed
+const isPromoAlreadyDismissed = (): boolean => {
+  try {
+    return (
+      localStorage.getItem('natal_vip_popup_closed') === 'true' ||
+      localStorage.getItem('natal_vip_promo_dismissed') === 'true' ||
+      sessionStorage.getItem('natal_vip_popup_closed') === 'true' ||
+      sessionStorage.getItem('natal_vip_promo_dismissed') === 'true'
+    );
+  } catch {
+    return false;
+  }
+};
+
 export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
   onOpenBookingWithTour,
 }) => {
   // Exit-intent / Promo pop-up state
   const [showExitModal, setShowExitModal] = useState(false);
-  const [hasDismissedPromo, setHasDismissedPromo] = useState(false);
+  const [hasDismissedPromo, setHasDismissedPromo] = useState(isPromoAlreadyDismissed);
+  const [autoCloseSeconds, setAutoCloseSeconds] = useState<number | null>(null);
+
+  // Synchronous ref to prevent any re-trigger loop during dismissal
+  const isDismissedRef = React.useRef<boolean>(isPromoAlreadyDismissed());
 
   // Lista dinâmica de meses válidos a partir do mês atual
   const availableTravelMonths = React.useMemo(() => getAvailableTravelMonths(12), []);
@@ -90,12 +108,11 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
       if (stored) {
         setLeadsList(JSON.parse(stored));
       } else {
-        // Seed initial high-value leads for realism and agency demo
         const initialLeads: LeadFollowUp[] = [
           {
             id: 'lead-101',
             name: 'Fernanda Carvalho',
-            phone: '(11) 98722-4411',
+            phone: '(84) 98872-2044',
             email: 'fernanda.turismo@gmail.com',
             travelMonth: 'Abril/2026',
             tourInterest: 'Parrachos de Maracajaú VIP',
@@ -104,34 +121,6 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
             status: 'novo',
             couponCode: 'VIPNATAL30',
             utmSource: 'Instagram Ads / Maré Baixa',
-          },
-          {
-            id: 'lead-102',
-            name: 'Ricardo Nogueira & Família',
-            phone: '(31) 99182-5520',
-            email: 'ricardo.bh@yahoo.com.br',
-            travelMonth: 'Maio/2026',
-            tourInterest: 'Pacote VIP · Os 4 Principais Passeios',
-            origin: 'abandoned_cart',
-            createdAt: '19/09/2026 09:30',
-            status: 'followup_enviado',
-            lastFollowUpDate: '19/09/2026 09:45',
-            couponCode: 'VIPNATAL30',
-            notes: 'Cliente simulou 4 adultos no carrinho e pausou no PIX.',
-          },
-          {
-            id: 'lead-103',
-            name: 'Mariana Duarte',
-            phone: '(81) 98220-1199',
-            email: 'mariana.duarte@hotmail.com',
-            travelMonth: 'Julho/2026',
-            tourInterest: 'Litoral Sul 4x4 & Dunas de Búzios',
-            origin: 'tide_guide',
-            createdAt: '18/09/2026 17:20',
-            status: 'convertido',
-            lastFollowUpDate: '18/09/2026 18:00',
-            couponCode: 'VIPNATAL30',
-            notes: 'Fechou reserva após receber o guia em PDF!',
           },
         ];
         setLeadsList(initialLeads);
@@ -142,37 +131,107 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
     }
   }, []);
 
-  // Exit intent detection on desktop
+  // Safe scroll restoration function
+  const restorePageScroll = () => {
+    document.body.style.overflow = '';
+    document.body.style.removeProperty('overflow');
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.removeProperty('overflow');
+  };
+
+  // Body and HTML scroll lock/unlock management
   useEffect(() => {
+    if (showExitModal) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      restorePageScroll();
+    }
+    return () => {
+      restorePageScroll();
+    };
+  }, [showExitModal]);
+
+  // Função centralizada para fechar e desativar permanentemente o pop-up
+  const handleDismissModal = () => {
+    isDismissedRef.current = true;
+    setShowExitModal(false);
+    setHasDismissedPromo(true);
+    restorePageScroll();
+
+    // Salvar em localStorage e sessionStorage para não reaparecer
+    try {
+      localStorage.setItem('natal_vip_popup_closed', 'true');
+      localStorage.setItem('natal_vip_promo_dismissed', 'true');
+      sessionStorage.setItem('natal_vip_popup_closed', 'true');
+      sessionStorage.setItem('natal_vip_promo_dismissed', 'true');
+    } catch {
+      // ignore
+    }
+  };
+
+  // ESC key listener to close modal (Requisito 3)
+  useEffect(() => {
+    if (!showExitModal) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27) {
+        e.preventDefault();
+        handleDismissModal();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+  }, [showExitModal]);
+
+  // Exit intent detection on desktop (protegido contra re-abertura involuntária)
+  useEffect(() => {
+    if (isDismissedRef.current || isPromoAlreadyDismissed()) {
+      setHasDismissedPromo(true);
+      return;
+    }
+
     const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 15 && !hasDismissedPromo && !showExitModal) {
-        const dismissed = sessionStorage.getItem('natal_vip_promo_dismissed');
-        if (!dismissed) {
-          setShowExitModal(true);
-        }
+      if (isDismissedRef.current || isPromoAlreadyDismissed()) return;
+
+      if (e.clientY <= 15 && !showExitModal) {
+        setShowExitModal(true);
       }
     };
 
     document.addEventListener('mouseleave', handleMouseLeave);
     return () => document.removeEventListener('mouseleave', handleMouseLeave);
-  }, [hasDismissedPromo, showExitModal]);
+  }, [showExitModal]);
 
   // Timed trigger: after 45s of browsing if not dismissed
   useEffect(() => {
+    if (isDismissedRef.current || isPromoAlreadyDismissed()) {
+      setHasDismissedPromo(true);
+      return;
+    }
+
     const timer = setTimeout(() => {
-      const dismissed = sessionStorage.getItem('natal_vip_promo_dismissed');
-      if (!dismissed && !hasDismissedPromo && !showExitModal) {
+      if (!isDismissedRef.current && !isPromoAlreadyDismissed() && !showExitModal) {
         setShowExitModal(true);
       }
     }, 45000);
     return () => clearTimeout(timer);
-  }, [hasDismissedPromo, showExitModal]);
+  }, [showExitModal]);
 
-  const handleDismissModal = () => {
-    setShowExitModal(false);
-    setHasDismissedPromo(true);
-    sessionStorage.setItem('natal_vip_promo_dismissed', 'true');
-  };
+  // Auto-close countdown after successful lead submission
+  useEffect(() => {
+    if (isSuccess && autoCloseSeconds !== null) {
+      if (autoCloseSeconds <= 0) {
+        handleDismissModal();
+        return;
+      }
+      const timer = setTimeout(() => {
+        setAutoCloseSeconds((prev) => (prev !== null ? prev - 1 : null));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, autoCloseSeconds]);
 
   const handleCaptureLead = (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,7 +266,7 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
       // ignore
     }
 
-    // Persist to Cloud Firestore leads collection
+    // Persist to Cloud Firestore leads collection safely
     try {
       saveLeadToFirestore({
         name: newLead.name,
@@ -224,8 +283,24 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
       console.warn('Firestore lead error:', err);
     }
 
+    // Marcar como fechado em armazenamento permanente
+    try {
+      localStorage.setItem('natal_vip_popup_closed', 'true');
+      localStorage.setItem('natal_vip_promo_dismissed', 'true');
+      sessionStorage.setItem('natal_vip_popup_closed', 'true');
+      sessionStorage.setItem('natal_vip_promo_dismissed', 'true');
+      localStorage.setItem('natal_vip_lead_captured', 'true');
+    } catch {
+      // ignore
+    }
+
     setIsSuccess(true);
-    sessionStorage.setItem('natal_vip_promo_dismissed', 'true');
+    setAutoCloseSeconds(2); // Contagem regressiva rápida
+
+    // Requisito 8: Se for captura de lead, fechar automaticamente após envio
+    setTimeout(() => {
+      handleDismissModal();
+    }, 1800);
   };
 
   const handleCopyCoupon = () => {
@@ -238,19 +313,46 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
     <>
       {/* 1. EXIT-INTENT / PROMOTIONAL LEAD CAPTURE MODAL */}
       {showExitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="relative w-full max-w-xl bg-gradient-to-b from-[#0B1A2E] to-[#06101D] border-2 border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.8)] text-slate-100 overflow-hidden">
+        <div
+          id="vip-lead-popup-overlay"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer select-none"
+          style={{ touchAction: 'pan-y' }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleDismissModal();
+            }
+          }}
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) {
+              handleDismissModal();
+            }
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Oferta Especial de Boas-Vindas"
+        >
+          <div
+            id="vip-lead-popup-card"
+            className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto bg-gradient-to-b from-[#0B1A2E] to-[#06101D] border-2 border-amber-400/60 rounded-3xl p-6 sm:p-8 shadow-[0_25px_70px_rgba(0,0,0,0.9)] text-slate-100 cursor-default select-text"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
             {/* Background Glow */}
             <div className="absolute top-0 right-0 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
-            {/* Close Button */}
+            {/* Requisito 1: Botão "X" visível no canto superior direito do pop-up (área mínima 44x44px touch) */}
             <button
+              type="button"
+              id="btn-close-lead-popup"
               onClick={handleDismissModal}
-              className="absolute top-4 right-4 p-2 rounded-full bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
-              title="Fechar"
+              onPointerDown={(e) => e.stopPropagation()}
+              className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-50 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-slate-900/95 border-2 border-amber-400 text-amber-300 hover:bg-amber-400 hover:text-slate-950 flex items-center justify-center transition-all cursor-pointer shadow-xl active:scale-90 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              aria-label="Fechar pop-up"
+              title="Fechar (ESC)"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 stroke-[2.5]" />
             </button>
 
             {!isSuccess ? (
@@ -489,6 +591,22 @@ Natal / Rio Grande do Norte - Brasil
                         <span>Baixar Guia em PDF</span>
                       </>
                     )}
+                  </button>
+                </div>
+
+                {/* Auto-close notification and direct close button */}
+                <div className="pt-3 border-t border-slate-800/80 flex flex-col items-center gap-1.5">
+                  {autoCloseSeconds !== null && (
+                    <span className="text-[11px] text-slate-400">
+                      Fechando automaticamente em <strong className="text-amber-300">{autoCloseSeconds}s</strong>...
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleDismissModal}
+                    className="text-xs text-slate-400 hover:text-white underline cursor-pointer py-1"
+                  >
+                    Fechar pop-up agora e continuar no site
                   </button>
                 </div>
               </div>

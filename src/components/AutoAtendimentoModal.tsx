@@ -43,6 +43,36 @@ export const AutoAtendimentoModal: React.FC<AutoAtendimentoModalProps> = ({
     }
   }, [isOpen]);
 
+  // Body and HTML scroll lock/unlock management
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  // ESC key listener to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSearch = (e: React.FormEvent) => {
@@ -97,8 +127,20 @@ export const AutoAtendimentoModal: React.FC<AutoAtendimentoModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md">
-      <div className="relative w-full max-w-2xl bg-[#091527] border border-amber-500/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md cursor-pointer"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="relative w-full max-w-2xl bg-[#091527] border border-amber-500/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Top Header */}
         <div className="p-5 sm:p-6 border-b border-slate-800 bg-[#0C1C35] flex items-center justify-between">
           <div>
@@ -114,8 +156,11 @@ export const AutoAtendimentoModal: React.FC<AutoAtendimentoModalProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-400 hover:text-white"
+            className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-95"
+            aria-label="Fechar modal"
+            title="Fechar (ESC)"
           >
             <X className="w-5 h-5" />
           </button>
