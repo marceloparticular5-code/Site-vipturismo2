@@ -185,9 +185,9 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
               <div className="lg:col-span-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 px-5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  className="btn-pulse-hover w-full py-3.5 px-5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
-                  <Search className="w-4 h-4 stroke-[3]" />
+                  <Search className="w-4 h-4 stroke-[3] btn-icon-pulse transition-transform duration-300" />
                   <span>Buscar</span>
                 </button>
               </div>

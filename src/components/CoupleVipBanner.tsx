@@ -125,10 +125,10 @@ export const CoupleVipBanner: React.FC<CoupleVipBannerProps> = ({ onOpenBooking 
                   <button
                     type="button"
                     onClick={() => onOpenBooking('pacote-casal-vip')}
-                    className="w-full py-3.5 px-6 rounded-2xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+                    className="btn-pulse-hover group/couple w-full py-3.5 px-6 rounded-2xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
                   >
                     <span>Garantir Pacote Casal VIP</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4 btn-icon-pulse transition-transform duration-300 group-hover/couple:translate-x-1" />
                   </button>
 
                   <a

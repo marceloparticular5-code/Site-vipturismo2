@@ -272,10 +272,10 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
                           <button
                             type="button"
                             onClick={() => onOpenBooking(tour.id)}
-                            className="px-4 py-2.5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
+                            className="btn-pulse-hover group/btn px-4 py-2.5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
                           >
                             <span>Reservar</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
+                            <ArrowRight className="w-3.5 h-3.5 btn-icon-pulse transition-transform duration-300 group-hover/btn:translate-x-0.5" />
                           </button>
                         </div>
                       </div>
@@ -312,7 +312,7 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
           <div className="flex items-center gap-3 w-full md:w-auto">
             <button
               onClick={() => onOpenBooking()}
-              className="w-full md:w-auto px-5 py-2.5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-xs uppercase tracking-wider shadow transition-transform active:scale-95 cursor-pointer text-center"
+              className="btn-pulse-hover w-full md:w-auto px-5 py-2.5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-xs uppercase tracking-wider shadow transition-transform active:scale-95 cursor-pointer text-center"
             >
               Falar com Concierge VIP
             </button>

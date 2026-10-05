@@ -616,7 +616,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 className={`w-full py-4 rounded-xl font-extrabold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
                   isDateStringInPast(bookingDate)
                     ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60'
-                    : 'text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.4)] cursor-pointer'
+                    : 'btn-pulse-hover text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.4)] cursor-pointer'
                 }`}
               >
                 <span>{isDateStringInPast(bookingDate) ? 'Data Inválida (Já Passou)' : 'Avançar para Pagamento Seguro'}</span>
