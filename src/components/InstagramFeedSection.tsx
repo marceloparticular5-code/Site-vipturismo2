@@ -148,6 +148,11 @@ export const InstagramFeedSection: React.FC<InstagramFeedSectionProps> = ({ onOp
                 alt={post.caption}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                }}
               />
 
               {/* Video / Reel Indicator Badge */}
@@ -233,6 +238,12 @@ export const InstagramFeedSection: React.FC<InstagramFeedSectionProps> = ({ onOp
                 src={activeModalPost.imageUrl}
                 alt={activeModalPost.caption}
                 className="w-full h-full object-cover max-h-[480px]"
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                }}
               />
               {activeModalPost.isVideo && (
                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
@@ -253,6 +264,9 @@ export const InstagramFeedSection: React.FC<InstagramFeedSectionProps> = ({ onOp
                       src={activeModalPost.authorAvatar}
                       alt={activeModalPost.authorName}
                       className="w-10 h-10 rounded-full object-cover border border-amber-400"
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
                     />
                     <div>
                       <div className="flex items-center gap-1.5">

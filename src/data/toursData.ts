@@ -33,8 +33,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Veículos credenciados Cadastur com ar-condicionado',
       'Parcelamento em até 3x sem juros no cartão ou desconto no Pix',
     ],
-    imageUrl:
-      'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: '/imagens/casal-vip-buggy.jpg',
   },
 
   // 2. Passeio Maracajaú + Dayuse
@@ -69,8 +68,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Kit de mergulho higienizado e instrutor de bordo',
       'Seguro passageiro náutico integral',
     ],
-    imageUrl:
-      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: '/imagens/maracajau-mergulho.jpg',
   },
 
   // 3. Passeio Rio do Fogo + Punaú
@@ -104,8 +102,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Kit snorkel e colete flutuador',
       'Guia credenciado Cadastur acompanhante',
     ],
-    imageUrl:
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: '/imagens/rio-do-fogo-mergulho.jpg',
   },
 
   // 4. Passeio Pipa + Praia do Amor (VAN)
@@ -140,8 +137,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Paradas programadas nos melhores mirantes para fotos',
       'Seguro viagem para todos os passageiros',
     ],
-    imageUrl:
-      'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: '/imagens/pipa-praia-do-amor.jpg',
   },
 
   // 5. Pipa By-Night
@@ -174,8 +170,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Ar-condicionado e motorista profissional',
       'Dicas gastronômicas e descontos em parceiros de Pipa',
     ],
-    imageUrl:
-      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: '/imagens/pipa-by-night.jpg',
   },
 
   // 6. Off-Road Litoral Sul 4x4
@@ -210,8 +205,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Água mineral gelada a bordo',
       'Seguro passageiro integral',
     ],
-    imageUrl:
-      'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: '/imagens/litoral-sul-pajero.jpg',
   },
 
   // 7. Litoral Norte de Buggy (Genipabu)
@@ -246,8 +240,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Roteiro sem pressa com tempo livre nas lagoas',
       'Seguro atividade e assistência total',
     ],
-    imageUrl:
-      'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: '/imagens/casal-vip-buggy.jpg',
   },
 
   // 8. Transfer Aeroporto Promocional
@@ -281,8 +274,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Disponibilidade de cadeirinha infantil gratuita sob solicitação',
       'Suporte direto via WhatsApp para confirmação de voo',
     ],
-    imageUrl:
-      'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: '/imagens/transfer-aeroporto.jpg',
   },
 
   // 9. Quadriciclo Aventura
@@ -316,8 +308,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Combustível e equipamentos de proteção',
       'Instrução prática antes da partida',
     ],
-    imageUrl:
-      'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: '/imagens/quadriciclo-lagoa.jpg',
   },
 
   // 10. Auto do Potengi + City-Tour
@@ -350,8 +341,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Guia credenciado Cadastur',
       'Ingressos e seguro viagem inclusos',
     ],
-    imageUrl:
-      'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: '/imagens/fortaleza-dos-reis-magos.jpg',
   },
 ];
 

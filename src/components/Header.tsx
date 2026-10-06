@@ -126,6 +126,7 @@ export const Header: React.FC<HeaderProps> = ({
                 height="48"
                 loading="eager"
                 decoding="async"
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover scale-105"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';

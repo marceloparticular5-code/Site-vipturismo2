@@ -26,10 +26,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {/* Background Image with Deep Luxury Gradient Overlay */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1920&q=80"
-          alt="Parrachos de Maracajaú e Piscinas Naturais"
-          className="w-full h-full object-cover object-center opacity-35 scale-105 transform animate-pulse duration-[10000ms]"
+          src="/imagens/hero-natal-paradise.jpg"
+          alt="Litoral de Natal e Parrachos Maracajaú VIP"
+          className="w-full h-full object-cover object-center opacity-40 scale-105 transform animate-pulse duration-[10000ms]"
+          loading="eager"
+          decoding="async"
           referrerPolicy="no-referrer"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/src/assets/images/hero_natal_paradise_1791282937362.jpg';
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#050C16]/95 via-[#050C16]/80 to-[#050C16]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(212,175,55,0.12),transparent_70%)]" />

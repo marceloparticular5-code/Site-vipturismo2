@@ -64,6 +64,9 @@ export const NightlifeBlogSection: React.FC<NightlifeBlogSectionProps> = ({
                     alt={post.title}
                     className="w-16 h-16 rounded-xl object-cover shrink-0"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                    }}
                   />
                   <div className="flex-1 min-w-0">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 block mb-1">
@@ -101,6 +104,9 @@ export const NightlifeBlogSection: React.FC<NightlifeBlogSectionProps> = ({
                 alt={activePost.title}
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B1A30] via-black/30 to-transparent" />
               <div className="absolute top-4 left-4">

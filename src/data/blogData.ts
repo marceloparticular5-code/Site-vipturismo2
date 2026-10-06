@@ -14,8 +14,7 @@ export const BLOG_POSTS: BlogPost[] = [
       'Dica Natal Vip: Uma noite gastronômica leve combina perfeitamente com um acordar cedo no dia seguinte para o passeio aos Parrachos de Maracajaú! O transfer da Natal Vip Turismo busca você pontualmente na porta do hotel para você curtir a maré seca no melhor horário do dia.',
     suggestedTourId: 'maracajau-vip',
     suggestedTourName: 'Parrachos de Maracajaú VIP',
-    imageUrl:
-      'https://images.unsplash.com/photo-1551218808-94e220e084d2?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/imagens/maracajau-mergulho.jpg',
   },
   {
     id: 'rua-do-salsa-rastape-forro',
@@ -30,8 +29,7 @@ export const BLOG_POSTS: BlogPost[] = [
       'Dica Natal Vip: Aproveite a dança até a meia-noite e reserve seu dia seguinte com o Passeio de Buggy em Genipabu com a Natal Vip Turismo! O vento no rosto nas dunas e os banhos de água doce nas lagoas de Pitangui são o melhor remédio revigorante.',
     suggestedTourId: 'genipabu-buggy-vip',
     suggestedTourName: 'Dunas de Genipabu "Com Emoção"',
-    imageUrl:
-      'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/imagens/casal-vip-buggy.jpg',
   },
   {
     id: 'taverna-pub-castelo',
@@ -46,8 +44,7 @@ export const BLOG_POSTS: BlogPost[] = [
       'Dica Natal Vip: Combine essa noite inesquecível com nosso passeio Pipa VIP & Pôr do Sol no dia seguinte. Você viaja descansando no transfer executivo climatizado da Natal Vip Turismo e curte as praias e falésias sem preocupação com direção!',
     suggestedTourId: 'pipa-vip',
     suggestedTourName: 'Pipa VIP & Pôr do Sol na Lagoa',
-    imageUrl:
-      'https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/imagens/pipa-by-night.jpg',
   },
   {
     id: 'orla-ponta-negra-morro-careca',
@@ -62,8 +59,6 @@ export const BLOG_POSTS: BlogPost[] = [
       'Dica Natal Vip: No dia seguinte a essa noite serena, entregue-se à tranquilidade dos Parrachos de Rio do Fogo com a Natal Vip Turismo — piscinas naturais calmas, banco de areia deslumbrante e atendimento exclusivo número 1 do estado!',
     suggestedTourId: 'rio-do-fogo-vip',
     suggestedTourName: 'Parrachos de Rio do Fogo VIP',
-    imageUrl:
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/imagens/fortaleza-dos-reis-magos.jpg',
   },
 ];
-0

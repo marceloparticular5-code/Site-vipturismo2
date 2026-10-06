@@ -45,6 +45,7 @@ export const ComprehensiveFooter: React.FC<ComprehensiveFooterProps> = ({
                   height="48"
                   loading="lazy"
                   decoding="async"
+                  referrerPolicy="no-referrer"
                   className="w-full h-full object-cover scale-105"
                   onError={(e) => {
                     (e.target as HTMLElement).style.display = 'none';

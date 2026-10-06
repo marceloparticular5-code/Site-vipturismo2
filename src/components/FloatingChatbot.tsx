@@ -531,6 +531,7 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                       width="40"
                       height="40"
                       decoding="async"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover scale-105"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';
@@ -922,10 +923,10 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                             height="202"
                             loading="lazy"
                             decoding="async"
+                            referrerPolicy="no-referrer"
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80';
+                              (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
                             }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
@@ -1355,10 +1356,10 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                       height="214"
                       loading="lazy"
                       decoding="async"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80';
+                        (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />

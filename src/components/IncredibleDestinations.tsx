@@ -15,7 +15,7 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
       name: 'Praia de Pipa',
       subtitle: 'Falésias vermelhas, Baía dos Golfinhos e charme boêmio',
       badge: 'Destino Obrigatório',
-      imageUrl: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/imagens/pipa-praia-do-amor.jpg',
       priceNotice: 'Passeios a partir de R$ 80',
     },
     {
@@ -24,7 +24,7 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
       name: 'Parrachos de Maracajaú',
       subtitle: 'O Caribe Brasileiro a 7km da costa com piscinas mornas',
       badge: 'Mergulho & Corais',
-      imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/imagens/maracajau-mergulho.jpg',
       priceNotice: 'R$ 170 com lancha rápida',
     },
     {
@@ -33,16 +33,16 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
       name: 'Rio do Fogo',
       subtitle: 'Piscinas preservadas e banco de areia no meio do oceano',
       badge: 'Refúgio Preservado',
-      imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/imagens/rio-do-fogo-mergulho.jpg',
       priceNotice: 'R$ 170 por pessoa',
     },
     {
       id: 'praia-do-amor',
       tourId: 'pipa-praia-do-amor',
-      name: 'Praia do Amor',
-      subtitle: 'O famoso mirante natural em formato de coração e mar aberto',
+      name: 'Praia do Amor & Pipa Night',
+      subtitle: 'O famoso mirante natural em formato de coração e noites charmosas',
       badge: 'Cenário de Cinema',
-      imageUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/imagens/pipa-by-night.jpg',
       priceNotice: 'Incluso no roteiro Pipa VIP',
     },
     {
@@ -51,7 +51,7 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
       name: 'Litoral Sul & Lagoas',
       subtitle: 'Expedição 4x4, Lagoa do Carcará e pôr do sol em Búzios',
       badge: 'Aventura 4x4',
-      imageUrl: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/imagens/litoral-sul-pajero.jpg',
       priceNotice: 'Veículos 4x4 Pajero Dakar',
     },
     {
@@ -60,7 +60,7 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
       name: 'Litoral Norte & Genipabu',
       subtitle: 'Dunas móveis clássicas, travessia de balsa e lagoas de banho',
       badge: 'Emoção Pura',
-      imageUrl: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/imagens/casal-vip-buggy.jpg',
       priceNotice: 'Buggys credenciados Cadastur',
     },
   ];
@@ -96,10 +96,10 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
                 height="300"
                 loading="lazy"
                 decoding="async"
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#060D17] via-[#060D17]/50 to-transparent" />

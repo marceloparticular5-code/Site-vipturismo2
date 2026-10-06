@@ -137,6 +137,9 @@ export const FeaturedPackages: React.FC<FeaturedPackagesProps> = ({
                     alt={tour.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#091527] via-transparent to-black/30" />
 

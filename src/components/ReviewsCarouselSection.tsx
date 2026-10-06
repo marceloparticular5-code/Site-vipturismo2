@@ -356,6 +356,8 @@ export const ReviewsCarouselSection: React.FC<ReviewsCarouselSectionProps> = ({
                           alt={review.authorName}
                           className="w-9 h-9 rounded-full object-cover border border-amber-400/40"
                           loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
                         />
                       ) : (
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 text-slate-950 font-black text-xs flex items-center justify-center">

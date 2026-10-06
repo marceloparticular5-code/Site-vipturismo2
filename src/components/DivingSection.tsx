@@ -55,6 +55,9 @@ export const DivingSection: React.FC<DivingSectionProps> = ({
                 alt="Parrachos de Maracajaú"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A182E] via-transparent to-black/40" />
 
@@ -154,6 +157,9 @@ export const DivingSection: React.FC<DivingSectionProps> = ({
                 alt="Parrachos de Rio do Fogo"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/imagens/rio-do-fogo-mergulho.jpg';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A182E] via-transparent to-black/40" />
 

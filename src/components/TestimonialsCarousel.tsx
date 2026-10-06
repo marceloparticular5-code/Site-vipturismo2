@@ -273,6 +273,7 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
                     height="52"
                     loading="lazy"
                     decoding="async"
+                    referrerPolicy="no-referrer"
                     className="w-13 h-13 rounded-full object-cover border-2 border-[#FBBF24]/80 shadow"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';

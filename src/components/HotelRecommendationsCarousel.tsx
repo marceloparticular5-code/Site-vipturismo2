@@ -443,6 +443,9 @@ export const HotelRecommendationsCarousel: React.FC<HotelRecommendationsCarousel
                 src={activeHotelModal.imageUrl}
                 alt={activeHotelModal.name}
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#091526] via-transparent to-black/60" />
 

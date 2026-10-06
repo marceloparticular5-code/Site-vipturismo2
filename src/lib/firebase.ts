@@ -385,6 +385,18 @@ export function subscribeToTours(callback: (tours: TourPackage[]) => void): () =
       }
     });
 
+    // 4. Ensure all tours strictly use the new optimized images, eliminating old unsplash links
+    combinedMap.forEach((tour) => {
+      if (!tour.imageUrl || tour.imageUrl.includes('unsplash.com')) {
+        const defaultTour = VIP_TOURS.find((t) => t.id === tour.id);
+        if (defaultTour) {
+          tour.imageUrl = defaultTour.imageUrl;
+        } else {
+          tour.imageUrl = '/imagens/maracajau-mergulho.jpg';
+        }
+      }
+    });
+
     return Array.from(combinedMap.values());
   };
 

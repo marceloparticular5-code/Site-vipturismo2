@@ -429,6 +429,8 @@ export const MediaLibraryModal: React.FC<MediaLibraryModalProps> = ({
                             alt={item.originalName}
                             className="w-full h-full object-cover"
                             loading="lazy"
+                            decoding="async"
+                            referrerPolicy="no-referrer"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-slate-950">
@@ -441,6 +443,8 @@ export const MediaLibraryModal: React.FC<MediaLibraryModalProps> = ({
                           alt={item.originalName}
                           className="w-full h-full object-cover"
                           loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
                         />
                       )}
 
@@ -550,6 +554,9 @@ export const MediaLibraryModal: React.FC<MediaLibraryModalProps> = ({
                   src={previewMedia.url}
                   alt={previewMedia.originalName}
                   className="max-h-[58vh] max-w-full object-contain rounded-xl"
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
                 />
               )}
             </div>

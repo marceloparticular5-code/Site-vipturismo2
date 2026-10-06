@@ -537,6 +537,8 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
                     alt={`Foto ${index + 1}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
                   />
 
                   {/* Main Cover Badge */}
@@ -641,6 +643,7 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
               src={previewModalUrl}
               alt="Prévia ampliada"
               className="max-h-[80vh] w-auto mx-auto rounded-2xl object-contain"
+              referrerPolicy="no-referrer"
             />
           </div>
         </div>

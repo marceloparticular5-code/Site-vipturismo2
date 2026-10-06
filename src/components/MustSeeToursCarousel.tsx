@@ -278,6 +278,9 @@ export const MustSeeToursCarousel: React.FC<MustSeeToursCarouselProps> = ({
                 alt={currentTour.title}
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B172A] via-black/25 to-black/40 lg:bg-gradient-to-r lg:from-transparent lg:to-[#0B172A]" />
 

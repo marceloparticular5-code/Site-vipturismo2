@@ -274,7 +274,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
     setFormActive(true);
     setFormUrgencyText('Poucas vagas disponíveis para este período');
     setFormDescription('Viva momentos inesquecíveis com transporte com ar-condicionado, guias credenciados Cadastur e atendimento de excelência.');
-    setFormImageUrl('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80');
+    setFormImageUrl('/imagens/maracajau-mergulho.jpg');
     setFormGalleryImages([]);
     setFormHighlights([
       'Transporte executivo com ar-condicionado direto no hotel',
@@ -869,6 +869,9 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                               alt={tour.title}
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                              }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-black/40" />
 

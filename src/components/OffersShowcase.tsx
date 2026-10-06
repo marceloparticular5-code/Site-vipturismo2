@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
@@ -11,8 +11,102 @@ import {
   Flame,
   ShieldCheck,
   Loader2,
+  Waves,
+  Compass,
+  Anchor,
+  RotateCcw,
 } from 'lucide-react';
 import { TourPackage } from '../types';
+
+export type OfferFilterCategory = 'todos' | 'mergulho' | 'buggy' | 'lancha';
+
+interface FilterOption {
+  id: OfferFilterCategory;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  tagline: string;
+}
+
+const FILTER_OPTIONS: FilterOption[] = [
+  {
+    id: 'todos',
+    label: 'Todos os Passeios',
+    icon: Sparkles,
+    tagline: 'Catálogo completo',
+  },
+  {
+    id: 'mergulho',
+    label: 'Mergulho',
+    icon: Waves,
+    tagline: 'Parrachos & Piscinas Naturais',
+  },
+  {
+    id: 'buggy',
+    label: 'Passeios de Buggy',
+    icon: Compass,
+    tagline: 'Genipabu & Dunas 4x4',
+  },
+  {
+    id: 'lancha',
+    label: 'Lanchas VIP',
+    icon: Anchor,
+    tagline: 'Lancha Rápida & Náutico',
+  },
+];
+
+const matchesFilter = (tour: TourPackage, filter: OfferFilterCategory): boolean => {
+  if (filter === 'todos') return true;
+
+  const textToSearch = [
+    tour.title,
+    tour.subtitle,
+    tour.description,
+    tour.category,
+    tour.badge,
+    ...(tour.highlights || []),
+    ...(tour.included || []),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  if (filter === 'mergulho') {
+    return (
+      tour.includesDiving === true ||
+      textToSearch.includes('mergulho') ||
+      textToSearch.includes('snorkel') ||
+      textToSearch.includes('parrachos') ||
+      textToSearch.includes('piscinas naturais') ||
+      textToSearch.includes('corais')
+    );
+  }
+
+  if (filter === 'buggy') {
+    return (
+      textToSearch.includes('buggy') ||
+      textToSearch.includes('bugueiro') ||
+      textToSearch.includes('genipabu') ||
+      textToSearch.includes('dunas') ||
+      textToSearch.includes('4x4') ||
+      textToSearch.includes('quadriciclo') ||
+      textToSearch.includes('off-road')
+    );
+  }
+
+  if (filter === 'lancha') {
+    return (
+      textToSearch.includes('lancha') ||
+      textToSearch.includes('náutico') ||
+      textToSearch.includes('catamarã') ||
+      textToSearch.includes('plataforma flutuante') ||
+      textToSearch.includes('embarcação') ||
+      textToSearch.includes('maracajaú') ||
+      textToSearch.includes('rio do fogo')
+    );
+  }
+
+  return true;
+};
 
 interface OffersShowcaseProps {
   tours: TourPackage[];
@@ -88,7 +182,30 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
   onSelectTour: _onSelectTour,
   onOpenBooking,
 }) => {
+  const [activeFilter, setActiveFilter] = useState<OfferFilterCategory>('todos');
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  // Computa a contagem de tours por categoria de filtro
+  const countMap = useMemo(() => {
+    return {
+      todos: tours.length,
+      mergulho: tours.filter((t) => matchesFilter(t, 'mergulho')).length,
+      buggy: tours.filter((t) => matchesFilter(t, 'buggy')).length,
+      lancha: tours.filter((t) => matchesFilter(t, 'lancha')).length,
+    };
+  }, [tours]);
+
+  // Lista de tours filtrados conforme a categoria ativa
+  const filteredTours = useMemo(() => {
+    return tours.filter((tour) => matchesFilter(tour, activeFilter));
+  }, [tours, activeFilter]);
+
+  const handleFilterChange = (filterId: OfferFilterCategory) => {
+    setActiveFilter(filterId);
+    if (carouselRef.current) {
+      carouselRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+  };
 
   const scroll = (direction: 'left' | 'right') => {
     if (carouselRef.current) {
@@ -102,7 +219,7 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
 
   return (
     <section id="ofertas-vitrine" className="py-14 sm:py-20 bg-[#F8FAFC] text-[#0F172A]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8">
         {/* Section Header with Navigation Arrows */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#0A192F]/15 pb-4">
           <div className="space-y-1.5">
@@ -142,6 +259,58 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
           </div>
         </div>
 
+        {/* Sistema de Filtros: Mergulho, Passeios de Buggy, Lanchas VIP */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            {FILTER_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const count = countMap[opt.id] ?? 0;
+              const isActive = activeFilter === opt.id;
+
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => handleFilterChange(opt.id)}
+                  className={`group relative shrink-0 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer select-none active:scale-95 ${
+                    isActive
+                      ? 'bg-[#0A192F] text-[#FBBF24] border-2 border-[#FBBF24] shadow-md shadow-[#FBBF24]/15'
+                      : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-[#0A192F] border border-slate-200/90 shadow-sm'
+                  }`}
+                  aria-pressed={isActive}
+                >
+                  <Icon
+                    className={`w-4 h-4 transition-transform group-hover:scale-110 ${
+                      isActive ? 'text-[#FBBF24]' : 'text-slate-500'
+                    }`}
+                  />
+                  <span>{opt.label}</span>
+                  <span
+                    className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full transition-colors ${
+                      isActive
+                        ? 'bg-[#FBBF24] text-[#0A192F]'
+                        : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {activeFilter !== 'todos' && (
+            <button
+              type="button"
+              onClick={() => handleFilterChange('todos')}
+              className="text-xs font-semibold text-slate-500 hover:text-[#0A192F] flex items-center gap-1.5 self-start sm:self-auto transition-colors cursor-pointer py-1"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Mostrar todos ({tours.length})</span>
+            </button>
+          )}
+        </div>
+
         {/* Horizontal Carousel of Tours (CVC Style with Boutique Palette) */}
         <div
           ref={carouselRef}
@@ -163,16 +332,44 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
                   <TourCardSkeleton key={idx} />
                 ))}
               </motion.div>
+            ) : filteredTours.length === 0 ? (
+              <motion.div
+                key="empty-filter"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full min-w-[300px] sm:min-w-[450px] py-12 px-6 rounded-2xl bg-white border border-slate-200 shadow-sm text-center space-y-3 flex flex-col items-center justify-center my-2"
+              >
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                  <Compass className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-[#0A192F]">
+                    Nenhum passeio encontrado
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                    Não encontramos roteiros cadastrados especificamente para este filtro no momento.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange('todos')}
+                  className="px-4 py-2 rounded-xl bg-[#0A192F] text-[#FBBF24] font-bold text-xs hover:bg-[#132A4B] transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Ver Todos os Passeios</span>
+                </button>
+              </motion.div>
             ) : (
               <motion.div
-                key="tours-list"
+                key={`tours-list-${activeFilter}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.35 }}
                 className="flex gap-5 sm:gap-6"
               >
-                {tours.map((tour, index) => {
+                {filteredTours.map((tour, index) => {
                   const hasPrice = tour.priceDiscounted > 0;
                   const installmentPrice = hasPrice ? (tour.priceDiscounted / 3).toFixed(2) : null;
 
@@ -195,10 +392,10 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
                           height="250"
                           loading="lazy"
                           decoding="async"
+                          referrerPolicy="no-referrer"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80';
+                            (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
                           }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
