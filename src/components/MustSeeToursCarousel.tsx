@@ -275,11 +275,13 @@ export const MustSeeToursCarousel: React.FC<MustSeeToursCarouselProps> = ({
             <div className="lg:col-span-7 relative h-72 sm:h-96 lg:h-full min-h-[320px] overflow-hidden group">
               <img
                 src={currentTour.imageUrl}
-                alt={currentTour.title}
+                alt={`Experiência exclusiva ${currentTour.title} em Natal e Litoral do RN`}
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                loading="lazy"
+                decoding="async"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                  (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B172A] via-black/25 to-black/40 lg:bg-gradient-to-r lg:from-transparent lg:to-[#0B172A]" />

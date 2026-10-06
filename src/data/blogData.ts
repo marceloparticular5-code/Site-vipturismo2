@@ -14,7 +14,7 @@ export const BLOG_POSTS: BlogPost[] = [
       'Dica Natal Vip: Uma noite gastronômica leve combina perfeitamente com um acordar cedo no dia seguinte para o passeio aos Parrachos de Maracajaú! O transfer da Natal Vip Turismo busca você pontualmente na porta do hotel para você curtir a maré seca no melhor horário do dia.',
     suggestedTourId: 'maracajau-vip',
     suggestedTourName: 'Parrachos de Maracajaú VIP',
-    imageUrl: '/imagens/maracajau-mergulho.jpg',
+    imageUrl: '/images/maracajau/maracajau-mergulho-peixes.webp',
   },
   {
     id: 'rua-do-salsa-rastape-forro',
@@ -29,7 +29,7 @@ export const BLOG_POSTS: BlogPost[] = [
       'Dica Natal Vip: Aproveite a dança até a meia-noite e reserve seu dia seguinte com o Passeio de Buggy em Genipabu com a Natal Vip Turismo! O vento no rosto nas dunas e os banhos de água doce nas lagoas de Pitangui são o melhor remédio revigorante.',
     suggestedTourId: 'genipabu-buggy-vip',
     suggestedTourName: 'Dunas de Genipabu "Com Emoção"',
-    imageUrl: '/imagens/casal-vip-buggy.jpg',
+    imageUrl: '/images/buggy/buggy-praia-dunas.webp',
   },
   {
     id: 'taverna-pub-castelo',
@@ -44,7 +44,7 @@ export const BLOG_POSTS: BlogPost[] = [
       'Dica Natal Vip: Combine essa noite inesquecível com nosso passeio Pipa VIP & Pôr do Sol no dia seguinte. Você viaja descansando no transfer executivo climatizado da Natal Vip Turismo e curte as praias e falésias sem preocupação com direção!',
     suggestedTourId: 'pipa-vip',
     suggestedTourName: 'Pipa VIP & Pôr do Sol na Lagoa',
-    imageUrl: '/imagens/pipa-by-night.jpg',
+    imageUrl: '/images/pipa-by-night/pipa-night-village.webp',
   },
   {
     id: 'orla-ponta-negra-morro-careca',
@@ -59,6 +59,6 @@ export const BLOG_POSTS: BlogPost[] = [
       'Dica Natal Vip: No dia seguinte a essa noite serena, entregue-se à tranquilidade dos Parrachos de Rio do Fogo com a Natal Vip Turismo — piscinas naturais calmas, banco de areia deslumbrante e atendimento exclusivo número 1 do estado!',
     suggestedTourId: 'rio-do-fogo-vip',
     suggestedTourName: 'Parrachos de Rio do Fogo VIP',
-    imageUrl: '/imagens/fortaleza-dos-reis-magos.jpg',
+    imageUrl: '/images/city-tour/fortaleza-magos-sunset.webp',
   },
 ];

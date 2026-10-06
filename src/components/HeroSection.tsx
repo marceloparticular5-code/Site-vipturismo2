@@ -26,15 +26,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {/* Background Image with Deep Luxury Gradient Overlay */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/imagens/hero-natal-paradise.jpg"
-          alt="Litoral de Natal e Parrachos Maracajaú VIP"
+          src="/images/hero/hero-natal-paradise.webp"
+          alt="Vista aérea panorâmica das praias e dunas de Natal e arrecifes de Maracajaú RN"
           className="w-full h-full object-cover object-center opacity-40 scale-105 transform animate-pulse duration-[10000ms]"
           loading="eager"
           decoding="async"
           referrerPolicy="no-referrer"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/src/assets/images/hero_natal_paradise_1791282937362.jpg';
-          }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#050C16]/95 via-[#050C16]/80 to-[#050C16]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(212,175,55,0.12),transparent_70%)]" />
@@ -45,9 +42,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-lg">
             <img
-              src="/imagens/logovip.jpg"
-              alt="Selo Oficial Natal VIP"
+              src="/images/brand/logo-natal-vip.webp"
+              alt="Selo de Qualidade Certificada Cadastur Natal VIP Turismo RN"
               className="w-6 h-6 rounded-full object-cover scale-105 border border-amber-400/40 drop-shadow shrink-0"
+              loading="eager"
               referrerPolicy="no-referrer"
             />
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />

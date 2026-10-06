@@ -134,11 +134,13 @@ export const FeaturedPackages: React.FC<FeaturedPackagesProps> = ({
                 <div className="relative h-56 overflow-hidden">
                   <img
                     src={tour.imageUrl}
-                    alt={tour.title}
+                    alt={`Pacote VIP ${tour.title} em Natal RN`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
                     referrerPolicy="no-referrer"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                      (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#091527] via-transparent to-black/30" />

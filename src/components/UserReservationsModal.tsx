@@ -232,10 +232,13 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full overflow-hidden border border-amber-400/40 shrink-0 bg-slate-950">
                         <img
-                          src="/imagens/logovip.jpg"
+                          src="/images/brand/logo-natal-vip.webp"
                           alt="Natal VIP"
                           className="w-full h-full rounded-full object-cover scale-[1.04]"
                           referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/images/brand/favicon.png';
+                          }}
                         />
                       </div>
                       <span className="text-xs font-mono font-bold text-amber-300">

@@ -526,7 +526,7 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                 <div className="relative">
                   <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400/70 bg-slate-900 shadow">
                     <img
-                      src="/imagens/logovip.jpg"
+                      src="/images/brand/logo-natal-vip.webp"
                       alt="Natal VIP Turismo"
                       width="40"
                       height="40"
@@ -534,7 +534,7 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover scale-105"
                       onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
+                        (e.target as HTMLImageElement).src = '/images/brand/favicon.png';
                       }}
                     />
                   </div>
@@ -926,7 +926,7 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                             referrerPolicy="no-referrer"
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                              (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                             }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
@@ -1359,7 +1359,7 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                        (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />

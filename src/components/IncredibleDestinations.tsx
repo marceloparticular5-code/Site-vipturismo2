@@ -15,7 +15,8 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
       name: 'Praia de Pipa',
       subtitle: 'Falésias vermelhas, Baía dos Golfinhos e charme boêmio',
       badge: 'Destino Obrigatório',
-      imageUrl: '/imagens/pipa-praia-do-amor.jpg',
+      imageUrl: '/images/pipa/pipa-falesias-amor.webp',
+      altText: 'Falésias vermelhas da Praia de Pipa e Baía dos Golfinhos em Tibau do Sul RN',
       priceNotice: 'Passeios a partir de R$ 80',
     },
     {
@@ -24,7 +25,8 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
       name: 'Parrachos de Maracajaú',
       subtitle: 'O Caribe Brasileiro a 7km da costa com piscinas mornas',
       badge: 'Mergulho & Corais',
-      imageUrl: '/imagens/maracajau-mergulho.jpg',
+      imageUrl: '/images/maracajau/maracajau-mergulho-peixes.webp',
+      altText: 'Mergulho com peixes coloridos nos recifes de corais dos Parrachos de Maracajaú RN',
       priceNotice: 'R$ 170 com lancha rápida',
     },
     {
@@ -33,17 +35,19 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
       name: 'Rio do Fogo',
       subtitle: 'Piscinas preservadas e banco de areia no meio do oceano',
       badge: 'Refúgio Preservado',
-      imageUrl: '/imagens/rio-do-fogo-mergulho.jpg',
+      imageUrl: '/images/rio-do-fogo/rio-do-fogo-mergulho-punau.webp',
+      altText: 'Piscinas naturais paradisíacas e banco de areia em alto mar de Rio do Fogo RN',
       priceNotice: 'R$ 170 por pessoa',
     },
     {
       id: 'praia-do-amor',
-      tourId: 'pipa-praia-do-amor',
-      name: 'Praia do Amor & Pipa Night',
-      subtitle: 'O famoso mirante natural em formato de coração e noites charmosas',
+      tourId: 'pipa-by-night',
+      name: 'Pipa By Night',
+      subtitle: 'O famoso mirante natural, bistrôs acolhedores e noites charmosas',
       badge: 'Cenário de Cinema',
-      imageUrl: '/imagens/pipa-by-night.jpg',
-      priceNotice: 'Incluso no roteiro Pipa VIP',
+      imageUrl: '/images/pipa-by-night/pipa-night-village.webp',
+      altText: 'Rua charmosa iluminada e vida noturna boêmia na vila da Praia de Pipa RN',
+      priceNotice: 'R$ 100 por pessoa (Transfer incluso)',
     },
     {
       id: 'litoral-sul',
@@ -51,7 +55,8 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
       name: 'Litoral Sul & Lagoas',
       subtitle: 'Expedição 4x4, Lagoa do Carcará e pôr do sol em Búzios',
       badge: 'Aventura 4x4',
-      imageUrl: '/imagens/litoral-sul-pajero.jpg',
+      imageUrl: '/images/litoral-sul/litoral-sul-pajero-sunset.webp',
+      altText: 'Expedição off-road 4x4 Pajero Dakar nas falésias e lagoas do Litoral Sul de Natal',
       priceNotice: 'Veículos 4x4 Pajero Dakar',
     },
     {
@@ -60,7 +65,8 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
       name: 'Litoral Norte & Genipabu',
       subtitle: 'Dunas móveis clássicas, travessia de balsa e lagoas de banho',
       badge: 'Emoção Pura',
-      imageUrl: '/imagens/casal-vip-buggy.jpg',
+      imageUrl: '/images/buggy/buggy-praia-dunas.webp',
+      altText: 'Passeio de buggy com emoção pelas dunas móveis de Genipabu em Natal RN',
       priceNotice: 'Buggys credenciados Cadastur',
     },
   ];
@@ -91,7 +97,7 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
             >
               <img
                 src={dest.imageUrl}
-                alt={`Destino turístico ${dest.name} em Natal e Litoral do RN`}
+                alt={dest.altText}
                 width="400"
                 height="300"
                 loading="lazy"
@@ -99,7 +105,7 @@ export const IncredibleDestinations: React.FC<IncredibleDestinationsProps> = ({
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                  (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#060D17] via-[#060D17]/50 to-transparent" />

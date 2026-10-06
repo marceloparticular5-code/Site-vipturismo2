@@ -392,7 +392,7 @@ export function subscribeToTours(callback: (tours: TourPackage[]) => void): () =
         if (defaultTour) {
           tour.imageUrl = defaultTour.imageUrl;
         } else {
-          tour.imageUrl = '/imagens/maracajau-mergulho.jpg';
+          tour.imageUrl = '/images/maracajau/maracajau-mergulho-peixes.webp';
         }
       }
     });

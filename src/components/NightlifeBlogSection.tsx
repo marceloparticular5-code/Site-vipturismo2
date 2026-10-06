@@ -65,7 +65,7 @@ export const NightlifeBlogSection: React.FC<NightlifeBlogSectionProps> = ({
                     className="w-16 h-16 rounded-xl object-cover shrink-0"
                     referrerPolicy="no-referrer"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                      (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                     }}
                   />
                   <div className="flex-1 min-w-0">
@@ -105,7 +105,7 @@ export const NightlifeBlogSection: React.FC<NightlifeBlogSectionProps> = ({
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                  (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B1A30] via-black/30 to-transparent" />

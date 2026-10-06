@@ -53,8 +53,18 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
 
   return (
     <section className="relative w-full bg-[#0A192F] pt-6 pb-16 sm:pb-20 text-white overflow-hidden">
-      {/* Background Subtle Gradient & Tropical Elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#060D17]/90 via-[#0A192F]/95 to-[#0A192F] pointer-events-none" />
+      {/* Background Image & Luxury Gradient Overlay */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="/images/hero/hero-natal-paradise.webp"
+          alt="Paisagem aérea paradisíaca do litoral de Natal e dunas de Genipabu RN"
+          className="w-full h-full object-cover object-center opacity-25 scale-105 pointer-events-none"
+          loading="eager"
+          decoding="async"
+          referrerPolicy="no-referrer"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#060D17]/90 via-[#0A192F]/95 to-[#0A192F]" />
+      </div>
       <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#FBBF24]/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#F59E0B]/10 blur-3xl pointer-events-none" />
 

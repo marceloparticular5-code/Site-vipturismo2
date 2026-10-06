@@ -19,13 +19,16 @@ export const NatalVipLogo: React.FC<NatalVipLogoProps> = ({
         style={{ width: size, height: size }}
       >
         <img
-          src="/imagens/logovip.jpg"
+          src="/images/brand/logo-natal-vip.webp"
           alt="Natal VIP Turismo Agency Logo"
           className="w-full h-full object-cover scale-[1.04] block rounded-full"
           width={size}
           height={size}
           loading="eager"
           referrerPolicy="no-referrer"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/images/brand/favicon.png';
+          }}
         />
       </div>
 

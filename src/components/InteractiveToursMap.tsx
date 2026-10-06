@@ -40,7 +40,7 @@ export interface MapPointOfInterest {
 }
 
 export const MAP_POINTS: MapPointOfInterest[] = [
-  // 1. Pontos de Partida
+  // 1. Pontos de Partida & Apoio
   {
     id: 'partida-ponta-negra',
     name: 'Base VIP Ponta Negra (Orla Hoteleira)',
@@ -49,7 +49,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.8783, -35.1764],
     description:
       'Ponto de partida principal com busca privativa e executiva em todos os hotéis e pousadas da orla de Ponta Negra em van executiva com ar-condicionado.',
-    imageUrl: '/imagens/transfer-aeroporto.jpg',
+    imageUrl: '/images/transfer/transfer-executivo-vip.webp',
     recommendedTourId: 'maracajau-vip',
     recommendedTourName: 'Parrachos de Maracajaú VIP',
     highlights: ['Transfer ida e volta climatizado', 'Embarque a partir das 06:30', 'Acompanhamento de guia Cadastur'],
@@ -64,7 +64,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.8365, -35.1912],
     description:
       'Parada de embarque prioritário para os hóspedes dos resorts 5 estrelas e all-inclusive da Via Costeira de Natal.',
-    imageUrl: '/imagens/transfer-aeroporto.jpg',
+    imageUrl: '/images/transfer/transfer-executivo-vip.webp',
     recommendedTourId: 'maracajau-vip',
     recommendedTourName: 'Parrachos de Maracajaú VIP',
     highlights: ['Busca na recepção do resort', 'Sem necessidade de deslocamento', 'Veículos confortáveis'],
@@ -79,7 +79,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.4121, -35.3115],
     description:
       'Ponto de apoio beira-mar com restaurante privativo, vestiários com ducha, guarda-volumes e ponto de partida das lanchas rápidas VIP.',
-    imageUrl: '/imagens/maracajau-mergulho.jpg',
+    imageUrl: '/images/maracajau/maracajau-mergulho-peixes.webp',
     recommendedTourId: 'maracajau-vip',
     recommendedTourName: 'Parrachos de Maracajaú VIP',
     highlights: ['Ponto de apoio com piscina e sombra', 'Embarque seguro em lancha rápida', 'Restaurante potiguar'],
@@ -94,7 +94,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.2718, -35.3854],
     description:
       'Vila de pescadores autêntica e tranquila com estrutura de apoio à beira-mar, culinária típica e embarque nas lanchas para os corais intocados.',
-    imageUrl: '/imagens/rio-do-fogo-mergulho.jpg',
+    imageUrl: '/images/rio-do-fogo/rio-do-fogo-mergulho-punau.webp',
     recommendedTourId: 'rio-do-fogo-vip',
     recommendedTourName: 'Parrachos de Rio do Fogo VIP',
     highlights: ['Ambiente rústico e exclusivo', 'Peixe frito e petiscos locais', 'Embarque rápido sem muvuca'],
@@ -111,7 +111,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.378, -35.253],
     description:
       'Formações de recifes de corais a 7 km da costa com águas mornas, cristalinas e vida marinha exuberante. Excelente visibilidade de até 15 metros na maré seca.',
-    imageUrl: '/imagens/maracajau-mergulho.jpg',
+    imageUrl: '/images/maracajau/maracajau-mergulho-peixes.webp',
     recommendedTourId: 'maracajau-vip',
     recommendedTourName: 'Parrachos de Maracajaú VIP',
     highlights: [
@@ -131,7 +131,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.375, -35.25],
     description:
       'Grande plataforma flutuante ancorada nos recifes com deck de descanso, bar flutuante, escadas de acesso fácil à água e base para mergulho com cilindro.',
-    imageUrl: '/imagens/maracajau-mergulho.jpg',
+    imageUrl: '/images/maracajau/maracajau-mergulho-peixes.webp',
     recommendedTourId: 'maracajau-vip',
     recommendedTourName: 'Parrachos de Maracajaú VIP',
     highlights: [
@@ -151,7 +151,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.642, -35.267],
     description:
       'Parada opcional de descanso e fotos durante o trajeto Litoral Norte, famosa pelas mesas na água doce e sombras de coqueiros.',
-    imageUrl: '/imagens/quadriciclo-lagoa.jpg',
+    imageUrl: '/images/quadriciclo/quadriciclo-lagoa-casal.webp',
     recommendedTourId: 'maracajau-vip',
     recommendedTourName: 'Parrachos de Maracajaú VIP',
     highlights: ['Banho de água doce relaxante', 'Fotos nas dunas', 'Gastronomia caseira'],
@@ -166,7 +166,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.521, -35.262],
     description:
       'Fenômeno natural onde duas gameleiras centenárias se abraçaram pela força dos ventos alísios formando um portal de frente para o mar turquesa.',
-    imageUrl: '/imagens/casal-vip-buggy.jpg',
+    imageUrl: '/images/pacote-casal/casal-vip-buggy-praia.webp',
     recommendedTourId: 'maracajau-vip',
     recommendedTourName: 'Parrachos de Maracajaú VIP',
     highlights: ['Mirante para o mar aberto', 'Tradição local para casais e fotos', 'Vento constante e brisa suave'],
@@ -183,7 +183,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.245, -35.325],
     description:
       'Piscinas naturais ultra cristalinas e rasas (0,8m a 1,5m), conhecidas por serem muito mais tranquilas e reservadas que outros recifes do estado.',
-    imageUrl: '/imagens/rio-do-fogo-mergulho.jpg',
+    imageUrl: '/images/rio-do-fogo/rio-do-fogo-mergulho-punau.webp',
     recommendedTourId: 'rio-do-fogo-vip',
     recommendedTourName: 'Parrachos de Rio do Fogo VIP',
     highlights: [
@@ -203,7 +203,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.251, -35.335],
     description:
       'Uma faixa de areia branca reluzente que surge no meio do mar quando a maré atinge o nível mais baixo (0.0 a 0.3m), proporcionando fotos paradisíacas surreais.',
-    imageUrl: '/imagens/rio-do-fogo-mergulho.jpg',
+    imageUrl: '/images/rio-do-fogo/rio-do-fogo-mergulho-punau.webp',
     recommendedTourId: 'rio-do-fogo-vip',
     recommendedTourName: 'Parrachos de Rio do Fogo VIP',
     highlights: ['Caminhada em banco de areia oceânico', 'Cenário exclusivo para fotos VIP', 'Degustação de frutas a bordo'],
@@ -219,7 +219,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.298, -35.412],
     description:
       'Lagoa de águas tranquilas e límpidas protegida por dunas e vasta vegetação nativa, perfeita para fechar o dia após o mergulho nos recifes.',
-    imageUrl: '/imagens/quadriciclo-lagoa.jpg',
+    imageUrl: '/images/quadriciclo/quadriciclo-lagoa-casal.webp',
     recommendedTourId: 'rio-do-fogo-vip',
     recommendedTourName: 'Parrachos de Rio do Fogo VIP',
     highlights: ['Pôr do sol cinematográfico', 'Sossego total longe das multidões', 'Água morna e doce'],
@@ -234,7 +234,7 @@ export const MAP_POINTS: MapPointOfInterest[] = [
     coordinates: [-5.285, -35.395],
     description:
       'Ponto mais alto da orla norte com vista deslumbrante de onde o oceano encontra a barreira de corais e a costa dos coqueiros.',
-    imageUrl: '/imagens/litoral-sul-pajero.jpg',
+    imageUrl: '/images/litoral-sul/litoral-sul-pajero-sunset.webp',
     recommendedTourId: 'rio-do-fogo-vip',
     recommendedTourName: 'Parrachos de Rio do Fogo VIP',
     highlights: ['Vista de toda a enseada', 'Brisa marítima refrescante', 'Excelente parada fotográfica'],
@@ -831,7 +831,7 @@ export const InteractiveToursMap: React.FC<InteractiveToursMapProps> = ({
                             decoding="async"
                             referrerPolicy="no-referrer"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                              (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                             }}
                           />
                           <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/70 text-[9px] text-white">

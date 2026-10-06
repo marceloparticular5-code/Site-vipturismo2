@@ -913,10 +913,13 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-full overflow-hidden border border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.3)] shrink-0 bg-slate-950">
                       <img
-                        src="/imagens/logovip.jpg"
+                        src="/images/brand/logo-natal-vip.webp"
                         alt="Natal Vip Turismo"
                         className="w-full h-full rounded-full object-cover scale-[1.04]"
                         referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/images/brand/favicon.png';
+                        }}
                       />
                     </div>
                     <div>

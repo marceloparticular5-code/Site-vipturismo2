@@ -39,7 +39,7 @@ export const ComprehensiveFooter: React.FC<ComprehensiveFooterProps> = ({
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-[#FBBF24]/80 bg-[#060D17] shadow">
                 <img
-                  src="/imagens/logovip.jpg"
+                  src="/images/brand/logo-natal-vip.webp"
                   alt="Natal VIP Turismo - Agência de Turismo em Natal RN"
                   width="48"
                   height="48"
@@ -48,7 +48,7 @@ export const ComprehensiveFooter: React.FC<ComprehensiveFooterProps> = ({
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover scale-105"
                   onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
+                    (e.target as HTMLImageElement).src = '/images/brand/favicon.png';
                   }}
                 />
               </div>

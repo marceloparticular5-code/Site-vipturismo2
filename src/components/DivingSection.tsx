@@ -52,11 +52,13 @@ export const DivingSection: React.FC<DivingSectionProps> = ({
             <div className="relative h-64 sm:h-72 overflow-hidden">
               <img
                 src={maracajau.imageUrl}
-                alt="Parrachos de Maracajaú"
+                alt="Mergulho nos arrecifes de corais dos Parrachos de Maracajaú RN"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+                decoding="async"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                  (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A182E] via-transparent to-black/40" />
@@ -154,11 +156,13 @@ export const DivingSection: React.FC<DivingSectionProps> = ({
             <div className="relative h-64 sm:h-72 overflow-hidden">
               <img
                 src={rioDoFogo.imageUrl}
-                alt="Parrachos de Rio do Fogo"
+                alt="Piscinas de águas cristalinas e banco de areia em Rio do Fogo RN"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+                decoding="async"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/imagens/rio-do-fogo-mergulho.jpg';
+                  (e.target as HTMLImageElement).src = '/images/rio-do-fogo/rio-do-fogo-mergulho-punau.webp';
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A182E] via-transparent to-black/40" />

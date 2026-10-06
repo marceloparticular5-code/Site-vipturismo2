@@ -28,6 +28,19 @@ export const CoupleVipBanner: React.FC<CoupleVipBannerProps> = ({ onOpenBooking 
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="relative rounded-3xl bg-gradient-to-br from-[#0A192F] via-[#0F2744] to-[#060D17] text-white p-6 sm:p-10 lg:p-12 shadow-2xl overflow-hidden border border-[#1E3A5F]"
         >
+          {/* Real Photo Background with Luxury Dark Overlay */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src="/images/pacote-casal/casal-vip-buggy-praia.webp"
+              alt="Pacote Casal VIP em passeio privativo de buggy nas praias de Natal RN"
+              className="w-full h-full object-cover object-center opacity-20 pointer-events-none"
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0A192F]/95 via-[#0A192F]/85 to-[#060D17]/90" />
+          </div>
+
           {/* Subtle Decorative Elements */}
           <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#FBBF24]/10 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-[#F59E0B]/10 blur-3xl pointer-events-none" />

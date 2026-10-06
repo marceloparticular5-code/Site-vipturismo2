@@ -274,7 +274,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
     setFormActive(true);
     setFormUrgencyText('Poucas vagas disponíveis para este período');
     setFormDescription('Viva momentos inesquecíveis com transporte com ar-condicionado, guias credenciados Cadastur e atendimento de excelência.');
-    setFormImageUrl('/imagens/maracajau-mergulho.jpg');
+    setFormImageUrl('/images/maracajau/maracajau-mergulho-peixes.webp');
     setFormGalleryImages([]);
     setFormHighlights([
       'Transporte executivo com ar-condicionado direto no hotel',
@@ -465,10 +465,13 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full overflow-hidden border border-amber-400/40 bg-slate-950 flex items-center justify-center shrink-0">
               <img
-                src="/imagens/logovip.jpg"
+                src="/images/brand/logo-natal-vip.webp"
                 alt="Natal VIP Turismo"
                 className="w-full h-full rounded-full object-cover scale-[1.04]"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/images/brand/favicon.png';
+                }}
               />
             </div>
             <div>
@@ -870,7 +873,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                                (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                               }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-black/40" />

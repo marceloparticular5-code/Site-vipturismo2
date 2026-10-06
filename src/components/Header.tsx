@@ -120,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl overflow-hidden border-2 border-[#FBBF24]/80 bg-[#060D17] shadow-md group-hover:scale-105 transition-transform duration-300">
               <img
-                src="/imagens/logovip.jpg"
+                src="/images/brand/logo-natal-vip.webp"
                 alt="Natal VIP Turismo - Agência de Passeios"
                 width="48"
                 height="48"
@@ -129,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover scale-105"
                 onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
+                  (e.target as HTMLImageElement).src = '/images/brand/favicon.png';
                 }}
               />
             </div>

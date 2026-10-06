@@ -151,7 +151,7 @@ export const InstagramFeedSection: React.FC<InstagramFeedSectionProps> = ({ onOp
                 decoding="async"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                  (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                 }}
               />
 
@@ -242,7 +242,7 @@ export const InstagramFeedSection: React.FC<InstagramFeedSectionProps> = ({ onOp
                 decoding="async"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/imagens/maracajau-mergulho.jpg';
+                  (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
                 }}
               />
               {activeModalPost.isVideo && (
