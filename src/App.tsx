@@ -21,6 +21,7 @@ import { UserReservationsModal } from './components/UserReservationsModal';
 import { AdminToursModal } from './components/AdminToursModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { InAppNotificationToast } from './components/InAppNotificationToast';
+import { CalendarDrawer } from './components/CalendarDrawer';
 import { TourPackage } from './types';
 import { VIP_TOURS } from './data/toursData';
 import { subscribeToTours } from './lib/firebase';
@@ -359,6 +360,15 @@ export function App() {
         onOpenBooking={(tourId?: string) => handleOpenBooking(tourId)}
         onOpenCalendar={scrollToCalendar}
         onOpenNotificationCenter={() => setIsNotificationsOpen(true)}
+      />
+
+      {/* Gaveta Lateral Deslizante com Calendário Mensal Puro */}
+      <CalendarDrawer
+        onSelectDate={(dateFormatted) => setSelectedDate(dateFormatted)}
+        onOpenBookingWithDate={(dateFormatted) => {
+          setSelectedDate(dateFormatted);
+          setIsBookingOpen(true);
+        }}
       />
 
       {/* Modal Painel Administrativo */}
