@@ -48,9 +48,9 @@ export const CoupleVipBanner: React.FC<CoupleVipBannerProps> = ({ onOpenBooking 
           <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-7 space-y-5">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FBBF24]/20 border border-[#FBBF24]/40 text-[#FBBF24] text-xs font-bold uppercase tracking-wider">
-                <Heart className="w-3.5 h-3.5 fill-[#FBBF24] text-[#FBBF24]" />
-                <span>Oferta Especial para Casais · Temporada 2026</span>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FBBF24] text-[#0A192F] text-xs font-black uppercase tracking-wider shadow">
+                <Heart className="w-4 h-4 fill-[#0A192F] text-[#0A192F]" />
+                <span>Oferta Especial: R$ 1.320 Total para o Casal (2 Pessoas)</span>
               </div>
 
               <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight font-['Playfair_Display',serif]">
@@ -60,101 +60,106 @@ export const CoupleVipBanner: React.FC<CoupleVipBannerProps> = ({ onOpenBooking 
                 </span>
               </h2>
 
-              <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-light">
+              <p className="text-sm sm:text-base text-slate-100 leading-relaxed font-normal">
                 Esqueça filas e preocupações de logística. Nós cuidamos de tudo desde o desembarque
                 no Aeroporto de Natal até os momentos mais mágicos em Maracajaú, Pipa e Litoral Sul.
               </p>
 
               {/* What's Included */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs sm:text-sm text-slate-200">
-                <div className="flex items-start gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-sm text-white">
+                <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-[#FBBF24] shrink-0 mt-0.5" />
-                  <span>Transfer Aeroporto ⇄ Hotel ida e volta privativo</span>
+                  <span className="font-medium text-slate-100">Transfer Aeroporto ⇄ Hotel privativo (2 pessoas)</span>
                 </div>
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-[#FBBF24] shrink-0 mt-0.5" />
-                  <span>Parrachos de Maracajaú com Lancha Rápida</span>
+                  <span className="font-medium text-slate-100">Parrachos de Maracajaú com Lancha Rápida</span>
                 </div>
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-[#FBBF24] shrink-0 mt-0.5" />
-                  <span>Pipa VIP: Chapadão, Baía dos Golfinhos e Pôr do Sol</span>
+                  <span className="font-medium text-slate-100">Pipa VIP: Chapadão, Golfinhos e Pôr do Sol</span>
                 </div>
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-[#FBBF24] shrink-0 mt-0.5" />
-                  <span>Litoral Sul 4x4 ou Buggy pelas dunas e lagoas</span>
+                  <span className="font-medium text-slate-100">Litoral Sul 4x4 ou Buggy privativo pelas dunas</span>
                 </div>
               </div>
 
               {/* Price & Guarantee Callout */}
-              <div className="pt-3 border-t border-white/15 flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2 text-xs text-slate-300">
+              <div className="pt-3 border-t border-white/20 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-100">
                   <CreditCard className="w-4 h-4 text-[#FBBF24]" />
-                  <span>Em até <strong>3x sem juros</strong> no cartão</span>
+                  <span>Em até <strong>3x sem juros</strong> no cartão (R$ 440/mês)</span>
                 </div>
-                <span className="text-white/30 hidden sm:inline">|</span>
-                <div className="flex items-center gap-2 text-xs text-slate-300">
+                <span className="text-white/40 hidden sm:inline">|</span>
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-100">
                   <Flame className="w-4 h-4 text-[#FBBF24]" />
-                  <span>Desconto adicional no <strong>Pix à vista</strong></span>
+                  <span>Desconto de <strong>5% no Pix à vista</strong> (R$ 1.254,00)</span>
                 </div>
               </div>
             </div>
 
             {/* Right Card / CTA Column */}
             <div className="lg:col-span-5">
-              <div className="bg-white rounded-3xl p-6 sm:p-8 text-[#0F172A] shadow-2xl space-y-5 border border-slate-100">
+              <div className="bg-white rounded-3xl p-6 sm:p-8 text-[#0F172A] shadow-2xl space-y-5 border-2 border-amber-300/40">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Valor Fechado para 2 Pessoas
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-700 bg-slate-100 px-3 py-1 rounded-md">
+                    Preço Fechado para o Casal
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-black uppercase">
                     Economia de R$ 330
                   </span>
                 </div>
 
                 <div>
-                  <div className="text-xs text-slate-400 line-through">De R$ 1.650,00</div>
-                  <div className="flex items-baseline gap-2">
+                  <div className="text-xs sm:text-sm text-slate-500 line-through font-semibold">De R$ 1.650,00</div>
+                  <div className="flex items-baseline gap-2 flex-wrap">
                     <span className="text-3xl sm:text-4xl font-black text-[#0A192F]">
                       R$ 1.320,00
                     </span>
-                    <span className="text-xs font-semibold text-slate-500">total casal</span>
+                    <span className="text-xs sm:text-sm font-black text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                      VALOR TOTAL P/ 2 PESSOAS (CASAL)
+                    </span>
                   </div>
-                  <div className="text-xs font-bold text-[#F59E0B] mt-1">
-                    Ou 3x de R$ 440,00 sem juros no cartão
+                  <p className="text-xs font-bold text-amber-900 bg-amber-50/90 border border-amber-200 p-2 rounded-lg mt-2">
+                    ⚠️ <strong>Atenção:</strong> Este valor é fechado para o casal (2 pessoas juntas), <strong>NÃO é por pessoa!</strong>
+                  </p>
+                  <div className="text-xs sm:text-sm font-bold text-[#B45309] mt-2">
+                    Ou 3x de R$ 440,00 sem juros · 5% OFF no Pix à vista (R$ 1.254,00)
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5 text-xs text-slate-700">
-                  <div className="font-bold text-[#0A192F] flex items-center gap-1.5">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs sm:text-sm text-slate-800">
+                  <div className="font-bold text-[#0A192F] flex items-center gap-1.5 text-sm">
                     <Sparkles className="w-4 h-4 text-[#F59E0B]" />
                     <span>Benefícios Exclusivos do Casal VIP:</span>
                   </div>
-                  <p className="text-[11px] text-slate-600">
-                    Horários flexíveis alinhados à tábua de maré, assentos reservados com vista panorâmica e atendimento concierge diário.
+                  <p className="text-xs text-slate-700 leading-relaxed font-normal">
+                    Horários flexíveis alinhados à tábua de maré, assentos reservados com vista panorâmica, lancha rápida exclusiva e atendimento concierge diário.
                   </p>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <button
                     type="button"
                     onClick={() => onOpenBooking('pacote-casal-vip')}
-                    className="btn-pulse-hover group/couple w-full py-3.5 px-6 rounded-2xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+                    className="btn-pulse-hover group/couple w-full py-4 px-6 rounded-2xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-sm sm:text-base uppercase tracking-wider shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
                   >
-                    <span>Garantir Pacote Casal VIP</span>
+                    <span>Garantir Pacote Casal VIP Online</span>
                     <ArrowRight className="w-4 h-4 btn-icon-pulse transition-transform duration-300 group-hover/couple:translate-x-1" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => onOpenBooking('pacote-casal-vip')}
-                    className="w-full py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-amber-300 border border-amber-400/30 font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer text-center"
+                    className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-400/40 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer text-center"
                   >
-                    <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                    <Calendar className="w-4 h-4 text-amber-400" />
                     <span>Personalizar Data e Opcionais Online</span>
                   </button>
                 </div>
 
-                <div className="text-center text-[10px] text-slate-400">
+                <div className="text-center text-xs text-slate-600 font-medium">
                   🛡️ Agência homologada Cadastur · 100% de avaliações positivas no Google
                 </div>
               </div>

@@ -13,27 +13,31 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ onOpenChat, onOpenBookin
   const faqs = [
     {
       q: 'Onde o passeio inicia e onde vocês buscam?',
-      a: 'Todos os nossos passeios incluem transfer com busca e retorno gratuito na recepção do seu hotel ou pousada em Ponta Negra, Via Costeira e Praia do Meio. Nosso guia chama nominalmente no horário agendado.',
+      a: 'Todos os nossos passeios incluem transfer com busca e retorno gratuito na recepção do seu hotel ou pousada em Ponta Negra, Via Costeira e Praia do Meio. Nosso guia chama nominalmente no horário agendado com veículo executivo climatizado.',
     },
     {
-      q: 'Qual a política de cancelamento ou remarcação?',
-      a: 'Você pode cancelar ou remarcar sem qualquer custo com até 24 horas de antecedência. Em caso de chuva forte ou ventos que desaconselhem a navegação náutica em Maracajaú pela Capitania, reagendamos ou reembolsamos integralmente.',
-    },
-    {
-      q: 'Como funciona o parcelamento das reservas?',
-      a: 'Parcelamos em até 3x sem juros em todos os principais cartões de crédito (Visa, Mastercard, Elo, Hipercard, Amex). Para pagamentos à vista via Pix, oferecemos condições especiais com confirmação imediata do voucher.',
+      q: 'O Pacote Casal VIP (R$ 1.320) é cobrado por pessoa ou para o casal?',
+      a: 'O valor de R$ 1.320,00 é TOTAL e fechado para o CASAL (as duas pessoas inclusas juntas). NÃO é cobrado por pessoa! Inclui transfer in/out exclusivo no aeroporto, 4 dias de roteiros completos, Maracajaú de lancha, Pipa VIP, Litoral Sul 4x4 e suporte concierge 24h.',
     },
     {
       q: 'O que está incluso no passeio aos Parrachos de Maracajaú por R$ 170?',
-      a: 'Está incluso: transfer ida e volta em veículo climatizado saindo do hotel, lancha rápida veloz até a barreira de corais (7km da costa), kit completo de snorkel (máscara e tubo higienizados), colete flutuador, instrutor de apoio e taxa de preservação ambiental.',
+      a: 'Está incluso: transfer ida e volta em veículo climatizado saindo da recepção do seu hotel, embarque em lancha rápida veloz até a barreira de corais (7km da costa oceânica), kit completo de snorkel (máscara e tubo higienizados), colete flutuador homologado pela Capitania, instrutores experientes de apoio e taxa de preservação ambiental IDEMA.',
+    },
+    {
+      q: 'Qual a política de cancelamento ou remarcação em caso de chuva ou maré?',
+      a: 'Você pode cancelar ou remarcar sem qualquer custo com até 24 horas de antecedência. Em caso de chuva forte ou ventos que desaconselhem a navegação náutica em Maracajaú pela Capitania dos Portos, reagendamos imediatamente sem taxa ou estornamos 100% do seu pagamento.',
+    },
+    {
+      q: 'Como funciona o parcelamento das reservas e o desconto no Pix?',
+      a: 'Parcelamos em até 3x sem juros (ou até 12x) em todos os principais cartões de crédito (Visa, Mastercard, Elo, Hipercard, Amex). Para pagamentos à vista via Pix, você ganha 5% de desconto instantâneo com emissão imediata do seu voucher nominal com QR Code.',
     },
     {
       q: 'Quantas pessoas cabem no Buggy e o passeio tem emoção?',
-      a: 'O buggy comporta até 4 passageiros com total conforto e segurança. O trajeto pelas dunas de Genipabu conta com opção "com emoção" ou "sem emoção" — você escolhe o nível de adrenalina diretamente com o bugueiro credenciado.',
+      a: 'O buggy privativo comporta até 4 passageiros com total conforto e segurança. O trajeto pelas dunas de Genipabu conta com opção "com emoção" ou "sem emoção" — você escolhe o nível de adrenalina diretamente com o bugueiro credenciado.',
     },
     {
-      q: 'Como posso confirmar minha reserva agora?',
-      a: `Você pode finalizar em poucos cliques pelo autoatendimento seguro aqui no site com Pix ou Cartão, ou tirar dúvidas com o Assistente Natal VIP no chat do site. Caso prefira suporte pontual: ${PHONE_DISPLAY}.`,
+      q: 'Como posso confirmar minha reserva agora de forma rápida?',
+      a: `Você pode finalizar em poucos cliques pelo autoatendimento seguro aqui no site com Pix ou Cartão em até 12x, ou falar com o Assistente Natal VIP no chat flutuante 24h. Caso precise de suporte personalizado: ${PHONE_DISPLAY}.`,
     },
   ];
 
@@ -54,31 +58,49 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ onOpenChat, onOpenBookin
         </div>
 
         {/* Accordion FAQ Items */}
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           {faqs.map((faq, idx) => {
             const isOpen = openIndex === idx;
 
             return (
               <div
                 key={idx}
-                className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm transition-all"
+                className={`rounded-2xl border transition-all shadow-sm ${
+                  isOpen
+                    ? 'border-amber-400/80 shadow-md ring-1 ring-amber-400/30'
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}
               >
                 <button
                   type="button"
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
-                  className="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base text-[#0A192F] hover:text-[#D97706] flex items-center justify-between gap-4 bg-slate-50 hover:bg-slate-100/80 transition-colors cursor-pointer"
+                  className={`w-full p-4 sm:p-5 text-left font-bold text-base sm:text-lg flex items-center justify-between gap-4 transition-colors cursor-pointer rounded-2xl ${
+                    isOpen
+                      ? 'bg-[#0A192F] text-amber-300 hover:text-amber-200 rounded-b-none'
+                      : 'bg-slate-50 hover:bg-slate-100/90 text-[#0A192F] hover:text-[#B45309]'
+                  }`}
+                  aria-expanded={isOpen}
                 >
-                  <span>{faq.q}</span>
-                  {isOpen ? (
-                    <ChevronUp className="w-5 h-5 text-[#F59E0B] shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-400 shrink-0" />
-                  )}
+                  <span className="leading-snug">{faq.q}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs font-semibold uppercase tracking-wider opacity-80 hidden sm:inline">
+                      {isOpen ? 'Fechar' : 'Ver resposta'}
+                    </span>
+                    {isOpen ? (
+                      <span className="w-8 h-8 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-black">
+                        <ChevronUp className="w-5 h-5 stroke-[2.5]" />
+                      </span>
+                    ) : (
+                      <span className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center">
+                        <ChevronDown className="w-5 h-5" />
+                      </span>
+                    )}
+                  </div>
                 </button>
 
                 {isOpen && (
-                  <div className="p-4 sm:p-5 text-xs sm:text-sm text-slate-600 leading-relaxed bg-white border-t border-slate-100 animate-fadeIn">
-                    <p>{faq.a}</p>
+                  <div className="p-5 sm:p-6 text-sm sm:text-base text-[#0F172A] leading-[1.65] bg-white border-t border-amber-400/30 animate-fadeIn rounded-b-2xl">
+                    <p className="font-normal">{faq.a}</p>
                   </div>
                 )}
               </div>

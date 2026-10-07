@@ -99,9 +99,12 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const currentTour = tourList.find((t) => t.id === selectedTourId) || tourList[0] || VIP_TOURS[0];
 
   // Price calculations
+  const isCouplePackage = currentTour.id === 'pacote-casal-vip';
+  const isBuggy = currentTour.id === 'genipabu-buggy-vip';
   const baseTourPrice = currentTour.priceDiscounted;
-  const adultsTotal = adults * baseTourPrice;
-  const childrenTotal = children * (baseTourPrice * 0.5); // 50% discount for children
+  // Pacote Casal VIP is a flat R$ 1.320 for the couple (2 people); Buggy is flat R$ 820 for up to 4 people
+  const adultsTotal = isCouplePackage || isBuggy ? baseTourPrice : adults * baseTourPrice;
+  const childrenTotal = isCouplePackage || isBuggy ? 0 : children * (baseTourPrice * 0.5);
   const addonsTotal = selectedAddons.reduce((sum, addonId) => {
     const found = AVAILABLE_ADDONS.find((a) => a.id === addonId);
     return sum + (found ? found.price : 0);
@@ -321,10 +324,11 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
           <button
             onClick={handleCloseDrawer}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-400 hover:text-white transition-colors"
-            title="Fechar reserva"
+            className="p-2.5 rounded-xl bg-slate-800 hover:bg-rose-950/90 border border-slate-600 hover:border-rose-500 text-white hover:text-rose-200 transition-all cursor-pointer shadow-md flex items-center justify-center active:scale-95"
+            title="Fechar reserva (X)"
+            aria-label="Fechar gaveta de reserva"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 stroke-[2.5]" />
           </button>
         </div>
 
@@ -370,17 +374,21 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
             <div className="space-y-6">
               {/* Tour Switcher Selector */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-200 mb-2">
                   Escolha o Passeio
                 </label>
                 <select
                   value={selectedTourId}
                   onChange={(e) => setSelectedTourId(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm font-semibold text-white focus:outline-none focus:border-amber-400"
                 >
                   {tourList.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.title} — R$ {t.priceDiscounted.toFixed(2)} por pessoa
+                      {t.id === 'pacote-casal-vip'
+                        ? `${t.title} — R$ ${t.priceDiscounted.toFixed(2)} (VALOR TOTAL PARA 2 PESSOAS / CASAL)`
+                        : t.id === 'genipabu-buggy-vip'
+                        ? `${t.title} — R$ ${t.priceDiscounted.toFixed(2)} (Buggy privativo até 4 pessoas)`
+                        : `${t.title} — R$ ${t.priceDiscounted.toFixed(2)} por pessoa`}
                     </option>
                   ))}
                 </select>
@@ -389,8 +397,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               {/* Date and Embarkation Window */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                  <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-200 mb-2 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-amber-400" />
                     Data Desejada
                   </label>
                   <input
@@ -401,24 +409,24 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-sm text-white focus:outline-none ${
                       isDateStringInPast(bookingDate)
                         ? 'border-rose-500 focus:border-rose-400'
-                        : 'border-slate-700 focus:border-amber-400'
+                        : 'border-slate-600 focus:border-amber-400'
                     }`}
                   />
                   {isDateStringInPast(bookingDate) ? (
-                    <span className="text-[11px] text-rose-400 mt-1 flex items-center gap-1 font-semibold">
-                      <AlertTriangle className="w-3 h-3 shrink-0" />
+                    <span className="text-xs text-rose-400 mt-1 flex items-center gap-1 font-semibold">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                       Esta data já passou no calendário. Escolha uma data a partir de hoje.
                     </span>
                   ) : (
-                    <span className="text-[10px] text-slate-400 mt-1 block">
+                    <span className="text-xs text-slate-300 mt-1 block font-medium">
                       Sincronizada com o calendário oficial de marés
                     </span>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-amber-400" />
+                  <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-200 mb-2 flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-amber-400" />
                     Janela de Embarque
                   </label>
                   <input
@@ -426,68 +434,96 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     value={bookingTimeWindow}
                     onChange={(e) => setBookingTimeWindow(e.target.value)}
                     placeholder="Ex: 08:30 às 10:00"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400"
+                    className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400"
                   />
-                  <span className="text-[10px] text-emerald-400 mt-1 block">
+                  <span className="text-xs text-emerald-300 mt-1 block font-semibold">
                     Horário ajustado para maré 0.2m
                   </span>
                 </div>
               </div>
 
               {/* Passengers Counters */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-4">
-                <div className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+              <div className="bg-slate-900/90 border border-slate-700 rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="text-xs sm:text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
                   <Users className="w-4 h-4" />
                   Passageiros
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-sm font-bold text-white block">Adultos</span>
-                    <span className="text-xs text-slate-400">
-                      R$ {baseTourPrice},00 por pessoa
-                    </span>
+                {isCouplePackage ? (
+                  <div className="p-3.5 rounded-xl bg-amber-400/15 border border-amber-400/50 text-amber-200 text-xs sm:text-sm font-semibold space-y-1">
+                    <div className="flex items-center gap-2 text-amber-300 font-extrabold text-sm">
+                      <Heart className="w-4 h-4 fill-amber-300" />
+                      <span>Pacote Especial Casal VIP (Incluso 2 Pessoas)</span>
+                    </div>
+                    <p className="text-slate-100 font-normal leading-relaxed">
+                      Valor fechado de <strong>R$ 1.320,00 para o casal (2 pessoas juntas)</strong>. O valor não multiplica por pessoa.
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setAdults((prev) => Math.max(1, prev - 1))}
-                      className="w-8 h-8 rounded-lg bg-slate-800 text-white font-bold hover:bg-slate-700 transition-colors"
-                    >
-                      -
-                    </button>
-                    <span className="font-bold text-white w-6 text-center">{adults}</span>
-                    <button
-                      onClick={() => setAdults((prev) => prev + 1)}
-                      className="w-8 h-8 rounded-lg bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 transition-colors"
-                    >
-                      +
-                    </button>
+                ) : isBuggy ? (
+                  <div className="p-3.5 rounded-xl bg-amber-400/15 border border-amber-400/50 text-amber-200 text-xs sm:text-sm font-semibold space-y-1">
+                    <div className="flex items-center gap-2 text-amber-300 font-extrabold text-sm">
+                      <Users className="w-4 h-4" />
+                      <span>Buggy VIP Privativo (Capacidade até 4 pessoas)</span>
+                    </div>
+                    <p className="text-slate-100 font-normal leading-relaxed">
+                      Valor fechado de <strong>R$ 820,00 para o buggy exclusivo</strong> (divide para até 4 passageiros no veículo).
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm sm:text-base font-bold text-white block">Adultos</span>
+                        <span className="text-xs text-slate-300">
+                          R$ {baseTourPrice},00 por pessoa
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setAdults((prev) => Math.max(1, prev - 1))}
+                          className="w-9 h-9 rounded-lg bg-slate-800 text-white font-bold hover:bg-slate-700 transition-colors cursor-pointer text-lg"
+                        >
+                          -
+                        </button>
+                        <span className="font-black text-amber-300 text-base w-6 text-center">{adults}</span>
+                        <button
+                          type="button"
+                          onClick={() => setAdults((prev) => prev + 1)}
+                          className="w-9 h-9 rounded-lg bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 transition-colors cursor-pointer text-lg"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                  <div>
-                    <span className="text-sm font-bold text-white block">Crianças (6 a 11 anos)</span>
-                    <span className="text-xs text-emerald-400 font-medium">
-                      50% OFF (R$ {(baseTourPrice * 0.5).toFixed(2)}) · 0 a 5 anos cortesia
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setChildren((prev) => Math.max(0, prev - 1))}
-                      className="w-8 h-8 rounded-lg bg-slate-800 text-white font-bold hover:bg-slate-700 transition-colors"
-                    >
-                      -
-                    </button>
-                    <span className="font-bold text-white w-6 text-center">{children}</span>
-                    <button
-                      onClick={() => setChildren((prev) => prev + 1)}
-                      className="w-8 h-8 rounded-lg bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                      <div>
+                        <span className="text-sm sm:text-base font-bold text-white block">Crianças (6 a 11 anos)</span>
+                        <span className="text-xs text-emerald-400 font-semibold">
+                          50% OFF (R$ {(baseTourPrice * 0.5).toFixed(2)}) · 0 a 5 anos cortesia
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setChildren((prev) => Math.max(0, prev - 1))}
+                          className="w-9 h-9 rounded-lg bg-slate-800 text-white font-bold hover:bg-slate-700 transition-colors cursor-pointer text-lg"
+                        >
+                          -
+                        </button>
+                        <span className="font-black text-amber-300 text-base w-6 text-center">{children}</span>
+                        <button
+                          type="button"
+                          onClick={() => setChildren((prev) => prev + 1)}
+                          className="w-9 h-9 rounded-lg bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 transition-colors cursor-pointer text-lg"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Addons Selection */}
@@ -539,13 +575,13 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               </div>
 
               {/* Responsible Customer Data & Nationality */}
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3.5 pt-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                  <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-cyan-400" />
                     <span>Dados do Responsável & Nacionalidade</span>
                   </label>
-                  <span className="text-[10px] text-cyan-300 font-semibold bg-cyan-950/70 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+                  <span className="text-[11px] text-cyan-200 font-bold bg-cyan-950/80 border border-cyan-400/40 px-2.5 py-0.5 rounded-full">
                     Todas as Nacionalidades
                   </span>
                 </div>
@@ -553,7 +589,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 {/* Country/Nationality Selector */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] text-slate-400 font-semibold block mb-1">
+                    <label className="text-xs text-slate-200 font-bold block mb-1">
                       Nacionalidade / País de Origem:
                     </label>
                     <select
@@ -567,7 +603,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                           setCustomerPhone(`${nat.dialCode} `);
                         }
                       }}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 cursor-pointer"
+                      className="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-amber-400 cursor-pointer"
                     >
                       {NATIONALITIES.map((nat) => (
                         <option key={nat.code} value={nat.code}>
@@ -578,7 +614,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-slate-400 font-semibold block mb-1">
+                    <label className="text-xs text-slate-200 font-bold block mb-1">
                       {NATIONALITIES.find((n) => n.code === selectedNatCode)?.documentType || 'Documento / Passport'}:
                     </label>
                     <input
@@ -589,44 +625,56 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                         NATIONALITIES.find((n) => n.code === selectedNatCode)?.documentPlaceholder ||
                         'Número do Documento / Passport'
                       }
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                      className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Nome Completo *"
-                    required
-                    className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
-                  />
-                  <input
-                    type="tel"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="Telefone / WhatsApp com DDI *"
-                    required
-                    className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
-                  />
+                  <div>
+                    <label className="text-xs text-slate-200 font-bold block mb-1">Nome Completo *</label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Ex: Mariana Silva"
+                      required
+                      className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-200 font-bold block mb-1">WhatsApp / Telefone com DDI *</label>
+                    <input
+                      type="tel"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      placeholder="(84) 99999-9999"
+                      required
+                      className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    type="email"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                    placeholder="E-mail para envio do voucher"
-                    className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
-                  />
-                  <input
-                    type="text"
-                    value={hotelPickup}
-                    onChange={(e) => setHotelPickup(e.target.value)}
-                    placeholder="Nome do Hotel/Pousada em Natal (para transfer)"
-                    className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
-                  />
+                  <div>
+                    <label className="text-xs text-slate-200 font-bold block mb-1">E-mail para envio do voucher digital</label>
+                    <input
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      placeholder="seu.email@exemplo.com"
+                      className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-200 font-bold block mb-1">Hotel / Pousada para embarque</label>
+                    <input
+                      type="text"
+                      value={hotelPickup}
+                      onChange={(e) => setHotelPickup(e.target.value)}
+                      placeholder="Ex: Hotel em Ponta Negra / Via Costeira"
+                      className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -698,37 +746,41 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               </div>
 
               {/* Order summary banner */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 text-xs space-y-2">
-                <div className="flex justify-between text-slate-300">
+              <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 sm:p-5 text-sm space-y-2.5">
+                <div className="flex justify-between text-slate-100 font-semibold">
                   <span>
-                    {adults} Adulto(s) + {children} Criança(s)
+                    {isCouplePackage
+                      ? 'Pacote Casal VIP (Fechado p/ 2 pessoas / casal)'
+                      : isBuggy
+                      ? 'Buggy VIP Privativo (Veículo até 4 passageiros)'
+                      : `${adults} Adulto(s)${children > 0 ? ` + ${children} Criança(s)` : ''}`}
                   </span>
-                  <span>R$ {(adultsTotal + childrenTotal).toFixed(2)}</span>
+                  <span className="text-white font-bold">R$ {(adultsTotal + childrenTotal).toFixed(2)}</span>
                 </div>
                 {addonsTotal > 0 && (
-                  <div className="flex justify-between text-slate-300">
+                  <div className="flex justify-between text-slate-200">
                     <span>Opcionais selecionados ({selectedAddons.length})</span>
-                    <span>R$ {addonsTotal.toFixed(2)}</span>
+                    <span className="text-white font-bold">R$ {addonsTotal.toFixed(2)}</span>
                   </div>
                 )}
                 {paymentTab === 'pix' && (
-                  <div className="flex justify-between text-emerald-400 font-semibold">
-                    <span>Desconto Exclusivo PIX (5%)</span>
+                  <div className="flex justify-between text-emerald-300 font-bold bg-emerald-950/40 border border-emerald-500/30 p-2 rounded-lg">
+                    <span>Desconto Exclusivo PIX (5% OFF)</span>
                     <span>- R$ {pixDiscount.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="pt-2 border-t border-slate-800 flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-2">
+                <div className="pt-3 border-t border-slate-700 flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-2">
                   <div>
-                    <span className="font-bold text-white text-sm block">Total Final:</span>
+                    <span className="font-extrabold text-white text-base block">Total Final:</span>
                     {displayCurrency !== 'BRL' && (
-                      <span className="text-xs text-cyan-300 font-bold block">
+                      <span className="text-xs sm:text-sm text-cyan-200 font-bold block">
                         Equivalente: {formatCurrencyValue(finalTotal, displayCurrency)}
                       </span>
                     )}
                   </div>
 
                   <div className="sm:text-right">
-                    <span className="font-black text-amber-300 text-2xl block">
+                    <span className="font-black text-amber-300 text-2xl sm:text-3xl block">
                       R$ {finalTotal.toFixed(2)}
                     </span>
                     <div className="flex items-center sm:justify-end gap-1 text-[10px] text-slate-400 mt-0.5">

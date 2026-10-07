@@ -445,22 +445,30 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
                           <div>
                             {hasPrice ? (
                               <>
-                                <span className="text-[10px] text-slate-500 block uppercase font-medium">A partir de</span>
+                                <span className="text-[10px] sm:text-xs text-slate-600 block uppercase font-bold">
+                                  {tour.id === 'pacote-casal-vip' ? 'Valor Fechado' : 'A partir de'}
+                                </span>
                                 <div className="flex items-baseline gap-1">
                                   <span className="text-xl sm:text-2xl font-black text-[#0A192F]">
                                     R$ {tour.priceDiscounted}
                                   </span>
-                                  <span className="text-[11px] text-slate-500">/ pessoa</span>
+                                  <span className="text-xs font-bold text-slate-700">
+                                    {tour.id === 'pacote-casal-vip'
+                                      ? '/ 2 pessoas (casal)'
+                                      : tour.id === 'genipabu-buggy-vip'
+                                      ? '/ buggy (até 4 pess.)'
+                                      : '/ pessoa'}
+                                  </span>
                                 </div>
-                                <span className="text-[10px] font-bold text-[#F59E0B] block">
+                                <span className="text-xs font-extrabold text-[#B45309] block">
                                   ou 3x de R$ {installmentPrice} sem juros
                                 </span>
                               </>
                             ) : (
                               <>
-                                <span className="text-[10px] text-slate-500 block uppercase font-medium">Valores Exclusivos</span>
-                                <span className="text-lg font-black text-[#0A192F] block">Sob Consulta</span>
-                                <span className="text-[10px] text-slate-500">Veículo privativo</span>
+                                <span className="text-[10px] sm:text-xs text-slate-600 block uppercase font-bold">Valores Exclusivos</span>
+                                <span className="text-lg sm:text-xl font-black text-[#0A192F] block">Sob Consulta</span>
+                                <span className="text-xs font-semibold text-slate-700">Veículo privativo</span>
                               </>
                             )}
                           </div>
@@ -469,7 +477,7 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
                           <button
                             type="button"
                             onClick={() => onOpenBooking(tour.id)}
-                            className="btn-pulse-hover group/btn px-4 py-2.5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
+                            className="btn-pulse-hover group/btn px-4 py-2.5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
                           >
                             <span>Reservar</span>
                             <ArrowRight className="w-3.5 h-3.5 btn-icon-pulse transition-transform duration-300 group-hover/btn:translate-x-0.5" />

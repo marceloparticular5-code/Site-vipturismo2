@@ -5,7 +5,7 @@ export const VIP_TOURS: TourPackage[] = [
   {
     id: 'pacote-casal-vip',
     title: 'Pacote Casal VIP · 4 Dias + Transfer',
-    subtitle: 'Transfer aeroporto-hotel-aeroporto + 4 dias de passeios privativos para 2 pessoas',
+    subtitle: 'Transfer aeroporto in/out + 4 dias de passeios privativos (R$ 1.320 total para 2 pessoas / casal)',
     badge: 'Oferta Especial Casal',
     location: 'Natal, Maracajaú, Pipa e Litoral Sul',
     rating: 5.0,
@@ -17,7 +17,7 @@ export const VIP_TOURS: TourPackage[] = [
     isVip: true,
     category: 'pacotes',
     remainingSlots: 3,
-    urgencyText: 'R$ 1.320 para 2 pessoas em até 3x sem juros ou 5% de desconto no Pix',
+    urgencyText: 'R$ 1.320,00 fechado para 2 pessoas (casal) em até 3x sem juros ou 5% de desconto no Pix',
     description:
       'A viagem dos sonhos a dois: transfer executivo in/out no Aeroporto de Natal, passeio aos Parrachos de Maracajaú com lancha rápida, dia romântico em Pipa com falésias do Chapadão e pôr do sol, expedição 4x4 no Litoral Sul e buggy com emoção.',
     highlights: [

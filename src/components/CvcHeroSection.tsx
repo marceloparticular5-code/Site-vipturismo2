@@ -150,7 +150,7 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
                       <option value="off-road-litoral-sul">Off-Road Litoral Sul 4x4 (Pajero · Sob Consulta)</option>
                     </optgroup>
                     <optgroup label="Pacotes & Transfer">
-                      <option value="pacote-casal-vip">Pacote Casal VIP (R$ 1.320 para 2 pessoas · 4 Dias + Transfer)</option>
+                      <option value="pacote-casal-vip">Pacote Casal VIP (R$ 1.320 total para 2 pessoas / casal · 4 Dias + Transfer)</option>
                       <option value="transfer-vip-aeroporto">Transfer VIP Aeroporto de Natal (R$ 160 até 4 pessoas)</option>
                     </optgroup>
                   </select>
@@ -228,7 +228,7 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
                 onClick={() => handleQuickChip('pacote-casal-vip', 'pacotes')}
                 className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-[#0A192F] font-bold border border-amber-200 transition-colors cursor-pointer"
               >
-                Pacote Casal VIP (R$ 1.320)
+                Pacote Casal VIP (R$ 1.320 / 2 pessoas)
               </button>
               <button
                 type="button"

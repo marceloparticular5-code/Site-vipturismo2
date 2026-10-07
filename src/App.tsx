@@ -8,7 +8,6 @@ import { IncredibleDestinations } from './components/IncredibleDestinations';
 import { SocialProofSection } from './components/SocialProofSection';
 import { TravelTipsSection } from './components/TravelTipsSection';
 import { TideCalendar } from './components/TideCalendar';
-import { InteractiveToursMap } from './components/InteractiveToursMap';
 import { FaqSection } from './components/FaqSection';
 import { NewsletterSection } from './components/NewsletterSection';
 import { ComprehensiveFooter } from './components/ComprehensiveFooter';
@@ -307,19 +306,6 @@ export function App() {
           <TideCalendar
             onSelectDayForBooking={handleSelectDayForBooking}
             onOpenNotifications={() => setIsNotificationsOpen(true)}
-          />
-        </motion.div>
-
-        {/* 7.2 Mapa Interativo de Roteiros */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-          variants={fadeUpVariants}
-        >
-          <InteractiveToursMap
-            onOpenBooking={(tourId) => handleOpenBooking(tourId)}
-            onOpenCalendar={scrollToCalendar}
           />
         </motion.div>
 

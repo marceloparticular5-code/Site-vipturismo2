@@ -168,7 +168,7 @@ export const ComprehensiveFooter: React.FC<ComprehensiveFooterProps> = ({
                   onClick={() => onOpenBooking('pacote-casal-vip')}
                   className="hover:text-[#FBBF24] transition-colors cursor-pointer text-left font-semibold text-white"
                 >
-                  ❤️ Pacote Casal VIP (R$ 1.320)
+                  ❤️ Pacote Casal VIP (R$ 1.320 / 2 pessoas)
                 </button>
               </li>
               <li>

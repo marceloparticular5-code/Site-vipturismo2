@@ -240,7 +240,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => handleNavClick('pacote-casal-vip')}
               className="w-full text-left py-2 font-bold text-[#FBBF24] border-b border-[#1E3A5F]/50 flex items-center justify-between"
             >
-              <span>Pacote Casal VIP (4 Dias + Transfer)</span>
+              <span>Pacote Casal VIP (R$ 1.320 para 2 pessoas)</span>
               <span>❤️</span>
             </button>
             <button
