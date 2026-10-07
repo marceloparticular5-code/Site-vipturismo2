@@ -89,7 +89,7 @@ export const DEFAULT_INFRA_TASKS: InfraChecklistTask[] = [
     title: 'Contatos de Emergência & SOS Cadastrados',
     description: 'Telefone 0800 do seguro saúde, contato do Consultor Marcelo VIP e familiares adicionados aos favoritos.',
     requiredFor: 'Acionamento ágil em qualquer situação fora do hotel.',
-    tip: 'Salve o WhatsApp da Natal Vip Turismo (+55 84 98825-6545) com estrela de favorito.',
+    tip: 'Salve o WhatsApp da Natal Vip Turismo ((84) 98872-2044) com estrela de favorito.',
   },
 
   // 3. CONECTIVIDADE & TECNOLOGIA

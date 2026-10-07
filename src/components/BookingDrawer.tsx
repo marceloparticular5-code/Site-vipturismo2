@@ -8,6 +8,7 @@ import { generateGoogleCalendarUrl, downloadIcsFile } from '../lib/googleCalenda
 import { EmailConfirmationModal } from './EmailConfirmationModal';
 import { NATIONALITIES, formatCurrencyValue, SupportedCurrency } from '../lib/i18n';
 import { trackBookingComplete } from '../lib/tracking';
+import { PHONE_WA, PHONE_DISPLAY } from '../config/contact';
 import {
   X,
   Calendar,
@@ -38,6 +39,13 @@ interface BookingDrawerProps {
   preselectedDate?: string;
   preselectedTimeWindow?: string;
   preselectedTideHeight?: number;
+  preselectedAdults?: number;
+  preselectedChildren?: number;
+  preselectedCustomerName?: string;
+  preselectedCustomerPhone?: string;
+  preselectedCustomerEmail?: string;
+  preselectedAddons?: string[];
+  initialStep?: 'details' | 'gateway' | 'voucher';
   tours?: TourPackage[];
 }
 
@@ -48,18 +56,25 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   preselectedDate = '03/01/2026',
   preselectedTimeWindow = '08:30 às 10:00',
   preselectedTideHeight = 0.2,
+  preselectedAdults,
+  preselectedChildren,
+  preselectedCustomerName,
+  preselectedCustomerPhone,
+  preselectedCustomerEmail,
+  preselectedAddons,
+  initialStep,
   tours,
 }) => {
   const [selectedTourId, setSelectedTourId] = useState(preselectedTourId);
   const [bookingDate, setBookingDate] = useState(preselectedDate);
   const [bookingTimeWindow, setBookingTimeWindow] = useState(preselectedTimeWindow);
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [selectedAddons, setSelectedAddons] = useState<string[]>(['fotos-gopro']);
+  const [adults, setAdults] = useState(preselectedAdults || 2);
+  const [children, setChildren] = useState(preselectedChildren || 0);
+  const [selectedAddons, setSelectedAddons] = useState<string[]>(preselectedAddons || ['fotos-gopro']);
 
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerName, setCustomerName] = useState(preselectedCustomerName || '');
+  const [customerPhone, setCustomerPhone] = useState(preselectedCustomerPhone || '');
+  const [customerEmail, setCustomerEmail] = useState(preselectedCustomerEmail || '');
   const [hotelPickup, setHotelPickup] = useState('');
   const [selectedNatCode, setSelectedNatCode] = useState<string>('BR');
   const [customerDocument, setCustomerDocument] = useState<string>('');
@@ -108,7 +123,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
           const abandonedLead = {
             id: `lead-abandoned-${Date.now()}`,
             name: customerName || 'Visitante Interessado',
-            phone: customerPhone || '+55 (84) 98872-2044',
+            phone: customerPhone || PHONE_DISPLAY,
             email: customerEmail || 'contato@cliente.com',
             travelMonth: bookingDate,
             tourInterest: currentTour.title,
@@ -132,7 +147,26 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     if (preselectedTourId) setSelectedTourId(preselectedTourId);
     if (preselectedDate) setBookingDate(preselectedDate);
     if (preselectedTimeWindow) setBookingTimeWindow(preselectedTimeWindow);
-  }, [preselectedTourId, preselectedDate, preselectedTimeWindow]);
+    if (preselectedAdults) setAdults(preselectedAdults);
+    if (typeof preselectedChildren === 'number') setChildren(preselectedChildren);
+    if (preselectedCustomerName) setCustomerName(preselectedCustomerName);
+    if (preselectedCustomerPhone) setCustomerPhone(preselectedCustomerPhone);
+    if (preselectedCustomerEmail) setCustomerEmail(preselectedCustomerEmail);
+    if (preselectedAddons && preselectedAddons.length > 0) setSelectedAddons(preselectedAddons);
+    if (initialStep) setStep(initialStep);
+  }, [
+    preselectedTourId,
+    preselectedDate,
+    preselectedTimeWindow,
+    preselectedAdults,
+    preselectedChildren,
+    preselectedCustomerName,
+    preselectedCustomerPhone,
+    preselectedCustomerEmail,
+    preselectedAddons,
+    initialStep,
+    isOpen,
+  ]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -1101,9 +1135,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
-                  href={`https://wa.me/5584988722044?text=Ol%C3%A1%20Natal%20Vip%20Turismo!%20Acabei%20de%20emitir%20meu%20Voucher%20${generatedVoucher.voucherCode}%20para%20o%20passeio%20${encodeURIComponent(
-                    generatedVoucher.booking.tourName
-                  )}%20no%20dia%20${generatedVoucher.booking.date}.`}
+                  href={`https://wa.me/${PHONE_WA}?text=${encodeURIComponent(`Olá Natal Vip Turismo! Acabei de emitir meu Voucher ${generatedVoucher.voucherCode} para o passeio ${generatedVoucher.booking.tourName} no dia ${generatedVoucher.booking.date}.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-slate-950 bg-emerald-400 hover:bg-emerald-300 flex items-center justify-center gap-2"

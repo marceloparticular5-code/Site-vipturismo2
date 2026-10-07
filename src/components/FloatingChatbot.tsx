@@ -6,7 +6,6 @@ import {
   Calendar,
   Users,
   Compass,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
@@ -15,59 +14,84 @@ import {
   HelpCircle,
   RotateCcw,
   ChevronLeft,
-  ChevronDown,
-  ChevronUp,
-  MapPin,
   DollarSign,
   Heart,
   Flame,
-  Camera,
-  Sun,
-  Award,
-  Waves,
-  Car,
   Check,
-  Info,
+  CreditCard,
+  QrCode,
+  Tag,
+  AlertCircle,
+  Sparkles,
+  MapPin,
 } from 'lucide-react';
-import { VIP_TOURS } from '../data/toursData';
+import { VIP_TOURS, AVAILABLE_ADDONS } from '../data/toursData';
 import { saveLeadToFirestore } from '../lib/firebase';
 import { getTodayISO } from '../lib/dateUtils';
 import { TourPackage } from '../types';
-import { trackWhatsAppClick, trackLeadGeneration } from '../lib/tracking';
+import {
+  trackWhatsAppClick,
+  trackLeadGeneration,
+  trackChatStart,
+  trackCheckoutStart,
+} from '../lib/tracking';
+import {
+  PHONE_DISPLAY,
+  PHONE_WA,
+  CADASTUR_NUMBER,
+  getWhatsAppLink,
+  HELP_TEXT,
+} from '../config/contact';
 
 interface FloatingChatbotProps {
-  onOpenBookingModal?: (tourId?: string) => void;
+  onOpenBookingModal?: (
+    tourId?: string,
+    prefill?: {
+      date?: string;
+      adults?: number;
+      children?: number;
+      customerName?: string;
+      customerPhone?: string;
+      customerEmail?: string;
+      addons?: string[];
+      initialStep?: 'details' | 'gateway' | 'voucher';
+    }
+  ) => void;
   isOpenControlled?: boolean;
   onToggleControlled?: (open: boolean) => void;
-}
-
-// Memory structure across the session
-interface UserSessionMemory {
-  name: string;
-  guestsCount: string;
-  travelDate: string;
-  experienceType: string;
-  hotelLocation: string;
-  phone: string;
-  selectedTour: TourPackage | null;
-  indecisoPreference?: string;
 }
 
 // Conversation step
 type FlowStep =
   | 'welcome'
-  | 'experience_select'
-  | 'guests_select'
+  | 'interest_select'
+  | 'tour_select'
   | 'date_select'
-  | 'recommendations'
-  | 'tour_detail'
-  | 'indeciso_quiz'
-  | 'budget_collection'
-  | 'budget_complete'
-  | 'faq_list'
-  | 'faq_answer'
-  | 'all_tours_list'
-  | 'custom_chat';
+  | 'guests_select'
+  | 'addons_select'
+  | 'customer_data'
+  | 'order_summary'
+  | 'custom_quote'
+  | 'objections'
+  | 'faq'
+  | 'whatsapp_handoff';
+
+interface ChatBookingDraft {
+  interest: 'passeio' | 'transfer' | 'pacote';
+  tourId: string;
+  tourTitle: string;
+  basePrice: number;
+  date: string;
+  adults: number;
+  children: number;
+  selectedAddons: string[];
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  hotelPickup: string;
+  isCustomQuote?: boolean;
+  customNotes?: string;
+}
 
 export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
   onOpenBookingModal,
@@ -76,88 +100,116 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
 }) => {
   // Modal visibility
   const [isOpen, setIsOpen] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [showTeaser, setShowTeaser] = useState(false);
-  const [hasDismissedTeaser, setHasDismissedTeaser] = useState(false);
+  const [hasTrackedStart, setHasTrackedStart] = useState(false);
 
-  // Active step and history for Back button
+  // Active step and navigation history
   const [step, setStep] = useState<FlowStep>('welcome');
   const [stepHistory, setStepHistory] = useState<FlowStep[]>([]);
 
-  // Session Memory
-  const [memory, setMemory] = useState<UserSessionMemory>(() => {
+  // Unresolved queries counter (Rule 4: WhatsApp after 2 failed attempts)
+  const [failedAttemptsCount, setFailedAttemptsCount] = useState(0);
+  const [whatsappReason, setWhatsappReason] = useState<string>('');
+
+  // Booking Draft state
+  const [draft, setDraft] = useState<ChatBookingDraft>(() => {
     try {
-      const saved = sessionStorage.getItem('natal_vip_chat_memory');
+      const saved = sessionStorage.getItem('natal_vip_chat_draft');
       if (saved) return JSON.parse(saved);
     } catch {
       // fallback
     }
     return {
-      name: '',
-      guestsCount: '',
-      travelDate: '',
-      experienceType: '',
-      hotelLocation: '',
-      phone: '',
-      selectedTour: null,
+      interest: 'passeio',
+      tourId: 'maracajau-vip',
+      tourTitle: 'Passeio Maracajaú + Dayuse (Caribe Brasileiro)',
+      basePrice: 170,
+      date: getTodayISO(),
+      adults: 2,
+      children: 0,
+      selectedAddons: ['fotos-gopro'],
+      customerName: '',
+      customerPhone: '',
+      customerEmail: '',
+      hotelPickup: 'Ponta Negra',
     };
   });
 
-  // Selected tour for details/expanded view
-  const [focusedTour, setFocusedTour] = useState<TourPackage | null>(null);
-  const [expandedTourId, setExpandedTourId] = useState<string | null>(null);
-
-  // Active FAQ item
-  const [activeFaqKey, setActiveFaqKey] = useState<string | null>(null);
-
-  // Free text input
+  // Free text chat input
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [chatMessages, setChatMessages] = useState<Array<{ sender: 'bot' | 'user'; text: string; time: string }>>([]);
+  const [chatLog, setChatLog] = useState<Array<{ sender: 'bot' | 'user'; text: string; time: string }>>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Save session memory
+  // Persist draft in session
   useEffect(() => {
     try {
-      sessionStorage.setItem('natal_vip_chat_memory', JSON.stringify(memory));
+      sessionStorage.setItem('natal_vip_chat_draft', JSON.stringify(draft));
     } catch {
       // ignore
     }
-  }, [memory]);
+  }, [draft]);
 
-  // Sync with external controlled state
+  // Sync external controlled state
   useEffect(() => {
     if (typeof isOpenControlled === 'boolean') {
       setIsOpen(isOpenControlled);
-      if (isOpenControlled) {
-        setHasInteracted(true);
-        setShowTeaser(false);
+      if (isOpenControlled && !hasTrackedStart) {
+        trackChatStart();
+        setHasTrackedStart(true);
       }
     }
-  }, [isOpenControlled]);
+  }, [isOpenControlled, hasTrackedStart]);
 
-  // Auto teaser after 8 seconds if visitor hasn't opened yet
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const alreadyOpened = sessionStorage.getItem('natal_vip_chat_opened');
-      if (!alreadyOpened && !isOpen && !hasDismissedTeaser) {
-        setShowTeaser(true);
-      }
-    }, 8000);
-
-    return () => clearTimeout(timer);
-  }, [isOpen, hasDismissedTeaser]);
-
-  // Auto-scroll inside chat
+  // Auto-scroll on content updates
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [step, isTyping, chatMessages, focusedTour, activeFaqKey]);
+  }, [step, isTyping, chatLog, isOpen]);
 
-  // Navigate to step with history tracking
+  // RULE 2: Auto-open after 10s or 40% scroll (once per session)
+  useEffect(() => {
+    const alreadyAutoOpened = sessionStorage.getItem('natal_vip_chat_auto_opened');
+    if (alreadyAutoOpened || isOpen) return;
+
+    let timer: NodeJS.Timeout;
+
+    // Trigger A: 10 seconds timer
+    timer = setTimeout(() => {
+      if (!sessionStorage.getItem('natal_vip_chat_auto_opened') && !isOpen) {
+        sessionStorage.setItem('natal_vip_chat_auto_opened', 'true');
+        setIsOpen(true);
+        onToggleControlled?.(true);
+        trackChatStart();
+        setHasTrackedStart(true);
+      }
+    }, 10000);
+
+    // Trigger B: 40% scroll depth
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollHeight > 0) {
+        const scrolledPercent = (window.scrollY / scrollHeight) * 100;
+        if (scrolledPercent >= 40 && !sessionStorage.getItem('natal_vip_chat_auto_opened') && !isOpen) {
+          sessionStorage.setItem('natal_vip_chat_auto_opened', 'true');
+          setIsOpen(true);
+          onToggleControlled?.(true);
+          trackChatStart();
+          setHasTrackedStart(true);
+          window.removeEventListener('scroll', handleScroll);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isOpen, onToggleControlled]);
+
   const navigateTo = (newStep: FlowStep) => {
     setStepHistory((prev) => [...prev, step]);
     setStep(newStep);
@@ -165,9 +217,9 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
 
   const handleGoBack = () => {
     if (stepHistory.length > 0) {
-      const previousStep = stepHistory[stepHistory.length - 1];
+      const prevStep = stepHistory[stepHistory.length - 1];
       setStepHistory((prev) => prev.slice(0, -1));
-      setStep(previousStep);
+      setStep(prevStep);
     } else {
       setStep('welcome');
     }
@@ -176,362 +228,301 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
   const handleResetChat = () => {
     setStep('welcome');
     setStepHistory([]);
-    setFocusedTour(null);
-    setExpandedTourId(null);
-    setActiveFaqKey(null);
+    setFailedAttemptsCount(0);
+    setChatLog([]);
   };
 
   const handleOpenChat = () => {
     setIsOpen(true);
-    setHasInteracted(true);
-    setShowTeaser(false);
     onToggleControlled?.(true);
-    sessionStorage.setItem('natal_vip_chat_opened', 'true');
+    sessionStorage.setItem('natal_vip_chat_auto_opened', 'true');
+    if (!hasTrackedStart) {
+      trackChatStart();
+      setHasTrackedStart(true);
+    }
   };
 
   const handleCloseChat = () => {
     setIsOpen(false);
     onToggleControlled?.(false);
-    if (!hasDismissedTeaser) {
-      setTimeout(() => {
-        setShowTeaser(true);
-        setHasDismissedTeaser(true);
-      }, 15000);
+  };
+
+  // Official Tour Selection
+  const selectedTour = useMemo(() => {
+    return VIP_TOURS.find((t) => t.id === draft.tourId) || VIP_TOURS[0];
+  }, [draft.tourId]);
+
+  // Price Calculation
+  const isBuggyOrPackage = draft.tourId === 'genipabu-buggy-vip' || draft.tourId === 'pacote-casal-vip';
+  const basePricePerPerson = selectedTour.priceDiscounted;
+  const tourTotal = isBuggyOrPackage
+    ? basePricePerPerson
+    : basePricePerPerson * draft.adults + basePricePerPerson * 0.5 * draft.children;
+
+  const addonsTotal = draft.selectedAddons.reduce((sum, addonId) => {
+    const found = AVAILABLE_ADDONS.find((a) => a.id === addonId);
+    return sum + (found ? found.price : 0);
+  }, 0);
+
+  const subtotal = tourTotal + addonsTotal;
+  const pixDiscount = subtotal * 0.05;
+  const totalPix = subtotal - pixDiscount;
+  const cardInstallment12x = (subtotal / 12).toFixed(2);
+
+  // Trigger Online Booking Checkout (Pre-filled)
+  const handleProceedToCheckout = () => {
+    // 1. Track begin_checkout
+    trackCheckoutStart(draft.tourTitle, subtotal);
+
+    // 2. Save lead in background if not already saved
+    if (draft.customerName || draft.customerPhone) {
+      saveLeadToFirestore({
+        name: draft.customerName || 'Cliente Autoatendimento VIP',
+        phone: draft.customerPhone || PHONE_DISPLAY,
+        travelMonth: draft.date,
+        tourInterest: draft.tourTitle,
+        status: 'checkout_started',
+        createdAt: new Date().toISOString(),
+      }).catch(() => {});
+    }
+
+    // 3. Open BookingDrawer pre-filled
+    if (onOpenBookingModal) {
+      onOpenBookingModal(draft.tourId, {
+        date: draft.date,
+        adults: draft.adults,
+        children: draft.children,
+        customerName: draft.customerName,
+        customerPhone: draft.customerPhone,
+        customerEmail: draft.customerEmail,
+        addons: draft.selectedAddons,
+        initialStep: 'gateway', // Takes user directly to payment choice
+      });
+      handleCloseChat();
     }
   };
 
-  // WhatsApp generation helper
-  const handleOpenWhatsApp = (tourTitle?: string, customText?: string) => {
-    const currentTour = tourTitle || memory.selectedTour?.title || 'Passeios VIP em Natal';
-    const guestLabel = memory.guestsCount ? `${memory.guestsCount} pessoa(s)` : 'minha família/grupo';
-    const dateLabel = memory.travelDate || 'próximos dias';
-    const nameLabel = memory.name.trim() || 'Cliente VIP';
+  // Rule 4: Trigger WhatsApp ONLY as last resort
+  const handleTriggerWhatsApp = (reason: string) => {
+    setWhatsappReason(reason);
+    trackWhatsAppClick(draft.tourTitle, subtotal);
 
-    const defaultMsg = `Olá, Natal VIP Turismo! 👋\n\nMeu nome é ${nameLabel}.\n\nTenho interesse no passeio *${currentTour}* para *${guestLabel}*, na data *${dateLabel}*.\n\nGostaria de confirmar disponibilidade e finalizar minha reserva. 🌴☀️`;
+    // Save lead
+    if (draft.customerName || draft.customerPhone) {
+      saveLeadToFirestore({
+        name: draft.customerName || 'Cliente WhatsApp Chat',
+        phone: draft.customerPhone || PHONE_DISPLAY,
+        travelMonth: draft.date,
+        tourInterest: draft.tourTitle,
+        status: 'whatsapp_escalated',
+        createdAt: new Date().toISOString(),
+      }).catch(() => {});
+    }
 
-    const finalMsg = customText || defaultMsg;
-    const whatsappUrl = `https://wa.me/5584988722044?text=${encodeURIComponent(finalMsg)}`;
-
-    // Track conversion event (GA4 / GTM / Meta Pixel)
-    trackWhatsAppClick(currentTour, memory.selectedTour?.priceDiscounted || 189);
-
-    // Save lead record in background
-    saveLeadToFirestore({
-      name: memory.name.trim() || 'Visitante Chatbot VIP',
-      phone: memory.phone.trim() || '(84) 98872-2044',
-      travelMonth: memory.travelDate ? memory.travelDate.substring(0, 7) : '2026-10',
-      tourInterest: currentTour,
-      status: 'new',
-      createdAt: new Date().toISOString(),
-    }).catch(() => {});
-
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    navigateTo('whatsapp_handoff');
   };
 
-  // Filter tours dynamically based on experience and preferences
-  const recommendedTours = useMemo(() => {
-    const exp = memory.experienceType.toLowerCase();
-    const pref = memory.indecisoPreference?.toLowerCase() || '';
-
-    // 1. By Indeciso Preference
-    if (pref) {
-      if (pref.includes('completo')) {
-        return VIP_TOURS.filter((t) => t.id === 'pacote-vip-premium' || t.id === 'litoral-sul-4x4-vip');
-      }
-      if (pref.includes('economizar')) {
-        return VIP_TOURS.filter((t) => t.id === 'auto-do-potengi-vip' || t.id === 'litoral-norte-buggy');
-      }
-      if (pref.includes('romantico')) {
-        return VIP_TOURS.filter((t) => t.id === 'pipa-vip' || t.id === 'maracajau-vip' || t.id === 'auto-do-potengi-vip');
-      }
-      if (pref.includes('aventura')) {
-        return VIP_TOURS.filter((t) => t.id === 'litoral-norte-buggy' || t.id === 'quadriciclo-vip');
-      }
-      if (pref.includes('familia')) {
-        return VIP_TOURS.filter((t) => t.id === 'maracajau-vip' || t.id === 'litoral-sul-4x4-vip' || t.id === 'pacote-vip-premium');
-      }
-      if (pref.includes('fotos')) {
-        return VIP_TOURS.filter((t) => t.id === 'pipa-vip' || t.id === 'litoral-sul-4x4-vip' || t.id === 'litoral-norte-buggy');
-      }
-    }
-
-    // 2. By Experience Selection
-    if (exp) {
-      if (exp.includes('praias') || exp.includes('lagoas')) {
-        return VIP_TOURS.filter((t) => t.id === 'litoral-sul-4x4-vip' || t.id === 'pipa-vip');
-      }
-      if (exp.includes('dunas') || exp.includes('aventura')) {
-        return VIP_TOURS.filter((t) => t.id === 'litoral-norte-buggy' || t.id === 'quadriciclo-vip');
-      }
-      if (exp.includes('4x4')) {
-        return VIP_TOURS.filter((t) => t.id === 'litoral-sul-4x4-vip');
-      }
-      if (exp.includes('buggy')) {
-        return VIP_TOURS.filter((t) => t.id === 'litoral-norte-buggy');
-      }
-      if (exp.includes('piscinas') || exp.includes('mergulho')) {
-        return VIP_TOURS.filter((t) => t.id === 'maracajau-vip' || t.includesDiving);
-      }
-      if (exp.includes('por do sol') || exp.includes('pôr do sol')) {
-        return VIP_TOURS.filter((t) => t.id === 'auto-do-potengi-vip' || t.id === 'pipa-vip');
-      }
-      if (exp.includes('privativo')) {
-        return VIP_TOURS.filter((t) => t.isVip);
-      }
-    }
-
-    // Fallback: top 3 best-sellers
-    return VIP_TOURS.slice(0, 3);
-  }, [memory.experienceType, memory.indecisoPreference]);
-
-  // Intelligent text parser to detect dates, guests, intents
-  const handleSendTextMessage = (e?: React.FormEvent) => {
+  // Free text NLP analyzer
+  const handleSendText = (e?: React.FormEvent) => {
     e?.preventDefault();
     const query = inputText.trim();
     if (!query) return;
 
     const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    setChatMessages((prev) => [...prev, { sender: 'user', text: query, time }]);
+    setChatLog((prev) => [...prev, { sender: 'user', text: query, time }]);
     setInputText('');
     setIsTyping(true);
 
     const lower = query.toLowerCase();
 
-    // Natural Language Extraction: guests
-    const guestMatch = lower.match(/(\d+)\s*(pessoas?|adultos?|lugares?|passageiros?)/i) || lower.match(/somos\s*(\d+)/i);
-    let detectedGuests = memory.guestsCount;
-    if (guestMatch && guestMatch[1]) {
-      detectedGuests = guestMatch[1];
+    // Check if customer explicitly wants a human (Condition 4.1)
+    if (
+      lower.includes('humano') ||
+      lower.includes('atendente') ||
+      lower.includes('pessoa') ||
+      lower.includes('whatsapp') ||
+      lower.includes('falar com')
+    ) {
+      setTimeout(() => {
+        setIsTyping(false);
+        handleTriggerWhatsApp('Solicitação expressa de atendimento humano');
+      }, 500);
+      return;
     }
 
-    // Natural Language Extraction: dates
-    const dateMatch = lower.match(/(\d{1,2})[\/\-](\d{1,2})/i) || lower.match(/dia\s*(\d{1,2})/i);
-    let detectedDate = memory.travelDate;
-    if (dateMatch) {
-      detectedDate = dateMatch[0];
-    } else if (lower.includes('amanhã') || lower.includes('amanha')) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      detectedDate = tomorrow.toLocaleDateString('pt-BR');
-    } else if (lower.includes('hoje')) {
-      detectedDate = new Date().toLocaleDateString('pt-BR');
+    // Check payment issue (Condition 4.4)
+    if (lower.includes('erro no pagamento') || lower.includes('não consigo pagar') || lower.includes('recusado')) {
+      setTimeout(() => {
+        setIsTyping(false);
+        handleTriggerWhatsApp('Suporte com pagamento ou checkout');
+      }, 500);
+      return;
     }
 
-    // Update memory
-    setMemory((prev) => ({
-      ...prev,
-      guestsCount: detectedGuests,
-      travelDate: detectedDate,
-    }));
+    // Check large group (Condition 4.3)
+    if (lower.includes('grupo') || lower.includes('empresa') || lower.includes('excursão') || lower.includes('15 pessoas') || lower.includes('20 pessoas')) {
+      setTimeout(() => {
+        setIsTyping(false);
+        handleTriggerWhatsApp('Orçamento para grupo grande / evento corporativo');
+      }, 500);
+      return;
+    }
 
+    // Intelligent match to official tours
     setTimeout(() => {
       setIsTyping(false);
 
-      // Check intent matching
-      if (lower.includes('preço') || lower.includes('valor') || lower.includes('quanto custa')) {
-        navigateTo('all_tours_list');
-      } else if (lower.includes('dúvida') || lower.includes('indeciso') || lower.includes('qual escolher') || lower.includes('ajuda')) {
-        navigateTo('indeciso_quiz');
-      } else if (lower.includes('atendente') || lower.includes('humano') || lower.includes('marcelo') || lower.includes('falar')) {
-        handleOpenWhatsApp(undefined, `Olá! Gostaria de falar com um atendente da Natal VIP Turismo sobre passeios e roteiros.`);
-      } else if (lower.includes('maracajaú') || lower.includes('maracajau') || lower.includes('mergulho')) {
-        const tour = VIP_TOURS.find((t) => t.id === 'maracajau-vip') || VIP_TOURS[0];
-        setFocusedTour(tour);
-        setMemory((prev) => ({ ...prev, selectedTour: tour }));
-        navigateTo('tour_detail');
-      } else if (lower.includes('buggy') || lower.includes('genipabu')) {
-        const tour = VIP_TOURS.find((t) => t.id === 'litoral-norte-buggy') || VIP_TOURS[1];
-        setFocusedTour(tour);
-        setMemory((prev) => ({ ...prev, selectedTour: tour }));
-        navigateTo('tour_detail');
-      } else if (lower.includes('pipa')) {
-        const tour = VIP_TOURS.find((t) => t.id === 'pipa-vip') || VIP_TOURS[3];
-        setFocusedTour(tour);
-        setMemory((prev) => ({ ...prev, selectedTour: tour }));
-        navigateTo('tour_detail');
-      } else if (lower.includes('4x4') || lower.includes('litoral sul')) {
-        const tour = VIP_TOURS.find((t) => t.id === 'litoral-sul-4x4-vip') || VIP_TOURS[2];
-        setFocusedTour(tour);
-        setMemory((prev) => ({ ...prev, selectedTour: tour }));
-        navigateTo('tour_detail');
-      } else if (lower.includes('cancelar') || lower.includes('remarcar') || lower.includes('hotel') || lower.includes('horário') || lower.includes('criança')) {
-        navigateTo('faq_list');
+      if (lower.includes('maracajaú') || lower.includes('maracajau') || lower.includes('parrachos')) {
+        setDraft((prev) => ({
+          ...prev,
+          interest: 'passeio',
+          tourId: 'maracajau-vip',
+          tourTitle: 'Passeio Maracajaú + Dayuse (Caribe Brasileiro)',
+          basePrice: 170,
+        }));
+        navigateTo('date_select');
+      } else if (lower.includes('rio do fogo') || lower.includes('punau') || lower.includes('punaú')) {
+        setDraft((prev) => ({
+          ...prev,
+          interest: 'passeio',
+          tourId: 'rio-do-fogo-vip',
+          tourTitle: 'Passeio Rio do Fogo + Punaú',
+          basePrice: 170,
+        }));
+        navigateTo('date_select');
+      } else if (lower.includes('buggy') || lower.includes('genipabu') || lower.includes('dunas')) {
+        setDraft((prev) => ({
+          ...prev,
+          interest: 'passeio',
+          tourId: 'genipabu-buggy-vip',
+          tourTitle: 'Buggy VIP Premium Privativo nas Dunas de Genipabu',
+          basePrice: 820,
+        }));
+        navigateTo('date_select');
+      } else if (lower.includes('litoral sul') || lower.includes('4x4') || lower.includes('pajero')) {
+        setDraft((prev) => ({
+          ...prev,
+          interest: 'passeio',
+          tourId: 'litoral-sul-4x4-vip',
+          tourTitle: 'Off-Road Litoral Sul 4x4 Premium',
+          basePrice: 150,
+        }));
+        navigateTo('date_select');
+      } else if (lower.includes('pipa by night') || lower.includes('noite em pipa') || lower.includes('vila')) {
+        setDraft((prev) => ({
+          ...prev,
+          interest: 'passeio',
+          tourId: 'pipa-by-night',
+          tourTitle: 'Pipa By Night',
+          basePrice: 100,
+        }));
+        navigateTo('date_select');
+      } else if (lower.includes('pipa') || lower.includes('praia do amor')) {
+        setDraft((prev) => ({
+          ...prev,
+          interest: 'passeio',
+          tourId: 'pipa-praia-do-amor',
+          tourTitle: 'Passeio Pipa + Praia do Amor',
+          basePrice: 80,
+        }));
+        navigateTo('date_select');
+      } else if (lower.includes('casal') || lower.includes('lua de mel') || lower.includes('romântico')) {
+        setDraft((prev) => ({
+          ...prev,
+          interest: 'pacote',
+          tourId: 'pacote-casal-vip',
+          tourTitle: 'Pacote Casal VIP (Roteiro Completo)',
+          basePrice: 1320,
+        }));
+        navigateTo('date_select');
+      } else if (lower.includes('transfer') || lower.includes('aeroporto')) {
+        setDraft((prev) => ({
+          ...prev,
+          interest: 'transfer',
+          tourId: 'transfer-aeroporto-vip',
+          tourTitle: 'Transfer VIP Aeroporto (Ida e Volta Promocional)',
+          basePrice: 160,
+        }));
+        navigateTo('date_select');
+      } else if (lower.includes('preço') || lower.includes('valor') || lower.includes('quanto custa')) {
+        navigateTo('tour_select');
+      } else if (lower.includes('segurança') || lower.includes('cancelamento') || lower.includes('incluso') || lower.includes('chuva')) {
+        navigateTo('objections');
       } else {
-        // If they provided guests and date, guide straight to recommendations
-        if (detectedGuests && detectedDate) {
-          navigateTo('recommendations');
-        } else if (!memory.experienceType) {
-          navigateTo('experience_select');
+        // Unknown query: increment failed attempts counter
+        const nextFailed = failedAttemptsCount + 1;
+        setFailedAttemptsCount(nextFailed);
+
+        if (nextFailed >= 2) {
+          // Condition 4.2: Fails after 2 attempts -> trigger WhatsApp handoff
+          handleTriggerWhatsApp('Não compreendi sua dúvida após 2 tentativas');
         } else {
-          navigateTo('recommendations');
+          setChatLog((prev) => [
+            ...prev,
+            {
+              sender: 'bot',
+              text: 'Não compreendi totalmente. Você deseja ver nossos passeios oficiais, transfer de aeroporto ou tirar dúvidas de segurança e cancelamento?',
+              time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            },
+          ]);
         }
       }
-    }, 600);
+    }, 400);
   };
 
-  // Comprehensive 15 FAQs with clear, humanized, concise answers
-  const FAQ_ITEMS: Record<string, { q: string; a: string }> = {
-    passeios: {
-      q: 'Quais passeios vocês oferecem?',
-      a: 'Oferecemos os passeios mais cobiçados de Natal: Parrachos de Maracajaú com lancha rápida, Litoral Norte de Buggy (Genipabu), Litoral Sul 4x4 Rota dos Nativos, Pipa VIP com pôr do sol, Quadriciclo e Passeio no Rio Potengi.',
-    },
-    valores: {
-      q: 'Quais são os valores?',
-      a: 'Valores oficiais com desconto: Pipa + Praia do Amor por R$ 80 (Van); Pipa by-Night por R$ 100; Litoral Sul 4x4 por R$ 150; Rio do Fogo + Punaú por R$ 170; Maracajaú + Dayuse por R$ 170; Litoral Norte de Buggy por R$ 820 privativo (ou divide para 2 casais); Quadriciclo por R$ 280 (até 2 pessoas) e Transfer Aeroporto por R$ 160 (2 trajetos na contratação de 1 passeio)!',
-    },
-    hotel: {
-      q: 'Vocês buscam no hotel?',
-      a: 'Sim! Todos os nossos passeios realizam embarques diretamente na recepção dos hotéis localizados em: Ponta Negra, Via Costeira e Praia dos Artistas.',
-    },
-    privativo: {
-      q: 'O passeio é privativo?',
-      a: 'Temos o Litoral Norte de Buggy por R$ 820 privativo (que pode ser dividido para até 2 casais / 4 pessoas) e opções compartilhadas executivas como Pipa em van por apenas R$ 80 por pessoa.',
-    },
-    buggy_vagas: {
-      q: 'Quantas pessoas cabem no buggy?',
-      a: 'Cada buggy oficial credenciado comporta com total conforto e segurança até 4 passageiros mais o bugueiro profissional credenciado pelo Cadastur.',
-    },
-    emocao: {
-      q: 'O passeio tem opção com emoção?',
-      a: 'Com certeza! No Litoral Norte de Buggy você escolhe na hora: com emoção (manobras seguras nas dunas móveis) ou sem emoção (passeio suave e contemplativo). Você está no comando!',
-    },
-    criancas: {
-      q: 'Quais passeios são indicados para crianças?',
-      a: 'Para famílias com crianças, recomendamos: Maracajaú + Dayuse (piscinas naturais calmas e dayuse com estrutura), Rio do Fogo + Punaú e o Litoral Sul 4x4 em veículo Pajero Dakar climatizado.',
-    },
-    casal: {
-      q: 'Quais passeios são indicados para casal?',
-      a: 'Para casais: Pipa + Praia do Amor, Pipa by-Night para jantar romântico, Maracajaú VIP com lancha rápida e o Buggy privativo dividido a dois.',
-    },
-    reserva: {
-      q: 'Como funciona a reserva?',
-      a: 'Super simples: você escolhe o passeio, reserva sua vaga no Pix (com entrada e o restante no dia do passeio) ou no cartão pelo link seguro da InfinitePay (https://loja.infinitepay.io/natalvipturismo).',
-    },
-    pagamento: {
-      q: 'Quais formas de pagamento?',
-      a: 'PIX (com entrada para reserva da vaga e o restante pago nos dias dos respectivos passeios) ou Cartão de crédito pelo link oficial da InfinitePay: https://loja.infinitepay.io/natalvipturismo',
-    },
-    levar: {
-      q: 'O que levar no passeio?',
-      a: 'Recomendamos protetor solar, óculos de sol, chapéu ou boné, roupa de banho, toalha e um documento com foto. Leve também dinheiro ou cartão para almoço e fotos opcionais.',
-    },
-    horario: {
-      q: 'Qual horário de saída?',
-      a: 'As saídas dos hotéis acontecem geralmente entre 07:00 e 08:30 da manhã. Para passeios náuticos como Maracajaú, o horário exato é sincronizado diariamente com o pico da maré baixa para garantir a melhor água!',
-    },
-    embarque: {
-      q: 'Como funciona o embarque?',
-      a: 'Nosso guia ou motorista chama nominalmente você na recepção do seu hotel no horário combinado. O veículo é climatizado, higienizado e identificado com a logomarca da agência.',
-    },
-    cancelamento: {
-      q: 'Posso cancelar ou remarcar?',
-      a: 'Sim! Remarcações são totalmente gratuitas com até 24h de antecedência. Em caso de condições climáticas adversas ou maré desfavorável para mergulho, reagendamos ou reembolsamos sem burocracia.',
-    },
-    atendente: {
-      q: 'Como falar com um atendente?',
-      a: 'Você pode falar diretamente com o consultor Marcelo e nossa equipe de atendimento agora mesmo pelo WhatsApp (84) 98872-2044. O atendimento é rápido, cordial e humanizado!',
-    },
-  };
-
-  // Budget submission handler
-  const handleBudgetSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!memory.name.trim()) return;
-
-    // Track lead generation in GA4 & Meta Pixel
-    trackLeadGeneration({
-      name: memory.name.trim(),
-      tour: memory.selectedTour?.title || 'Roteiro Personalizado VIP',
-      phone: memory.phone.trim(),
-      guests: memory.guestsCount,
-      date: memory.travelDate,
-      value: memory.selectedTour?.priceDiscounted || 189,
-    });
-
-    // Save lead
-    saveLeadToFirestore({
-      name: memory.name.trim(),
-      phone: memory.phone.trim() || '(84) 98872-2044',
-      travelMonth: memory.travelDate ? memory.travelDate.substring(0, 7) : '2026-10',
-      tourInterest: memory.selectedTour?.title || 'Roteiro Personalizado VIP',
-      status: 'new',
-      createdAt: new Date().toISOString(),
-    }).catch(() => {});
-
-    navigateTo('budget_complete');
+  // WhatsApp Message Composer
+  const getPreparedWhatsAppMessage = () => {
+    return `Olá, Natal VIP Turismo! 👋\n\nEstava conversando com o Assistente Natal VIP no site e gostaria de atendimento sobre:\n\n*Roteiro:* ${draft.tourTitle}\n*Data desejada:* ${draft.date}\n*Pessoas:* ${draft.adults} adulto(s)${draft.children ? `, ${draft.children} criança(s)` : ''}\n*Motivo:* ${whatsappReason || 'Atendimento personalizado'}\n*Titular:* ${draft.customerName || 'Cliente VIP'}\n\nPoderiam me ajudar a concluir minha reserva? 🌴☀️`;
   };
 
   return (
     <>
-      {/* 1. DISCREET FLOATING TEASER (After 8s or when user wanders) */}
-      {!isOpen && showTeaser && (
-        <div className="fixed bottom-24 right-4 sm:right-6 z-40 max-w-xs animate-bounce duration-1000">
-          <div className="relative p-3.5 rounded-2xl bg-gradient-to-r from-[#0C2238] to-[#0A3047] border border-amber-400/50 shadow-2xl text-white">
-            <button
-              onClick={() => setShowTeaser(false)}
-              className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-slate-900 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs shadow"
-            >
-              ✕
-            </button>
-            <div className="flex items-start gap-2.5">
-              <span className="text-xl shrink-0">🌴</span>
-              <div className="text-xs">
-                <p className="font-bold text-amber-300">Posso te ajudar com sua viagem?</p>
-                <p className="text-slate-300 mt-0.5">Preços, disponibilidade e roteiros imperdíveis em Natal.</p>
-                <button
-                  onClick={handleOpenChat}
-                  className="mt-2 text-[11px] font-black text-amber-300 hover:text-amber-200 underline flex items-center gap-1 cursor-pointer"
-                >
-                  <span>Iniciar autoatendimento</span>
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 2. ROUND FLOATING BUTTON (Bottom Right - Turquoise + Gold) */}
+      {/* 1. PRIORITY FLOATING BUTTON (Rule 2: High contrast gold over blue, subtle pulse, clear label) */}
       {!isOpen && (
-        <div className="fixed bottom-5 right-4 sm:right-6 z-50">
+        <div className="fixed bottom-5 right-4 sm:right-6 z-50 flex items-center justify-end">
           <button
+            type="button"
             onClick={handleOpenChat}
-            className="group relative flex items-center justify-center w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-tr from-cyan-600 via-teal-500 to-amber-400 text-white shadow-[0_10px_30px_rgba(6,182,212,0.45)] hover:shadow-[0_12px_40px_rgba(245,158,11,0.55)] border-2 border-amber-300/80 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
-            aria-label="Abrir Chatbot VIP de Autoatendimento"
+            className="group relative flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-500 text-slate-950 font-black shadow-[0_10px_35px_rgba(245,158,11,0.55)] hover:shadow-[0_14px_45px_rgba(245,158,11,0.7)] border-2 border-yellow-200 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
+            aria-label="Fale com a gente e reserve agora"
           >
-            {/* Pulsing ring animation */}
-            <span className="absolute -inset-1 rounded-full bg-cyan-400 opacity-40 blur-sm group-hover:opacity-75 animate-pulse" />
+            {/* Subtle radar pulse glow */}
+            <span className="absolute -inset-1 rounded-full bg-amber-400 opacity-40 blur-sm group-hover:opacity-75 animate-pulse" />
 
-            <div className="relative flex flex-col items-center justify-center">
-              <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-md group-hover:rotate-12 transition-transform duration-300" />
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-950 flex items-center justify-center shrink-0 border border-amber-300/60 shadow">
+              <MessageCircle className="w-5 h-5 text-amber-400" />
             </div>
 
-            {/* "Online agora" badge */}
-            <span className="absolute -top-1.5 -right-1.5 px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 font-extrabold text-[9px] tracking-wider uppercase shadow-md flex items-center gap-1 border border-emerald-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-              <span>Online</span>
-            </span>
+            <div className="relative text-left pr-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs sm:text-sm font-black text-slate-950 leading-tight tracking-tight uppercase">
+                  Fale com a gente e reserve agora
+                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping shrink-0" />
+              </div>
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-900/80 block leading-none">
+                Assistente VIP · Autoatendimento 24h
+              </span>
+            </div>
           </button>
         </div>
       )}
 
-      {/* 3. MAIN CHAT WINDOW (Mobile Full Sheet / Desktop Floating Panel) */}
+      {/* 2. MAIN CHAT WINDOW */}
       {isOpen && (
-        <div className="fixed inset-x-0 bottom-0 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[420px] md:w-[440px] z-50 flex flex-col max-h-[92vh] sm:max-h-[640px] rounded-t-3xl sm:rounded-3xl bg-[#071322] border border-cyan-500/30 sm:border-amber-400/40 shadow-2xl overflow-hidden animate-fadeIn">
+        <div className="fixed inset-x-0 bottom-0 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[440px] md:w-[460px] z-50 flex flex-col max-h-[92vh] sm:max-h-[660px] rounded-t-3xl sm:rounded-3xl bg-[#071322] border-2 border-amber-400/50 shadow-[0_20px_50px_rgba(0,0,0,0.85)] overflow-hidden animate-fadeIn">
           
-          {/* Top Bar Header */}
-          <div className="p-3.5 sm:p-4 bg-gradient-to-r from-[#0C1E36] via-[#0D2A44] to-[#0A1A2F] border-b border-amber-500/30 text-white shrink-0">
+          {/* Top Bar Header (Rule 1: Brand Logo, Assistente Natal VIP, Cadastur) */}
+          <div className="p-4 bg-gradient-to-r from-[#0C1E36] via-[#0E2847] to-[#0A1A2F] border-b border-amber-500/30 text-white shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400/70 bg-slate-900 shadow">
+                <div className="relative shrink-0">
+                  <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-amber-400/80 bg-slate-950 shadow-md">
                     <img
                       src="/images/brand/logo-natal-vip.webp"
-                      alt="Natal VIP Turismo"
-                      width="40"
-                      height="40"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
+                      alt="Assistente Natal VIP"
+                      width="44"
+                      height="44"
                       className="w-full h-full object-cover scale-105"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = '/images/brand/favicon.png';
@@ -543,32 +534,33 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
 
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h3 className="font-extrabold text-sm text-white tracking-wide">
-                      Agente VIP · Autoatendimento
+                    <h3 className="font-extrabold text-sm sm:text-base text-white tracking-wide">
+                      Assistente Natal VIP
                     </h3>
                     <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
                   </div>
-                  <p className="text-[11px] text-cyan-300 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Ponta Negra, Natal-RN · Resposta em segundos</span>
+                  <p className="text-[11px] text-amber-300 font-semibold flex items-center gap-1">
+                    <span>Cadastur: {CADASTUR_NUMBER}</span>
+                    <span>·</span>
+                    <span className="text-emerald-400">Online agora</span>
                   </p>
                 </div>
               </div>
 
-              {/* Header action controls */}
+              {/* Header Action Controls */}
               <div className="flex items-center gap-1 text-slate-300">
                 <button
                   type="button"
                   onClick={handleResetChat}
-                  className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-amber-300 transition-colors"
-                  title="Reiniciar autoatendimento"
+                  className="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-amber-300 transition-colors cursor-pointer"
+                  title="Reiniciar conversa"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
                   onClick={handleCloseChat}
-                  className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                  className="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
                   title="Fechar conversa"
                 >
                   <X className="w-5 h-5" />
@@ -576,966 +568,825 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
               </div>
             </div>
 
-            {/* Persistent Sub-Navigation Bar */}
-            <div className="flex items-center justify-between gap-1 mt-2.5 pt-2 border-t border-slate-800 text-[11px]">
-              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+            {/* Sub-nav / Breadcrumb */}
+            <div className="flex items-center justify-between gap-1 mt-2.5 pt-2 border-t border-slate-800/80 text-[11px]">
+              <div className="flex items-center gap-2">
                 {step !== 'welcome' && (
                   <button
                     type="button"
                     onClick={handleGoBack}
-                    className="px-2 py-0.5 rounded-md bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1 font-semibold"
+                    className="px-2 py-0.5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1 font-bold cursor-pointer"
                   >
                     <ChevronLeft className="w-3 h-3" />
                     <span>Voltar</span>
                   </button>
                 )}
-
                 <button
                   type="button"
                   onClick={() => navigateTo('welcome')}
-                  className="px-2 py-0.5 rounded-md bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-amber-300 font-semibold"
+                  className="text-slate-400 hover:text-amber-300 cursor-pointer font-semibold"
                 >
-                  🏠 Menu Principal
+                  Início
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => navigateTo('indeciso_quiz')}
-                  className="px-2 py-0.5 rounded-md bg-slate-900/80 hover:bg-slate-800 text-amber-300 hover:text-amber-200 font-semibold"
-                >
-                  💡 Em dúvida?
-                </button>
+                <span className="text-slate-600">/</span>
+                <span className="text-amber-300 font-bold capitalize">
+                  {step.replace('_', ' ')}
+                </span>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleOpenWhatsApp()}
-                className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 shrink-0"
-              >
-                <Phone className="w-3 h-3" />
-                <span>WhatsApp</span>
-              </button>
+              <span className="text-[10px] text-slate-400">
+                Autoatendimento 100% Seguro
+              </span>
             </div>
           </div>
 
           {/* Main Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs sm:text-sm text-slate-200">
             
-            {/* STEP 1: ABERTURA & BEM-VINDO */}
+            {/* ETAPA 1: BEM-VINDO & SELEÇÃO DE INTERESSE */}
             {step === 'welcome' && (
               <div className="space-y-4 animate-fadeIn">
-                <div className="p-4 rounded-2xl bg-[#091D33] border border-cyan-500/30 space-y-2 shadow-sm">
-                  <p className="font-bold text-white text-sm sm:text-base">
-                    👋 Olá! Seja muito bem-vindo(a) à Natal VIP Turismo!
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0A223B] to-[#071728] border border-amber-400/40 shadow-sm space-y-2">
+                  <p className="font-extrabold text-white text-base">
+                    👋 Olá! Seja muito bem-vindo à Natal VIP Turismo!
                   </p>
-                  <p className="text-slate-300 leading-relaxed">
-                    Que tal encontrar o passeio perfeito para suas férias em Natal-RN? 🌴☀️
+                  <p className="text-slate-300 leading-relaxed text-xs sm:text-sm">
+                    Sou o seu <strong>Assistente Natal VIP</strong>. Posso te conduzir na reserva direta do seu passeio com cálculo instantâneo, vaga travada na maré e confirmação em minutos.
                   </p>
-                  <p className="text-amber-300 font-medium text-xs">
-                    Posso te ajudar com preços, roteiros, disponibilidade e reservas.
-                  </p>
-                </div>
-
-                {/* Opening Quick Action Buttons */}
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    Selecione uma opção rápida:
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('experience_select')}
-                      className="w-full text-left p-2.5 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 hover:from-cyan-950 hover:to-slate-800 border border-slate-700 hover:border-cyan-400/60 font-semibold text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      <span className="text-base">🌴</span>
-                      <span>Ver passeios</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('all_tours_list')}
-                      className="w-full text-left p-2.5 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 hover:from-amber-950 hover:to-slate-800 border border-slate-700 hover:border-amber-400/60 font-semibold text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      <span className="text-base">💰</span>
-                      <span>Consultar valores</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('date_select')}
-                      className="w-full text-left p-2.5 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 hover:from-cyan-950 hover:to-slate-800 border border-slate-700 hover:border-cyan-400/60 font-semibold text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      <span className="text-base">📅</span>
-                      <span>Ver disponibilidade</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMemory((prev) => ({ ...prev, experienceType: 'Passeio Privativo' }));
-                        navigateTo('recommendations');
-                      }}
-                      className="w-full text-left p-2.5 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 hover:from-amber-950 hover:to-slate-800 border border-slate-700 hover:border-amber-400/60 font-semibold text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      <span className="text-base">🚐</span>
-                      <span>Passeios privativos</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMemory((prev) => ({ ...prev, indecisoPreference: 'familia', guestsCount: '4' }));
-                        navigateTo('recommendations');
-                      }}
-                      className="w-full text-left p-2.5 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 hover:from-cyan-950 hover:to-slate-800 border border-slate-700 hover:border-cyan-400/60 font-semibold text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      <span className="text-base">👨‍👩‍👧‍👦</span>
-                      <span>Passeios para família</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMemory((prev) => ({ ...prev, indecisoPreference: 'romantico', guestsCount: '2' }));
-                        navigateTo('recommendations');
-                      }}
-                      className="w-full text-left p-2.5 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 hover:from-rose-950 hover:to-slate-800 border border-slate-700 hover:border-rose-400/60 font-semibold text-white transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      <span className="text-base">❤️</span>
-                      <span>Passeio para casal</span>
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleOpenWhatsApp(undefined, 'Olá! Gostaria de conversar com um atendente da Natal VIP Turismo.')}
-                    className="w-full mt-2 p-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-transform active:scale-95 shadow cursor-pointer"
-                  >
-                    <Phone className="w-4 h-4 fill-slate-950" />
-                    <span>📲 Falar com atendente no WhatsApp</span>
-                  </button>
-
-                  <div className="pt-2 text-center">
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('faq_list')}
-                      className="text-xs text-slate-400 hover:text-amber-300 underline inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <HelpCircle className="w-3.5 h-3.5" />
-                      <span>Dúvidas frequentes (FAQ)</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 2: EXPERIENCE SELECT */}
-            {step === 'experience_select' && (
-              <div className="space-y-3.5 animate-fadeIn">
-                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-cyan-500/30">
-                  <p className="font-bold text-white text-sm">
-                    Para começar, qual experiência você procura? 🏖️
-                  </p>
-                  <p className="text-slate-300 text-xs mt-1">
-                    Selecione o estilo de passeio que mais combina com suas férias em Natal:
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {[
-                    { id: 'Praias e lagoas', label: 'Praias e lagoas', icon: '🏖️' },
-                    { id: 'Dunas e aventura', label: 'Dunas e aventura', icon: '🏜️' },
-                    { id: '4x4', label: 'Expedição 4x4', icon: '🚙' },
-                    { id: 'Buggy', label: 'Passeio de Buggy', icon: '🏎️' },
-                    { id: 'Piscinas naturais', label: 'Piscinas naturais', icon: '🐬' },
-                    { id: 'Pôr do sol', label: 'Pôr do sol', icon: '🌅' },
-                    { id: 'Passeio privativo', label: 'Passeio privativo', icon: '⭐' },
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setMemory((prev) => ({ ...prev, experienceType: item.id }));
-                        if (!memory.guestsCount) {
-                          navigateTo('guests_select');
-                        } else if (!memory.travelDate) {
-                          navigateTo('date_select');
-                        } else {
-                          navigateTo('recommendations');
-                        }
-                      }}
-                      className="p-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-400/80 font-bold text-white text-left flex items-center gap-2.5 transition-all cursor-pointer"
-                    >
-                      <span className="text-xl">{item.icon}</span>
-                      <span>{item.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* STEP 3: GUESTS COUNT */}
-            {step === 'guests_select' && (
-              <div className="space-y-3.5 animate-fadeIn">
-                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-cyan-500/30">
-                  <p className="font-bold text-white text-sm">
-                    Quantas pessoas irão viajar? 👥
-                  </p>
-                  <p className="text-slate-300 text-xs mt-1">
-                    Assim podemos dimensionar os melhores veículos e valores para seu grupo:
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-5 gap-2">
-                  {['1', '2', '3', '4', '5+'].map((num) => (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => {
-                        setMemory((prev) => ({ ...prev, guestsCount: num }));
-                        if (!memory.travelDate) {
-                          navigateTo('date_select');
-                        } else {
-                          navigateTo('recommendations');
-                        }
-                      }}
-                      className={`py-3 rounded-xl font-black text-sm transition-all border cursor-pointer ${
-                        memory.guestsCount === num
-                          ? 'bg-amber-400 text-slate-950 border-amber-300'
-                          : 'bg-slate-900 border-slate-700 text-white hover:border-amber-400'
-                      }`}
-                    >
-                      {num}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-400 text-xs flex items-center gap-2">
-                  <Info className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span>Crianças até 5 anos no colo possuem condições especiais!</span>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 4: DATE SELECT */}
-            {step === 'date_select' && (
-              <div className="space-y-3.5 animate-fadeIn">
-                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-cyan-500/30">
-                  <p className="font-bold text-white text-sm">
-                    Você já sabe a data do passeio? 📅
-                  </p>
-                  <p className="text-slate-300 text-xs mt-1">
-                    Consultamos a tábua de maré e vagas em tempo real para seu roteiro:
-                  </p>
-                </div>
-
-                {/* Quick chip options */}
-                <div className="grid grid-cols-3 gap-2">
-                  {['Hoje', 'Amanhã', 'Esta semana'].map((label) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => {
-                        setMemory((prev) => ({ ...prev, travelDate: label }));
-                        navigateTo('recommendations');
-                      }}
-                      className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400 text-white font-semibold text-xs text-center cursor-pointer transition-colors"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Manual date input */}
-                <div className="p-3 rounded-xl bg-slate-900 border border-slate-700 space-y-2">
-                  <label className="text-xs font-semibold text-amber-300 block">
-                    Ou selecione a data no calendário:
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="date"
-                      min={getTodayISO()}
-                      value={memory.travelDate.includes('-') ? memory.travelDate : ''}
-                      onChange={(e) => setMemory((prev) => ({ ...prev, travelDate: e.target.value }))}
-                      className="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white focus:outline-none focus:border-amber-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!memory.travelDate) {
-                          setMemory((prev) => ({ ...prev, travelDate: 'A definir' }));
-                        }
-                        navigateTo('recommendations');
-                      }}
-                      className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs cursor-pointer transition-colors"
-                    >
-                      Confirmar
-                    </button>
+                  <div className="p-2.5 rounded-xl bg-amber-400/10 border border-amber-400/30 text-[11px] text-amber-300 font-medium flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>Agência Oficial Cadastur {CADASTUR_NUMBER} · Mais de 12.000 clientes satisfeitos</span>
                   </div>
                 </div>
 
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMemory((prev) => ({ ...prev, travelDate: 'Datas flexíveis' }));
-                      navigateTo('recommendations');
-                    }}
-                    className="text-xs text-slate-400 hover:text-white underline cursor-pointer"
-                  >
-                    Ainda não sei a data exata (ver opções gerais)
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 5: PERSONALIZED TOUR RECOMMENDATIONS (CARDS) */}
-            {step === 'recommendations' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#0C2238] to-[#0A2E44] border border-cyan-500/40 text-white space-y-1">
-                  <p className="font-extrabold text-amber-300 text-sm flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    <span>Perfeito! Encontrei as melhores opções para você 😊</span>
+                <div className="space-y-2">
+                  <p className="text-xs font-black uppercase tracking-wider text-amber-400">
+                    Qual é o seu objetivo para esta viagem?
                   </p>
-                  <p className="text-slate-300 text-xs">
-                    {memory.experienceType ? `Filtro: ${memory.experienceType}` : 'Passeios mais bem avaliados'} ·{' '}
-                    {memory.guestsCount ? `${memory.guestsCount} pessoa(s)` : ''} {memory.travelDate ? `· Data: ${memory.travelDate}` : ''}
-                  </p>
-                </div>
 
-                {/* Tour Cards List (Limited to 1-3 highly relevant) */}
-                <div className="space-y-3">
-                  {recommendedTours.map((tour) => {
-                    const isExpanded = expandedTourId === tour.id;
-
-                    return (
-                      <div
-                        key={tour.id}
-                        className="rounded-2xl overflow-hidden bg-slate-900 border border-slate-700/80 hover:border-amber-400/60 shadow-lg transition-all"
-                      >
-                        {/* Card Image Banner */}
-                        <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-950">
-                          <img
-                            src={tour.imageUrl}
-                            alt={`Passeio ${tour.title} Natal RN`}
-                            width="360"
-                            height="202"
-                            loading="lazy"
-                            decoding="async"
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
-
-                          {/* Badge */}
-                          <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow">
-                            {tour.badge || 'VIP'}
-                          </div>
-
-                          {/* Duration Badge */}
-                          <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-lg bg-black/75 text-white font-medium text-[11px] flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-cyan-400" />
-                            <span>{tour.duration}</span>
-                          </div>
-
-                          {/* Price Tag */}
-                          <div className="absolute bottom-2.5 right-2.5 text-right bg-slate-900/90 border border-amber-400/40 px-2.5 py-1 rounded-xl shadow">
-                            <span className="text-[10px] text-slate-400 line-through mr-1">R$ {tour.priceOriginal}</span>
-                            <span className="text-xs font-black text-amber-300">R$ {tour.priceDiscounted}</span>
-                          </div>
-                        </div>
-
-                        {/* Card Body */}
-                        <div className="p-3.5 space-y-2.5">
-                          <div>
-                            <h4 className="font-bold text-white text-sm leading-snug">
-                              {tour.title}
-                            </h4>
-                            <p className="text-slate-400 text-xs mt-0.5 line-clamp-2">
-                              {tour.description}
-                            </p>
-                          </div>
-
-                          {/* Highlights Preview */}
-                          <div className="space-y-1">
-                            {tour.highlights.slice(0, 2).map((hl, i) => (
-                              <div key={i} className="flex items-start gap-1.5 text-xs text-slate-300">
-                                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                                <span className="line-clamp-1">{hl}</span>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Expandable Itinerary */}
-                          {isExpanded && (
-                            <div className="pt-2 border-t border-slate-800 space-y-2 text-xs animate-fadeIn">
-                              <div>
-                                <span className="font-bold text-amber-300 block mb-1">Roteiro Completo:</span>
-                                <ul className="space-y-1 text-slate-300">
-                                  {tour.highlights.map((h, idx) => (
-                                    <li key={idx} className="flex items-start gap-1.5">
-                                      <span className="text-amber-400">•</span>
-                                      <span>{h}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-
-                              <div>
-                                <span className="font-bold text-cyan-300 block mb-1">O que está incluso:</span>
-                                <ul className="space-y-1 text-slate-300">
-                                  {tour.included.map((inc, idx) => (
-                                    <li key={idx} className="flex items-start gap-1.5">
-                                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                                      <span>{inc}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Action Buttons */}
-                          <div className="grid grid-cols-2 gap-2 pt-1">
-                            <button
-                              type="button"
-                              onClick={() => setExpandedTourId(isExpanded ? null : tour.id)}
-                              className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors"
-                            >
-                              <span>{isExpanded ? 'Ocultar roteiro' : 'Ver roteiro'}</span>
-                              {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setMemory((prev) => ({ ...prev, selectedTour: tour }));
-                                setFocusedTour(tour);
-                                navigateTo('budget_collection');
-                              }}
-                              className="py-2 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer transition-transform active:scale-95 shadow"
-                            >
-                              <span>Quero reservar</span>
-                              <ArrowRight className="w-3 h-3" />
-                            </button>
-                          </div>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDraft((prev) => ({ ...prev, interest: 'passeio' }));
+                        navigateTo('tour_select');
+                      }}
+                      className="w-full text-left p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 to-[#0F233B] hover:from-[#112D4E] hover:to-[#173A63] border border-slate-700 hover:border-amber-400/70 font-bold text-white transition-all flex items-center justify-between cursor-pointer shadow group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">🌊</span>
+                        <div>
+                          <span className="block text-sm text-white group-hover:text-amber-300">
+                            Passeios de Barco, Buggy & 4x4
+                          </span>
+                          <span className="text-[11px] text-slate-400 block">
+                            Maracajaú, Rio do Fogo, Pipa, Genipabu (a partir de R$ 80)
+                          </span>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-
-                {/* Persuasive Follow-Up Box */}
-                <div className="p-3.5 rounded-2xl bg-[#0A1F35] border border-amber-400/40 space-y-2 text-center">
-                  <p className="text-white text-xs font-bold">
-                    Essa experiência combina bastante com o que você procura. 🌴✨
-                  </p>
-                  <p className="text-slate-300 text-xs">
-                    Quer que eu verifique os detalhes para sua data?
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('budget_collection')}
-                      className="flex-1 py-2 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider cursor-pointer shadow"
-                    >
-                      📅 Continuar atendimento
+                      <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
                     </button>
+
                     <button
                       type="button"
-                      onClick={() => handleOpenWhatsApp()}
-                      className="flex-1 py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer shadow"
+                      onClick={() => {
+                        setDraft((prev) => ({
+                          ...prev,
+                          interest: 'pacote',
+                          tourId: 'pacote-casal-vip',
+                          tourTitle: 'Pacote Casal VIP (Roteiro Completo)',
+                          basePrice: 1320,
+                        }));
+                        navigateTo('date_select');
+                      }}
+                      className="w-full text-left p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 to-[#0F233B] hover:from-[#112D4E] hover:to-[#173A63] border border-slate-700 hover:border-amber-400/70 font-bold text-white transition-all flex items-center justify-between cursor-pointer shadow group"
                     >
-                      <Phone className="w-3.5 h-3.5 fill-slate-950" />
-                      <span>Falar no WhatsApp</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">💑</span>
+                        <div>
+                          <span className="block text-sm text-white group-hover:text-amber-300">
+                            Pacote Casal VIP
+                          </span>
+                          <span className="text-[11px] text-slate-400 block">
+                            Experiência romântica completa com transfer exclusivo (R$ 1.320)
+                          </span>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDraft((prev) => ({
+                          ...prev,
+                          interest: 'transfer',
+                          tourId: 'transfer-aeroporto-vip',
+                          tourTitle: 'Transfer VIP Aeroporto (Ida e Volta Promocional)',
+                          basePrice: 160,
+                        }));
+                        navigateTo('date_select');
+                      }}
+                      className="w-full text-left p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 to-[#0F233B] hover:from-[#112D4E] hover:to-[#173A63] border border-slate-700 hover:border-amber-400/70 font-bold text-white transition-all flex items-center justify-between cursor-pointer shadow group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">🚐</span>
+                        <div>
+                          <span className="block text-sm text-white group-hover:text-amber-300">
+                            Transfer VIP Aeroporto
+                          </span>
+                          <span className="text-[11px] text-slate-400 block">
+                            2 trajetos in/out com ar-condicionado por R$ 160 promocional
+                          </span>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => navigateTo('all_tours_list')}
-                    className="text-xs text-slate-400 hover:text-white underline mt-1 inline-block cursor-pointer"
-                  >
-                    ↩️ Ver outros passeios disponíveis
-                  </button>
+                  <div className="pt-2 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigateTo('objections')}
+                      className="text-xs text-slate-400 hover:text-amber-300 underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
+                      <span>Segurança, maré & cancelamento</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerWhatsApp('Dúvida específica não listada')}
+                      className="text-[11px] text-slate-400 hover:text-emerald-400 cursor-pointer font-medium"
+                    >
+                      Precisa de suporte humano?
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* STEP 6: CLIENTE INDECISO (Quiz & Guidance) */}
-            {step === 'indeciso_quiz' && (
+            {/* ETAPA 2: CATÁLOGO DE ROTEIROS OFICIAIS */}
+            {step === 'tour_select' && (
               <div className="space-y-3.5 animate-fadeIn">
-                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-cyan-500/30">
+                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-amber-400/30">
                   <p className="font-bold text-white text-sm">
-                    Está em dúvida entre alguns passeios? Posso te ajudar a escolher 😊
+                    Escolha um dos nossos Roteiros Oficiais Registrados:
                   </p>
                   <p className="text-slate-300 text-xs mt-1">
-                    Qual é a sua maior prioridade para essa viagem?
+                    Preços tabelados com transfer incluso saindo do hotel em Ponta Negra e Via Costeira.
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   {[
-                    { id: 'completo', label: '🏆 Quero conhecer o mais completo', desc: 'Roteiros integrados que reúnem praias, dunas e lagoas' },
-                    { id: 'economizar', label: '💰 Quero economizar', desc: 'Melhor custo-benefício mantendo qualidade VIP' },
-                    { id: 'romantico', label: '❤️ Quero algo romântico', desc: 'Pôr do sol paradisíaco e praias cinematográficas' },
-                    { id: 'aventura', label: '🔥 Quero aventura', desc: 'Dunas móveis, manobras de buggy e quadriciclo 4x4' },
-                    { id: 'familia', label: '👨‍👩‍👧‍👦 Quero algo para família', desc: 'Águas calmas, segurança infantil e conforto total' },
-                    { id: 'fotos', label: '📸 Quero lugares incríveis para fotos', desc: 'Mirantes de falésias, lagoas cristalinas e corais' },
-                  ].map((option) => (
+                    { id: 'maracajau-vip', title: 'Passeio Maracajaú + Dayuse', price: 170, badge: 'Mais Procurado', desc: 'Piscinas naturais a 7km em lancha rápida com kit snorkel incluso.' },
+                    { id: 'rio-do-fogo-vip', title: 'Passeio Rio do Fogo + Punaú', price: 170, badge: 'Águas Virgens', desc: 'Piscinas preservadas com parada na Lagoa do Teiú e Rio Punaú.' },
+                    { id: 'litoral-sul-4x4-vip', title: 'Off-Road Litoral Sul 4x4 Premium', price: 150, badge: 'Aventura 4x4', desc: 'Rota dos nativos em Pajero Dakar com praias secretas e falésias.' },
+                    { id: 'pipa-praia-do-amor', title: 'Passeio Pipa + Praia do Amor', price: 80, badge: 'Melhor Custo', desc: 'Van executiva, Chapadão, Baía dos Golfinhos e centrinho de Pipa.' },
+                    { id: 'pipa-by-night', title: 'Pipa By Night', price: 100, badge: 'Noite Romântica', desc: 'Vila charmosa, bistrôs, bares ao ar livre e gastronomia potiguar.' },
+                    { id: 'genipabu-buggy-vip', title: 'Buggy VIP Premium Privativo', price: 820, badge: 'Privativo 4 Pessoas', desc: 'Dunas de Genipabu com emoção, lagoas de Pitangui e Jacumã (divide até 4 pessoas).' },
+                    { id: 'transfer-aeroporto-vip', title: 'Transfer VIP Aeroporto', price: 160, badge: 'Promocional', desc: 'Busca pontual no aeroporto com ar-condicionado (ida e volta).' },
+                    { id: 'pacote-casal-vip', title: 'Pacote Casal VIP', price: 1320, badge: 'Pacote Completo', desc: 'Mergulho em Maracajaú + Buggy privativo + Transfer exclusivo para o casal.' },
+                  ].map((tour) => (
                     <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => {
-                        setMemory((prev) => ({ ...prev, indecisoPreference: option.id }));
-                        navigateTo('recommendations');
-                      }}
-                      className="w-full text-left p-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-white transition-all cursor-pointer group shadow-sm"
-                    >
-                      <p className="font-bold text-xs sm:text-sm group-hover:text-amber-300 transition-colors">
-                        {option.label}
-                      </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">{option.desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* STEP 7: ORÇAMENTO AUTOMÁTICO (Data Collection) */}
-            {step === 'budget_collection' && (
-              <div className="space-y-3.5 animate-fadeIn">
-                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-cyan-500/30">
-                  <p className="font-bold text-white text-sm">
-                    Quase lá! Vamos preparar seu orçamento personalizado 🚐✨
-                  </p>
-                  <p className="text-slate-300 text-xs mt-1">
-                    Preencha os dados abaixo para receber os horários exatos da tábua de maré e confirmar seu voucher:
-                  </p>
-                </div>
-
-                <form onSubmit={handleBudgetSubmit} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                  {/* Passeio Selecionado */}
-                  <div>
-                    <label className="text-[11px] font-bold text-amber-300 block mb-1">
-                      Passeio Escolhido:
-                    </label>
-                    <select
-                      value={memory.selectedTour?.id || ''}
-                      onChange={(e) => {
-                        const tour = VIP_TOURS.find((t) => t.id === e.target.value) || null;
-                        setMemory((prev) => ({ ...prev, selectedTour: tour }));
-                      }}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400"
-                    >
-                      {VIP_TOURS.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.title} (R$ {t.priceDiscounted})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Nome */}
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                      Seu Nome Completo: *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ex: Mariana Silva"
-                      value={memory.name}
-                      onChange={(e) => setMemory((prev) => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-
-                  {/* Número de pessoas & Data */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                        Pessoas:
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ex: 2 adultos"
-                        value={memory.guestsCount}
-                        onChange={(e) => setMemory((prev) => ({ ...prev, guestsCount: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                        Data Pretendida:
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ex: 15/10 ou Amanhã"
-                        value={memory.travelDate}
-                        onChange={(e) => setMemory((prev) => ({ ...prev, travelDate: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Hotel / Localização */}
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                      Hotel ou Bairro em Natal:
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Hotel em Ponta Negra ou Via Costeira"
-                      value={memory.hotelLocation}
-                      onChange={(e) => setMemory((prev) => ({ ...prev, hotelLocation: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-
-                  {/* WhatsApp */}
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                      WhatsApp para Envio do Orçamento:
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder="Ex: (84) 99999-9999"
-                      value={memory.phone}
-                      onChange={(e) => setMemory((prev) => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-transform active:scale-95 shadow cursor-pointer mt-2"
-                  >
-                    Gerar Atendimento e Disponibilidade
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* STEP 8: BUDGET COMPLETE (Condução para WhatsApp) */}
-            {step === 'budget_complete' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/80 to-[#0A2E3D] border border-emerald-500/50 text-white space-y-2">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 mb-1">
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <p className="font-extrabold text-sm sm:text-base text-white">
-                    Perfeito, {memory.name.trim() || 'Viajante'}! Já tenho as informações necessárias para preparar seu atendimento. 🚐✨
-                  </p>
-                  <p className="text-slate-300 text-xs leading-relaxed">
-                    Sua solicitação para <strong>{memory.selectedTour?.title || 'Passeio VIP'}</strong> foi estruturada com sucesso.
-                  </p>
-                </div>
-
-                {/* Resumo do Pedido */}
-                <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1.5 text-xs">
-                  <div className="flex justify-between py-1 border-b border-slate-800">
-                    <span className="text-slate-400">Passeio:</span>
-                    <span className="font-bold text-amber-300">{memory.selectedTour?.title || 'Passeios VIP'}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800">
-                    <span className="text-slate-400">Viajantes:</span>
-                    <span className="font-bold text-white">{memory.guestsCount || '1'} pessoa(s)</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800">
-                    <span className="text-slate-400">Data:</span>
-                    <span className="font-bold text-cyan-300">{memory.travelDate || 'A confirmar'}</span>
-                  </div>
-                  {memory.hotelLocation && (
-                    <div className="flex justify-between py-1 border-b border-slate-800">
-                      <span className="text-slate-400">Local de Embarque:</span>
-                      <span className="font-bold text-white">{memory.hotelLocation}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between py-1">
-                    <span className="text-slate-400">Valor Cadastrado:</span>
-                    <span className="font-black text-emerald-400">
-                      R$ {memory.selectedTour ? memory.selectedTour.priceDiscounted : 169} por pessoa
-                    </span>
-                  </div>
-                </div>
-
-                {/* WhatsApp Primary Call To Action */}
-                <button
-                  type="button"
-                  onClick={() => handleOpenWhatsApp()}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all cursor-pointer"
-                >
-                  <Phone className="w-5 h-5 fill-slate-950" />
-                  <span>📲 Continuar pelo WhatsApp</span>
-                </button>
-
-                {/* Self-service online booking fallback */}
-                {onOpenBookingModal && (
-                  <div className="text-center pt-1">
-                    <button
-                      type="button"
-                      onClick={() => onOpenBookingModal(memory.selectedTour?.id)}
-                      className="text-xs text-cyan-300 hover:text-white underline cursor-pointer"
-                    >
-                      Ou finalizar reserva online pelo site com Pix / Cartão
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* STEP 9: ALL TOURS LIST (Consulta de Valores) */}
-            {step === 'all_tours_list' && (
-              <div className="space-y-3 animate-fadeIn">
-                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-cyan-500/30">
-                  <p className="font-bold text-white text-sm">
-                    Tabela Oficial de Passeios & Valores 🌴💰
-                  </p>
-                  <p className="text-slate-300 text-xs mt-1">
-                    Valores com desconto para reserva antecipada via agência oficial:
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  {VIP_TOURS.map((tour) => (
-                    <div
                       key={tour.id}
+                      type="button"
                       onClick={() => {
-                        setMemory((prev) => ({ ...prev, selectedTour: tour }));
-                        setFocusedTour(tour);
-                        navigateTo('tour_detail');
+                        setDraft((prev) => ({
+                          ...prev,
+                          tourId: tour.id,
+                          tourTitle: tour.title,
+                          basePrice: tour.price,
+                        }));
+                        navigateTo('date_select');
                       }}
-                      className="p-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-400 flex items-center justify-between gap-2 transition-all cursor-pointer"
+                      className="w-full text-left p-3 rounded-xl bg-slate-900/90 hover:bg-[#0E243D] border border-slate-800 hover:border-amber-400/70 transition-all flex items-start justify-between gap-3 cursor-pointer group"
                     >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h5 className="font-bold text-white text-xs truncate">{tour.title}</h5>
-                          {tour.badge && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 font-semibold shrink-0">
-                              {tour.badge}
-                            </span>
-                          )}
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-extrabold text-white text-xs sm:text-sm group-hover:text-amber-300">
+                            {tour.title}
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                            {tour.badge}
+                          </span>
                         </div>
-                        <p className="text-[11px] text-slate-400 mt-0.5">{tour.duration}</p>
+                        <p className="text-[11px] text-slate-400 leading-tight">
+                          {tour.desc}
+                        </p>
                       </div>
 
                       <div className="text-right shrink-0">
-                        <div className="text-[10px] text-slate-400 line-through">R$ {tour.priceOriginal}</div>
-                        <div className="text-xs font-black text-amber-300">R$ {tour.priceDiscounted}</div>
+                        <span className="text-[10px] text-slate-400 block">por apenas</span>
+                        <span className="text-sm font-black text-amber-300">
+                          R$ {tour.price}
+                        </span>
                       </div>
-                    </div>
+                    </button>
                   ))}
-                </div>
 
-                <button
-                  type="button"
-                  onClick={() => navigateTo('experience_select')}
-                  className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs text-center cursor-pointer"
-                >
-                  Filtrar por estilo de passeio
-                </button>
+                  {/* Opção sob consulta para grupos grandes */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDraft((prev) => ({
+                        ...prev,
+                        tourId: 'personalizado-grupo',
+                        tourTitle: 'Roteiro Exclusivo / Grupo Grande (Sob Consulta)',
+                        basePrice: 0,
+                        isCustomQuote: true,
+                      }));
+                      handleTriggerWhatsApp('Orçamento de grupo grande ou roteiro sob medida');
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-dashed border-amber-400/40 text-amber-300 text-xs font-bold text-center hover:bg-amber-400/10 cursor-pointer transition-colors"
+                  >
+                    ✨ Grupo grande ou Roteiro personalizado sob consulta? Clique aqui
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* STEP 10: TOUR DETAIL VIEW */}
-            {step === 'tour_detail' && focusedTour && (
+            {/* ETAPA 3: DATA DESEJADA */}
+            {step === 'date_select' && (
               <div className="space-y-3.5 animate-fadeIn">
-                <div className="rounded-2xl overflow-hidden bg-slate-900 border border-amber-400/40 shadow-xl">
-                  <div className="relative aspect-[16/9] w-full overflow-hidden">
-                    <img
-                      src={focusedTour.imageUrl}
-                      alt={`Detalhes do passeio ${focusedTour.title} em Natal RN`}
-                      width="380"
-                      height="214"
-                      loading="lazy"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/maracajau/maracajau-mergulho-peixes.webp';
+                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-amber-400/30 space-y-2">
+                  <p className="font-bold text-white text-sm">
+                    📅 Para qual data você planeja o passeio <strong>{draft.tourTitle}</strong>?
+                  </p>
+                  <p className="text-amber-300 text-xs flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Poucas vagas disponíveis nas marés ideais deste mês. Travamos seu horário!</span>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-slate-400">Escolha uma data rápida ou digite abaixo:</p>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Amanhã', 'Próxima sexta-feira', 'Neste sábado', 'Neste domingo'].map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => {
+                          setDraft((prev) => ({ ...prev, date: chip }));
+                          navigateTo('guests_select');
+                        }}
+                        className="p-2.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-amber-400 font-bold text-white text-xs text-center cursor-pointer hover:bg-slate-800 transition-all"
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="pt-2">
+                    <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                      Ou selecione a data no calendário:
+                    </label>
+                    <input
+                      type="date"
+                      value={draft.date.includes('/') ? '' : draft.date}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setDraft((prev) => ({ ...prev, date: e.target.value }));
+                        }
                       }}
+                      className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-amber-400 outline-none"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
-                    <div className="absolute bottom-3 left-3 text-white">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 uppercase tracking-wider">
-                        {focusedTour.badge || 'VIP'}
-                      </span>
-                      <h4 className="text-base font-black text-white mt-1">{focusedTour.title}</h4>
-                    </div>
                   </div>
 
-                  <div className="p-3.5 space-y-3 text-xs">
-                    <p className="text-slate-300 leading-relaxed">{focusedTour.description}</p>
-
-                    <div>
-                      <span className="font-bold text-amber-300 block mb-1">Destaques do Roteiro:</span>
-                      <ul className="space-y-1 text-slate-300">
-                        {focusedTour.highlights.map((h, i) => (
-                          <li key={i} className="flex items-start gap-1.5">
-                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                            <span>{h}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between">
-                      <div>
-                        <span className="text-slate-400 text-[11px] block">Valor promocional:</span>
-                        <span className="text-base font-black text-amber-300">R$ {focusedTour.priceDiscounted}</span>
-                        <span className="text-[11px] text-slate-400 ml-1">por pessoa</span>
-                      </div>
-
-                      <span className="text-[11px] text-cyan-300 font-semibold flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{focusedTour.duration}</span>
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => navigateTo('budget_collection')}
-                        className="py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider cursor-pointer shadow"
-                      >
-                        Quero Reservar
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleOpenWhatsApp(focusedTour.title)}
-                        className="py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer shadow"
-                      >
-                        <Phone className="w-3.5 h-3.5 fill-slate-950" />
-                        <span>WhatsApp</span>
-                      </button>
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('guests_select')}
+                    className="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow mt-2"
+                  >
+                    <span>Continuar para quantidade de pessoas</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* STEP 11: FAQ LIST & ANSWERS */}
-            {step === 'faq_list' && (
-              <div className="space-y-3 animate-fadeIn">
-                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-cyan-500/30">
+            {/* ETAPA 4: NÚMERO DE PESSOAS */}
+            {step === 'guests_select' && (
+              <div className="space-y-3.5 animate-fadeIn">
+                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-amber-400/30">
                   <p className="font-bold text-white text-sm">
-                    Perguntas Frequentes (FAQ) 💡
+                    👥 Quantas pessoas irão no passeio?
                   </p>
                   <p className="text-slate-300 text-xs mt-1">
-                    Tire suas dúvidas instantaneamente com respostas diretas:
+                    Crianças até 5 anos no colo não pagam em roteiros de van, e crianças de 6 a 10 têm 50% de desconto!
                   </p>
                 </div>
 
-                <div className="space-y-1.5">
-                  {Object.entries(FAQ_ITEMS).map(([key, item]) => {
-                    const isSelected = activeFaqKey === key;
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
+                    <div>
+                      <span className="font-bold text-white block text-xs">Adultos</span>
+                      <span className="text-[10px] text-slate-400">A partir de 11 anos</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setDraft((p) => ({ ...p, adults: Math.max(1, p.adults - 1) }))}
+                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-base cursor-pointer"
+                      >
+                        -
+                      </button>
+                      <span className="font-black text-amber-300 text-sm w-4 text-center">
+                        {draft.adults}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setDraft((p) => ({ ...p, adults: p.adults + 1 }))}
+                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-base cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
+                    <div>
+                      <span className="font-bold text-white block text-xs">Crianças (6 a 10 anos)</span>
+                      <span className="text-[10px] text-amber-300">50% de desconto</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setDraft((p) => ({ ...p, children: Math.max(0, p.children - 1) }))}
+                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-base cursor-pointer"
+                      >
+                        -
+                      </button>
+                      <span className="font-black text-amber-300 text-sm w-4 text-center">
+                        {draft.children}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setDraft((p) => ({ ...p, children: p.children + 1 }))}
+                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-base cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('addons_select')}
+                    className="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow"
+                  >
+                    <span>Ver Opcionais Disponíveis</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ETAPA 5: OPCIONAIS DISPONÍVEIS */}
+            {step === 'addons_select' && (
+              <div className="space-y-3.5 animate-fadeIn">
+                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-amber-400/30">
+                  <p className="font-bold text-white text-sm">
+                    ✨ Deseja adicionar opcionais de experiência?
+                  </p>
+                  <p className="text-slate-300 text-xs mt-1">
+                    Equipamentos profissionais e fotos subaquáticas podem ser garantidos já com desconto:
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    { id: 'fotos-gopro', title: 'Fotos Subaquáticas GoPro', price: 70, desc: 'Pacote com 30+ fotos e vídeos em alta resolução na maré.' },
+                    { id: 'batismo-mergulho', title: 'Batismo de Mergulho com Cilindro', price: 140, desc: 'Instrutor PADI individual por 20 minutos nos corais.' },
+                    { id: 'transfer-hotel', title: 'Transfer Ida e Volta Hotel', price: 0, desc: 'Embarque e desembarque direto no hotel (Incluso Grátis!).' },
+                  ].map((addon) => {
+                    const isSelected = draft.selectedAddons.includes(addon.id) || addon.price === 0;
 
                     return (
                       <div
-                        key={key}
-                        className="rounded-xl overflow-hidden bg-slate-900 border border-slate-700/80 transition-all"
+                        key={addon.id}
+                        onClick={() => {
+                          if (addon.price === 0) return;
+                          setDraft((prev) => ({
+                            ...prev,
+                            selectedAddons: prev.selectedAddons.includes(addon.id)
+                              ? prev.selectedAddons.filter((id) => id !== addon.id)
+                              : [...prev.selectedAddons, addon.id],
+                          }));
+                        }}
+                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? 'bg-amber-400/15 border-amber-400/80 text-white'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                        }`}
                       >
-                        <button
-                          type="button"
-                          onClick={() => setActiveFaqKey(isSelected ? null : key)}
-                          className="w-full p-3 text-left font-semibold text-xs sm:text-sm text-white hover:text-amber-300 flex items-center justify-between gap-2 cursor-pointer"
-                        >
-                          <span>{item.q}</span>
-                          {isSelected ? (
-                            <ChevronUp className="w-4 h-4 text-amber-400 shrink-0" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
-                          )}
-                        </button>
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-xs block text-white">
+                            {addon.title}
+                          </span>
+                          <span className="text-[11px] text-slate-400 block">
+                            {addon.desc}
+                          </span>
+                        </div>
 
-                        {isSelected && (
-                          <div className="p-3 pt-0 text-xs text-slate-300 border-t border-slate-800/80 bg-slate-950/50 leading-relaxed animate-fadeIn">
-                            <p>{item.a}</p>
-                            <div className="pt-2 flex justify-end">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenWhatsApp(undefined, `Olá! Tenho uma dúvida sobre: ${item.q}`)}
-                                className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
-                              >
-                                <Phone className="w-3 h-3" />
-                                <span>Falar com atendente sobre isso</span>
-                              </button>
-                            </div>
-                          </div>
-                        )}
+                        <div className="text-right shrink-0">
+                          <span className="text-xs font-black text-amber-300 block">
+                            {addon.price === 0 ? 'GRÁTIS' : `+ R$ ${addon.price}`}
+                          </span>
+                          <span className={`text-[10px] font-bold ${isSelected ? 'text-emerald-400' : 'text-slate-500'}`}>
+                            {isSelected ? '✓ Selecionado' : '+ Adicionar'}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}
+
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('customer_data')}
+                    className="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow mt-2"
+                  >
+                    <span>Avançar para Dados do Titular</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* Custom Messages history if user typed */}
-            {chatMessages.length > 0 && (
-              <div className="space-y-2 pt-2 border-t border-slate-800">
-                {chatMessages.map((msg, idx) => (
+            {/* ETAPA 6: DADOS DO CLIENTE (LEAD CAPTURE) */}
+            {step === 'customer_data' && (
+              <div className="space-y-3.5 animate-fadeIn">
+                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-amber-400/30 space-y-1">
+                  <p className="font-bold text-white text-sm">
+                    👤 Para quem emitimos o resumo e voucher da reserva?
+                  </p>
+                  <p className="text-slate-300 text-xs">
+                    Coleta rápida em 1 passo. Seus dados estão protegidos por criptografia de ponta a ponta.
+                  </p>
+                </div>
+
+                <div className="space-y-2.5">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                      Nome Completo do Titular:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Mariana Silva"
+                      value={draft.customerName}
+                      onChange={(e) => setDraft((p) => ({ ...p, customerName: e.target.value }))}
+                      className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-amber-400 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                      WhatsApp com DDD (para envio do voucher e embarque):
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="(84) 99999-9999"
+                      value={draft.customerPhone}
+                      onChange={(e) => setDraft((p) => ({ ...p, customerPhone: e.target.value }))}
+                      className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-amber-400 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                      E-mail (para confirmação digital):
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="seu.email@exemplo.com"
+                      value={draft.customerEmail}
+                      onChange={(e) => setDraft((p) => ({ ...p, customerEmail: e.target.value }))}
+                      className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-amber-400 outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={!draft.customerName.trim()}
+                    onClick={() => {
+                      // Lead Captured event
+                      trackLeadGeneration({
+                        name: draft.customerName.trim(),
+                        tour: draft.tourTitle,
+                        phone: draft.customerPhone.trim(),
+                        guests: draft.adults + draft.children,
+                        date: draft.date,
+                        value: subtotal,
+                      });
+
+                      // Save lead in background
+                      saveLeadToFirestore({
+                        name: draft.customerName.trim(),
+                        phone: draft.customerPhone.trim() || PHONE_DISPLAY,
+                        travelMonth: draft.date,
+                        tourInterest: draft.tourTitle,
+                        status: 'lead_captured',
+                        createdAt: new Date().toISOString(),
+                      }).catch(() => {});
+
+                      navigateTo('order_summary');
+                    }}
+                    className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow cursor-pointer transition-all ${
+                      draft.customerName.trim()
+                        ? 'bg-amber-400 hover:bg-amber-300 text-slate-950'
+                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    }`}
+                  >
+                    <span>Calcular Total e Ver Resumo</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ETAPA 7: RESUMO DO PEDIDO & CHECKOUT DIRETO */}
+            {step === 'order_summary' && (
+              <div className="space-y-4 animate-fadeIn">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0B2544] to-[#071728] border-2 border-amber-400/50 shadow-lg space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-700/80 pb-2">
+                    <span className="text-[10px] uppercase font-black text-amber-400 tracking-wider">
+                      Resumo da Reserva VIP
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/40">
+                      Vaga Pré-Aprovada
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <p className="font-extrabold text-white text-sm">{draft.tourTitle}</p>
+                    <p className="text-slate-300">
+                      📅 <strong>Data:</strong> {draft.date}
+                    </p>
+                    <p className="text-slate-300">
+                      👥 <strong>Passageiros:</strong> {draft.adults} adulto(s)
+                      {draft.children > 0 && ` + ${draft.children} criança(s)`}
+                    </p>
+                    {draft.selectedAddons.length > 0 && (
+                      <p className="text-slate-300">
+                        ✨ <strong>Opcionais:</strong> {draft.selectedAddons.length} selecionado(s)
+                      </p>
+                    )}
+                    {draft.customerName && (
+                      <p className="text-slate-300">
+                        👤 <strong>Titular:</strong> {draft.customerName}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Pricing Box */}
+                  <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-slate-300">
+                      <span>Subtotal:</span>
+                      <span className="font-bold">R$ {subtotal.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-emerald-400 font-bold border-t border-slate-800 pt-1.5">
+                      <span className="flex items-center gap-1">
+                        <QrCode className="w-3.5 h-3.5" />
+                        À vista no PIX (5% OFF):
+                      </span>
+                      <span className="text-sm font-black text-emerald-300">
+                        R$ {totalPix.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                      <span className="flex items-center gap-1">
+                        <CreditCard className="w-3 h-3" />
+                        No Cartão de Crédito:
+                      </span>
+                      <span>em até 12x de R$ {cardInstallment12x}</span>
+                    </div>
+                  </div>
+
+                  {/* Mental Triggers Guarantee */}
+                  <div className="text-[10px] text-slate-400 space-y-1 bg-black/30 p-2 rounded-lg">
+                    <p className="flex items-center gap-1 text-slate-300 font-medium">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      Cancelamento gratuito e remarcação sem taxa até 24h antes.
+                    </p>
+                    <p className="flex items-center gap-1 text-slate-300 font-medium">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      Transfer executivo com ar-condicionado na porta do hotel.
+                    </p>
+                    <p className="flex items-center gap-1 text-slate-300 font-medium">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      Cadastur Oficial {CADASTUR_NUMBER}.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Primary CTA: Send client straight to checkout */}
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleProceedToCheckout}
+                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[0_8px_25px_rgba(245,158,11,0.45)] hover:scale-[1.02] active:scale-95 transition-all"
+                  >
+                    <span>Confirmar Reserva & Ir Para Pagamento</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => navigateTo('date_select')}
+                      className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer"
+                    >
+                      Alterar data/pessoas
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => navigateTo('objections')}
+                      className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer"
+                    >
+                      Tirar dúvidas
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CONTORNO DE OBJEÇÕES COMUNS */}
+            {step === 'objections' && (
+              <div className="space-y-3.5 animate-fadeIn">
+                <div className="p-3.5 rounded-2xl bg-[#091D33] border border-amber-400/30">
+                  <p className="font-bold text-white text-sm">
+                    🛡️ Perguntas Frequentes & Garantias Natal VIP
+                  </p>
+                  <p className="text-slate-300 text-xs mt-1">
+                    Transparência total para você reservar com máxima tranquilidade:
+                  </p>
+                </div>
+
+                <div className="space-y-2.5">
+                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                    <span className="font-bold text-amber-300 text-xs block">
+                      💰 "E se eu encontrar mais barato em agência de rua?"
+                    </span>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      Nossos passeios incluem transfer executivo com ar-condicionado na porta do hotel (sem você ter que caminhar no sol), lanchas homologadas pela Capitania e guias credenciados Cadastur. Sem taxas surpresa!
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                    <span className="font-bold text-amber-300 text-xs block">
+                      🌧️ "E se chover ou a maré estiver ruim?"
+                    </span>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      Monitoramos a tábua de marés da Marinha diariamente. Se as condições não estiverem seguras ou ideais, reagendamos para outro dia sem qualquer custo ou estornamos 100% do seu pagamento.
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                    <span className="font-bold text-amber-300 text-xs block">
+                      🚐 "Onde é o ponto de embarque?"
+                    </span>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      Buscamos e deixamos você diretamente na recepção de todos os hotéis e pousadas de Ponta Negra, Via Costeira e Praia dos Artistas.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('order_summary')}
+                    className="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow mt-2"
+                  >
+                    <span>Perfeito! Quero Confirmar Minha Reserva</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* RULE 4: WHATSAPP ESCALATION (ONLY UNDER 4 SPECIFIC CONDITIONS) */}
+            {step === 'whatsapp_handoff' && (
+              <div className="space-y-4 animate-fadeIn">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-[#062417] to-[#0A1A2F] border-2 border-emerald-500/50 shadow-md space-y-2">
+                  <div className="flex items-center gap-2 text-emerald-400">
+                    <Phone className="w-4 h-4" />
+                    <span className="font-extrabold text-sm uppercase tracking-wide">
+                      Plantão VIP WhatsApp
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-200 leading-relaxed">
+                    Para atender seu caso com atenção dedicada ({whatsappReason || 'Atendimento personalizado'}), vou te transferir agora para nosso canal direto.
+                  </p>
+                  <p className="text-[11px] text-emerald-300 font-medium">
+                    Número oficial: {PHONE_DISPLAY}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-300 space-y-1">
+                  <span className="font-bold text-amber-300 block">Resumo que será enviado:</span>
+                  <p className="text-slate-400 italic">"{getPreparedWhatsAppMessage()}"</p>
+                </div>
+
+                <div className="space-y-2">
+                  <a
+                    href={`https://wa.me/${PHONE_WA}?text=${encodeURIComponent(getPreparedWhatsAppMessage())}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span>Continuar no WhatsApp</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('order_summary')}
+                    className="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer"
+                  >
+                    Voltar para reserva online no site
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* CHAT LOG FOR CUSTOM MESSAGES */}
+            {chatLog.length > 0 && (
+              <div className="space-y-2.5 pt-2 border-t border-slate-800">
+                {chatLog.map((msg, idx) => (
                   <div
                     key={idx}
-                    className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+                    className={`flex gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
+                    {msg.sender === 'bot' && (
+                      <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 mt-0.5 border border-amber-400/50">
+                        <img
+                          src="/images/brand/logo-natal-vip.webp"
+                          alt="Assistente"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/images/brand/favicon.png';
+                          }}
+                        />
+                      </div>
+                    )}
                     <div
-                      className={`max-w-[85%] p-2.5 rounded-2xl text-xs ${
+                      className={`max-w-[80%] p-2.5 rounded-2xl text-xs ${
                         msg.sender === 'user'
-                          ? 'bg-amber-400 text-slate-950 font-medium rounded-br-none'
-                          : 'bg-slate-800 text-white rounded-bl-none'
+                          ? 'bg-amber-400 text-slate-950 font-medium'
+                          : 'bg-slate-900 text-slate-200 border border-slate-800'
                       }`}
                     >
-                      {msg.text}
+                      <p>{msg.text}</p>
+                      <span className={`text-[9px] block text-right mt-1 ${msg.sender === 'user' ? 'text-slate-800' : 'text-slate-500'}`}>
+                        {msg.time}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-slate-500 mt-0.5">{msg.time}</span>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Typing Indicator */}
             {isTyping && (
-              <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-900 text-amber-300 text-xs w-max animate-pulse">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-                <span>Agente VIP digitando...</span>
+              <div className="flex items-center gap-2 text-xs text-amber-300 animate-pulse">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" />
+                <span>Assistente Natal VIP digitando...</span>
               </div>
             )}
 
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Bottom Fixed Text Input Form */}
-          <div className="p-3 bg-[#0A1A2F] border-t border-slate-800 shrink-0">
-            <form onSubmit={handleSendTextMessage} className="flex items-center gap-2">
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Digite sua dúvida ou preferência..."
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors"
-              />
-              <button
-                type="submit"
-                disabled={!inputText.trim()}
-                className="w-10 h-10 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 cursor-pointer shadow shrink-0"
-                aria-label="Enviar mensagem"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
-
+          {/* Bottom Interactive Text Input Bar */}
+          <form
+            onSubmit={handleSendText}
+            className="p-3 bg-[#0A182B] border-t border-slate-800 shrink-0 flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="Digite sua dúvida ou roteiro desejado..."
+              className="flex-1 py-2 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:border-amber-400 outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!inputText.trim()}
+              className={`p-2.5 rounded-xl transition-all ${
+                inputText.trim()
+                  ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer shadow'
+                  : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+              }`}
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
         </div>
       )}
     </>
   );
 };
+
+export default FloatingChatbot;

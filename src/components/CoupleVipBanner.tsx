@@ -144,15 +144,14 @@ export const CoupleVipBanner: React.FC<CoupleVipBannerProps> = ({ onOpenBooking 
                     <ArrowRight className="w-4 h-4 btn-icon-pulse transition-transform duration-300 group-hover/couple:translate-x-1" />
                   </button>
 
-                  <a
-                    href="https://wa.me/5584988722044?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Pacote%20Casal%20VIP%20de%20R%24%201.320%20com%20transfer!"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#0A192F] font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer text-center"
+                  <button
+                    type="button"
+                    onClick={() => onOpenBooking('pacote-casal-vip')}
+                    className="w-full py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-amber-300 border border-amber-400/30 font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer text-center"
                   >
-                    <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Dúvidas? Fale com o Consultor no WhatsApp</span>
-                  </a>
+                    <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Personalizar Data e Opcionais Online</span>
+                  </button>
                 </div>
 
                 <div className="text-center text-[10px] text-slate-400">

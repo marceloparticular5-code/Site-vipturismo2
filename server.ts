@@ -30,7 +30,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     agency: 'Natal Vip Turismo Agency',
-    geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
+    aiServiceReady: Boolean(process.env.GEMINI_API_KEY),
   });
 });
 

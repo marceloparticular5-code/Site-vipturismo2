@@ -43,6 +43,16 @@ export function App() {
   const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
   const [isLoadingTours, setIsLoadingTours] = useState(true);
 
+  const [bookingPrefill, setBookingPrefill] = useState<{
+    adults?: number;
+    children?: number;
+    customerName?: string;
+    customerPhone?: string;
+    customerEmail?: string;
+    addons?: string[];
+    initialStep?: 'details' | 'gateway' | 'voucher';
+  }>({});
+
   // Monitor real-time tide and vacancy alerts
   useRealTimeTideAndVacancyMonitor(tours);
 
@@ -56,7 +66,6 @@ export function App() {
     setIsLoadingTours(true);
     const unsubscribe = subscribeToTours((allTours) => {
       setTours(allTours);
-      // Suave delay para exibição fluida do skeleton/shimmer sem piscar
       setTimeout(() => {
         setIsLoadingTours(false);
       }, 500);
@@ -64,9 +73,9 @@ export function App() {
     return () => unsubscribe();
   }, []);
 
-  // Admin route detection
+  // Admin & /reservar route detection
   useEffect(() => {
-    const checkAdminRoute = () => {
+    const checkRoutes = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
       const search = window.location.search.toLowerCase();
@@ -80,16 +89,26 @@ export function App() {
       ) {
         setIsAdminOpen(true);
       }
+
+      if (
+        path === '/reservar' ||
+        path === '/reservar/' ||
+        hash === '#reservar' ||
+        hash === '#/reservar' ||
+        search.includes('reservar')
+      ) {
+        setIsBookingOpen(true);
+      }
     };
 
-    checkAdminRoute();
+    checkRoutes();
 
-    window.addEventListener('popstate', checkAdminRoute);
-    window.addEventListener('hashchange', checkAdminRoute);
+    window.addEventListener('popstate', checkRoutes);
+    window.addEventListener('hashchange', checkRoutes);
 
     return () => {
-      window.removeEventListener('popstate', checkAdminRoute);
-      window.removeEventListener('hashchange', checkAdminRoute);
+      window.removeEventListener('popstate', checkRoutes);
+      window.removeEventListener('hashchange', checkRoutes);
     };
   }, []);
 
@@ -114,8 +133,34 @@ export function App() {
     }
   };
 
-  const handleOpenBooking = (tourId?: string) => {
+  const handleOpenBooking = (
+    tourId?: string,
+    prefill?: {
+      date?: string;
+      adults?: number;
+      children?: number;
+      customerName?: string;
+      customerPhone?: string;
+      customerEmail?: string;
+      addons?: string[];
+      initialStep?: 'details' | 'gateway' | 'voucher';
+    }
+  ) => {
     if (tourId) setSelectedTourId(tourId);
+    if (prefill?.date) setSelectedDate(prefill.date);
+    if (prefill) {
+      setBookingPrefill({
+        adults: prefill.adults,
+        children: prefill.children,
+        customerName: prefill.customerName,
+        customerPhone: prefill.customerPhone,
+        customerEmail: prefill.customerEmail,
+        addons: prefill.addons,
+        initialStep: prefill.initialStep,
+      });
+    } else {
+      setBookingPrefill({});
+    }
     setIsBookingOpen(true);
   };
 
@@ -285,7 +330,10 @@ export function App() {
           viewport={{ once: true, margin: "-50px" }}
           variants={fadeUpVariants}
         >
-          <FaqSection />
+          <FaqSection
+            onOpenChat={() => setIsChatOpen(true)}
+            onOpenBooking={handleOpenBooking}
+          />
         </motion.div>
 
         {/* 9. Newsletter com Selo de Desconto VIP */}
@@ -314,6 +362,13 @@ export function App() {
         preselectedDate={selectedDate}
         preselectedTimeWindow={selectedTimeWindow}
         preselectedTideHeight={selectedTideHeight}
+        preselectedAdults={bookingPrefill.adults}
+        preselectedChildren={bookingPrefill.children}
+        preselectedCustomerName={bookingPrefill.customerName}
+        preselectedCustomerPhone={bookingPrefill.customerPhone}
+        preselectedCustomerEmail={bookingPrefill.customerEmail}
+        preselectedAddons={bookingPrefill.addons}
+        initialStep={bookingPrefill.initialStep}
         tours={tours}
       />
 
@@ -324,7 +379,7 @@ export function App() {
         onOpenBooking={() => handleOpenBooking()}
       />
 
-      {/* Chatbot Flutuante Natal Vip Turismo (Ponta Negra, botão redondo, azul turquesa & dourado, fluxo guiado e WhatsApp) */}
+      {/* Assistente Natal VIP - Chatbot Flutuante de Autoatendimento & Conversão */}
       <FloatingChatbot
         isOpenControlled={isChatOpen}
         onToggleControlled={setIsChatOpen}

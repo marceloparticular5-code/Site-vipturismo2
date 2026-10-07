@@ -1,15 +1,16 @@
 import React from 'react';
 import { PersonalConsultantChat } from './PersonalConsultantChat';
 
-export interface GeminiChatbotProps {
+export interface AssistenteChatbotProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenBooking: (tourId?: string) => void;
   onOpenCalendar: () => void;
 }
 
-export const GeminiChatbot: React.FC<GeminiChatbotProps> = (props) => {
+export const AssistenteChatbot: React.FC<AssistenteChatbotProps> = (props) => {
   return <PersonalConsultantChat {...props} />;
 };
 
-export default GeminiChatbot;
+export default AssistenteChatbot;
+

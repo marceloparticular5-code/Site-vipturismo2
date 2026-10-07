@@ -192,10 +192,10 @@ export function buildBookingConfirmationEmailHtml(
                 Dúvidas sobre a maré ou roteiro? Fale com nosso consultor:
               </p>
               <div style="font-size: 14px; font-weight: 900; color: #fbbf24; margin-bottom: 12px;">
-                Marcelo · Plantão VIP WhatsApp: <a href="https://wa.me/5584988256545" style="color: #10b981; text-decoration: none;">(84) 98825-6545</a>
+                Marcelo · Plantão VIP WhatsApp: <a href="https://wa.me/5584988722044" style="color: #10b981; text-decoration: none;">(84) 98872-2044</a>
               </div>
               <p style="margin: 0; font-size: 10px; color: #64748b; line-height: 1.5;">
-                Natal Vip Turismo Ltda · Cadastur 24.089.123/0001-90<br>
+                Natal Vip Turismo Ltda · Cadastur 39.456.551/0001-08<br>
                 E-mail Oficial: reservas@natalvipturismo.com · Ponta Negra, Natal/RN<br>
                 Este e-mail é gerado automaticamente pelo sistema de confirmação e sincronização VIP.
               </p>

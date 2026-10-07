@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NatalVipLogo } from './NatalVipLogo';
 import { Phone, Mail, MapPin, ShieldCheck, Heart, ArrowUp, Sparkles, Send, CheckCircle2, Bell } from 'lucide-react';
 import { subscribeToTravelDeals } from '../lib/emailService';
+import { PHONE_DISPLAY, HELP_TEXT, getWhatsAppLink } from '../config/contact';
 
 interface FooterProps {
   onOpenBooking: (tourId?: string) => void;
@@ -254,21 +255,13 @@ export const Footer: React.FC<FooterProps> = ({
             <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4 font-['Cinzel',serif]">
               Atendimento VIP
             </h4>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-2.5">
-                <Phone className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <a
-                    href="https://wa.me/5584988722044?text=Ol%C3%A1%20Natal%20Vip%20Turismo!%20Gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20os%20passeios."
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-emerald-300 block font-bold text-emerald-400 text-xs"
-                  >
-                    WhatsApp VIP: +55 (84) 98872-2044
-                  </a>
-                  <span className="text-[10px] text-slate-400 block">Atendimento oficial direto</span>
-                </div>
-              </li>
+            <div className="space-y-3">
+              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
+                <p className="leading-relaxed">
+                  {HELP_TEXT}
+                </p>
+              </div>
+              <ul className="space-y-3">
               <li className="flex items-start gap-2.5">
                 <Mail className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div>
@@ -285,6 +278,7 @@ export const Footer: React.FC<FooterProps> = ({
             </ul>
           </div>
         </div>
+      </div>
 
         {/* Bottom Bar */}
         <div className="border-t border-slate-800/80 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-400">

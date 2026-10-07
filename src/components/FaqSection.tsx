@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
-import { HelpCircle, ChevronDown, ChevronUp, Phone } from 'lucide-react';
+import { HelpCircle, ChevronDown, ChevronUp, MessageCircle, Calendar } from 'lucide-react';
+import { PHONE_DISPLAY } from '../config/contact';
 
-export const FaqSection: React.FC = () => {
+interface FaqSectionProps {
+  onOpenChat?: () => void;
+  onOpenBooking?: () => void;
+}
+
+export const FaqSection: React.FC<FaqSectionProps> = ({ onOpenChat, onOpenBooking }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const faqs = [
@@ -27,7 +33,7 @@ export const FaqSection: React.FC = () => {
     },
     {
       q: 'Como posso confirmar minha reserva agora?',
-      a: 'Você pode finalizar pelo checkout seguro aqui no site com Pix ou Cartão, ou falar diretamente com o consultor Marcelo pelo WhatsApp no número (84) 98872-2044.',
+      a: `Você pode finalizar em poucos cliques pelo autoatendimento seguro aqui no site com Pix ou Cartão, ou tirar dúvidas com o Assistente Natal VIP no chat do site. Caso prefira suporte pontual: ${PHONE_DISPLAY}.`,
     },
   ];
 
@@ -81,20 +87,33 @@ export const FaqSection: React.FC = () => {
         </div>
 
         {/* Still have questions banner */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 to-[#0A192F] text-white border border-[#1E3A5F] flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">
-            <h4 className="font-bold text-sm text-[#0A192F]">Ainda ficou com alguma dúvida sobre seu roteiro?</h4>
-            <p className="text-xs text-slate-600">Nossa equipe em Ponta Negra responde em poucos minutos.</p>
+            <h4 className="font-bold text-sm text-white">Ainda ficou com alguma dúvida sobre seu roteiro?</h4>
+            <p className="text-xs text-slate-300">Tire dúvidas em tempo real com o Assistente Natal VIP ou inicie sua reserva online.</p>
           </div>
-          <a
-            href="https://wa.me/5584988722044"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow shrink-0"
-          >
-            <Phone className="w-3.5 h-3.5" />
-            <span>Falar no WhatsApp</span>
-          </a>
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap justify-center">
+            {onOpenChat && (
+              <button
+                type="button"
+                onClick={onOpenChat}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-md cursor-pointer transition-transform active:scale-95"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Tirar Dúvidas no Chat</span>
+              </button>
+            )}
+            {onOpenBooking && (
+              <button
+                type="button"
+                onClick={() => onOpenBooking()}
+                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/20 cursor-pointer transition-colors"
+              >
+                <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                <span>Reservar Online</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </section>

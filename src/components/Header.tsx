@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { auth, loginWithGoogle, logoutUser, isUserAdmin } from '../lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { PHONE_DISPLAY } from '../config/contact';
 
 interface HeaderProps {
   onOpenBooking: (tourId?: string) => void;
@@ -79,15 +80,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="flex items-center gap-4 text-[11px] font-medium ml-auto">
-            <a
-              href="https://wa.me/5584988722044"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#FBBF24] hover:text-[#F59E0B] transition-colors flex items-center gap-1 font-bold"
+            <button
+              type="button"
+              onClick={() => onOpenBooking()}
+              className="text-[#FBBF24] hover:text-[#F59E0B] transition-colors flex items-center gap-1.5 font-bold cursor-pointer"
             >
-              <Phone className="w-3 h-3 text-[#FBBF24]" />
-              <span>(84) 98872-2044</span>
-            </a>
+              <Calendar className="w-3 h-3 text-[#FBBF24]" />
+              <span>Autoatendimento & Reserva Online 24h</span>
+            </button>
 
             {/* Admin Access Indicator if Admin */}
             {isUserAdmin(currentUser) && (
@@ -294,15 +294,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <Ticket className="w-4 h-4 text-[#FBBF24]" />
                 <span>Acessar Minhas Reservas</span>
               </button>
-              <a
-                href="https://wa.me/5584988722044"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2"
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenBooking();
+                }}
+                className="w-full py-2.5 rounded-xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#0A192F] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow cursor-pointer"
               >
-                <Phone className="w-4 h-4" />
-                <span>WhatsApp: (84) 98872-2044</span>
-              </a>
+                <Calendar className="w-4 h-4" />
+                <span>Reservar Online Agora</span>
+              </button>
             </div>
           </div>
         )}

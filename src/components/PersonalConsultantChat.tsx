@@ -376,4 +376,5 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
   );
 };
 
-export const GeminiChatbot = PersonalConsultantChat;
+export const AssistenteNatalVipChatbot = PersonalConsultantChat;
+export default PersonalConsultantChat;

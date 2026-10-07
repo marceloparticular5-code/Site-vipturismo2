@@ -2,6 +2,7 @@
  * Google Calendar & iCalendar (.ics) synchronization service for Natal Vip Turismo.
  * Synchronizes confirmed bookings with reservas@natalvipturismo.com and customer calendars.
  */
+import { PHONE_DISPLAY } from '../config/contact';
 
 export interface CalendarEventPayload {
   voucherCode: string;
@@ -86,7 +87,7 @@ export function generateGoogleCalendarUrl(payload: CalendarEventPayload): string
     `--------------------------------------------`,
     `Voucher Localizador: ${payload.voucherCode}`,
     `Passageiro Responsável: ${payload.customerName}`,
-    `Telefone / WhatsApp: ${payload.customerPhone || '(84) 98825-6545'}`,
+    `Telefone / WhatsApp: ${payload.customerPhone || PHONE_DISPLAY}`,
     `Passeio: ${payload.tourName}`,
     `Data: ${payload.date}`,
     `Horário / Janela: ${payload.timeWindow}`,
@@ -97,7 +98,7 @@ export function generateGoogleCalendarUrl(payload: CalendarEventPayload): string
     ``,
     `CONTATOS & SUPORTE:`,
     `E-mail da Central: reservas@natalvipturismo.com`,
-    `Plantão VIP / Marcelo: (84) 98825-6545`,
+    `Plantão VIP / Atendimento: ${PHONE_DISPLAY}`,
     `Site: https://natalvipturismo.com`,
   ]
     .filter(Boolean)
@@ -131,7 +132,7 @@ export function generateIcsCalendarData(payload: CalendarEventPayload): string {
   const nowUtc = formatDateToGoogleUtc(new Date());
 
   const summary = `Passeio VIP: ${payload.tourName} - ${payload.customerName}`;
-  const description = `Reserva confirmada NVT: ${payload.voucherCode}. Embarque: ${payload.hotelPickup || 'Ponta Negra'}. Janela de maré: ${payload.timeWindow}. Central: reservas@natalvipturismo.com / (84) 98825-6545.`;
+  const description = `Reserva confirmada NVT: ${payload.voucherCode}. Embarque: ${payload.hotelPickup || 'Ponta Negra'}. Janela de maré: ${payload.timeWindow}. Central: reservas@natalvipturismo.com / ${PHONE_DISPLAY}.`;
   const location = payload.hotelPickup || 'Ponta Negra, Natal - RN';
 
   return [

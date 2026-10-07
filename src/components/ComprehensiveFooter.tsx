@@ -11,7 +11,9 @@ import {
   CreditCard,
   QrCode,
   ArrowUp,
+  MessageCircle,
 } from 'lucide-react';
+import { PHONE_DISPLAY, HELP_TEXT, getWhatsAppLink, CADASTUR_NUMBER } from '../config/contact';
 
 interface ComprehensiveFooterProps {
   onOpenBooking: (tourId?: string) => void;
@@ -201,32 +203,22 @@ export const ComprehensiveFooter: React.FC<ComprehensiveFooterProps> = ({
             <h4 className="font-bold text-[#FBBF24] text-sm uppercase tracking-wider">
               Atendimento VIP
             </h4>
-            <ul className="space-y-2.5 text-xs text-slate-300">
-              <li className="flex items-start gap-2">
-                <Phone className="w-4 h-4 text-[#FBBF24] shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-white font-bold block">(84) 98872-2044</span>
-                  <span className="text-[11px] text-slate-400">WhatsApp oficial para reservas</span>
-                </div>
-              </li>
-              <li className="flex items-start gap-2">
-                <Clock className="w-4 h-4 text-[#FBBF24] shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-white font-bold block">07:00 às 22:00</span>
-                  <span className="text-[11px] text-slate-400">Todos os dias (inclusive feriados)</span>
-                </div>
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-[#FBBF24] shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-white font-bold block">Ponta Negra, Natal - RN</span>
-                  <span className="text-[11px] text-slate-400">Av. Eng. Roberto Freire</span>
-                </div>
-              </li>
-            </ul>
+            <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 space-y-2">
+              <p className="text-slate-300 leading-relaxed">
+                {HELP_TEXT}
+              </p>
+              <div className="flex items-center gap-2 pt-1 text-slate-400 text-[11px]">
+                <Clock className="w-3.5 h-3.5 text-[#FBBF24] shrink-0" />
+                <span>Plantão das 07:00 às 22:00</span>
+              </div>
+              <div className="flex items-center gap-2 text-slate-400 text-[11px]">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Cadastur: {CADASTUR_NUMBER}</span>
+              </div>
+            </div>
 
             {/* Social Link */}
-            <div className="pt-2">
+            <div className="pt-1">
               <a
                 href="https://instagram.com"
                 target="_blank"

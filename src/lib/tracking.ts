@@ -125,6 +125,81 @@ export function trackTourView(tourTitle: string, price: number) {
   }
 }
 
+export function trackChatStart() {
+  if (typeof window === 'undefined') return;
+
+  const eventPayload = {
+    event: 'chat_start',
+    event_category: 'Engajamento',
+    event_action: 'Início Chat VIP Autoatendimento',
+    timestamp: new Date().toISOString(),
+  };
+
+  // @ts-ignore
+  window.dataLayer = window.dataLayer || [];
+  // @ts-ignore
+  window.dataLayer.push(eventPayload);
+
+  // @ts-ignore
+  if (typeof window.gtag === 'function') {
+    // @ts-ignore
+    window.gtag('event', 'chat_start', {
+      event_category: 'Chat',
+      event_label: 'Assistente Natal VIP',
+    });
+  }
+
+  // @ts-ignore
+  if (typeof window.fbq === 'function') {
+    // @ts-ignore
+    window.fbq('trackCustom', 'ChatStart', {
+      content_name: 'Assistente Natal VIP',
+    });
+  }
+}
+
+export function trackCheckoutStart(tourTitle: string, totalAmount: number) {
+  if (typeof window === 'undefined') return;
+
+  // @ts-ignore
+  window.dataLayer = window.dataLayer || [];
+  // @ts-ignore
+  window.dataLayer.push({
+    event: 'begin_checkout',
+    ecommerce: {
+      value: totalAmount,
+      currency: 'BRL',
+      items: [
+        {
+          item_name: tourTitle,
+          price: totalAmount,
+          currency: 'BRL',
+        },
+      ],
+    },
+  });
+
+  // @ts-ignore
+  if (typeof window.gtag === 'function') {
+    // @ts-ignore
+    window.gtag('event', 'begin_checkout', {
+      currency: 'BRL',
+      value: totalAmount,
+      items: [{ item_name: tourTitle }],
+    });
+  }
+
+  // @ts-ignore
+  if (typeof window.fbq === 'function') {
+    // @ts-ignore
+    window.fbq('track', 'InitiateCheckout', {
+      content_name: tourTitle,
+      value: totalAmount,
+      currency: 'BRL',
+    });
+  }
+}
+
 export function trackBookingComplete(bookingId: string, tourTitle: string, totalAmount: number) {
   if (typeof window === 'undefined') return;
 

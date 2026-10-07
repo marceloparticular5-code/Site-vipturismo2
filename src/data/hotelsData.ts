@@ -1,4 +1,5 @@
 import { HotelPartner } from '../types';
+import { PHONE_WA } from '../config/contact';
 
 export const PARTNER_HOTELS: HotelPartner[] = [
   {
@@ -30,7 +31,7 @@ export const PARTNER_HOTELS: HotelPartner[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
     directBookingUrl: 'https://www.oceanpalace.com.br/',
-    whatsappConciergeNumber: '5584988256545',
+    whatsappConciergeNumber: PHONE_WA,
     marceloTip:
       'Dica do Marcelo: O Ocean Palace é o ponto favorito dos nossos clientes de luxo! Como a Via Costeira tem tráfego livre, nossa van VIP busca você sem trânsito e com tempo de sobra para aproveitar as melhores marés em Maracajaú e o pôr do sol em Genipabu.',
     address: 'Av. Senador Dinarte Medeiros Mariz, 7829 - Via Costeira, Natal - RN',
@@ -67,7 +68,7 @@ export const PARTNER_HOTELS: HotelPartner[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80',
     directBookingUrl: 'https://www.wishhotels.com.br/wish-natal',
-    whatsappConciergeNumber: '5584988256545',
+    whatsappConciergeNumber: PHONE_WA,
     marceloTip:
       'Dica do Marcelo: Perfeito para casais! A localização do Wish permite que a nossa van pegue a Via Expressa em direção ao Litoral Norte economizando até 25 minutos de trajeto para o mergulho em Maracajaú.',
     address: 'Av. Sen. Dinarte Medeiros Mariz, 5525 - Parque das Dunas, Natal - RN',
@@ -104,7 +105,7 @@ export const PARTNER_HOTELS: HotelPartner[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=1200&q=80',
     directBookingUrl: 'https://www.vogalhotel.com.br/',
-    whatsappConciergeNumber: '5584988256545',
+    whatsappConciergeNumber: PHONE_WA,
     marceloTip:
       'Dica do Marcelo: Quem se hospeda no Vogal busca exclusividade máxima. Para os hóspedes daqui, disponibilizamos nossa opção de van executiva semicompartilhada ou privativa com horário flexível alinhado à maré baixa.',
     address: 'Rua Coronel Inácio Vale, 8861 - Ponta Negra, Natal - RN',
@@ -141,7 +142,7 @@ export const PARTNER_HOTELS: HotelPartner[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1200&q=80',
     directBookingUrl: 'https://www.serhsnatalgrandhotel.com/',
-    whatsappConciergeNumber: '5584988256545',
+    whatsappConciergeNumber: PHONE_WA,
     marceloTip:
       'Dica do Marcelo: Excelente estrutura para quem viaja em família com crianças! Os monitores cuidam dos pequenos enquanto os pais curtem o mergulho com cilindro nos Parrachos de Maracajaú.',
     address: 'Av. Senador Dinarte Medeiros Mariz, 6045 - Via Costeira, Natal - RN',
@@ -178,7 +179,7 @@ export const PARTNER_HOTELS: HotelPartner[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1200&q=80',
     directBookingUrl: 'https://pontanegra.goldentulip.com/pt-br/',
-    whatsappConciergeNumber: '5584988256545',
+    whatsappConciergeNumber: PHONE_WA,
     marceloTip:
       'Dica do Marcelo: Para quem busca conforto, boa localização e ótimo custo-benefício, o Golden Tulip é uma das minhas primeiras indicações. Fica bem perto de onde nossas vans começam o recolhimento!',
     address: 'Av. Engenheiro Roberto Freire, 4382 - Ponta Negra, Natal - RN',
@@ -215,7 +216,7 @@ export const PARTNER_HOTELS: HotelPartner[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
     directBookingUrl: 'https://www.manary.com.br/',
-    whatsappConciergeNumber: '5584988256545',
+    whatsappConciergeNumber: PHONE_WA,
     marceloTip:
       'Dica do Marcelo: Se a sua viagem é de lua de mel ou aniversário de casamento, o Manary é imbatível. Combine a hospedagem aqui com o nosso passeio VIP de Lancha nos Parrachos de Maracajaú para uma experiência inesquecível!',
     address: 'Rua Francisco Gurgel, 9067 - Ponta Negra, Natal - RN',
@@ -252,7 +253,7 @@ export const PARTNER_HOTELS: HotelPartner[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1549294413-26f195200c16?auto=format&fit=crop&w=1200&q=80',
     directBookingUrl: 'https://www.vilagale.com/pt/hoteis/brasil/vila-gale-touros',
-    whatsappConciergeNumber: '5584988256545',
+    whatsappConciergeNumber: PHONE_WA,
     marceloTip:
       'Dica do Marcelo: Excelente para quem quer fugir da cidade e focar 100% nas piscinas naturais e praias desertas do Litoral Norte. Como você já dorme na região, acorda mais tarde e chega antes de todo mundo nos arrecifes!',
     address: 'Fazenda das Garças, s/n - Gameleira, Touros - RN',
@@ -289,7 +290,7 @@ export const PARTNER_HOTELS: HotelPartner[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80',
     directBookingUrl: 'https://www.sombraeaguafresca.com.br/',
-    whatsappConciergeNumber: '5584988256545',
+    whatsappConciergeNumber: PHONE_WA,
     marceloTip:
       'Dica do Marcelo: Se você planeja dividir sua estada entre Natal e Pipa, recomendo 3 noites em Natal para os Parrachos e Genipabu e 2 noites no Sombra e Água Fresca em Pipa. Posso coordenar todo o transfer e os passeios!',
     address: 'Praia do Amor - Tibau do Sul / Pipa - RN',

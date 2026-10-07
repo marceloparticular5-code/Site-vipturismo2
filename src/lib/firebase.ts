@@ -220,7 +220,7 @@ export interface FirebaseLead {
   tourInterest: string;
   travelMonth: string;
   couponCode?: string;
-  status: 'new' | 'contacted' | 'booked';
+  status: 'new' | 'contacted' | 'booked' | 'lead_captured' | 'checkout_started' | 'whatsapp_escalated';
   createdAt: string;
 }
 
@@ -307,8 +307,8 @@ export async function saveLeadToFirestore(leadData: Omit<FirebaseLead, 'id'>): P
   try {
     const docRef = await addDoc(collection(db, path), {
       ...leadData,
-      status: 'new',
-      createdAt: new Date().toISOString(),
+      status: leadData.status || 'new',
+      createdAt: leadData.createdAt || new Date().toISOString(),
     });
     return docRef.id;
   } catch (error) {
