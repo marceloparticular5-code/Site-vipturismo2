@@ -28,8 +28,8 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ onOpenChat, onOpenBookin
       a: 'Você pode cancelar ou remarcar sem qualquer custo com até 24 horas de antecedência. Em caso de chuva forte ou ventos que desaconselhem a navegação náutica em Maracajaú pela Capitania dos Portos, reagendamos imediatamente sem taxa ou estornamos 100% do seu pagamento.',
     },
     {
-      q: 'Como funciona o parcelamento das reservas e o desconto no Pix?',
-      a: 'Parcelamos em até 3x sem juros (ou até 12x) em todos os principais cartões de crédito (Visa, Mastercard, Elo, Hipercard, Amex). Para pagamentos à vista via Pix, você ganha 5% de desconto instantâneo com emissão imediata do seu voucher nominal com QR Code.',
+      q: 'Como funciona o pagamento das reservas no Pix ou Cartão?',
+      a: 'Você paga o mesmo valor no Pix ou no Cartão de Crédito em até 3x sem juros (ou até 12x) em todos os principais cartões (Visa, Mastercard, Elo, Hipercard, Amex). O Pix conta com confirmação imediata e aprovação em segundos, liberando seu voucher nominal na hora.',
     },
     {
       q: 'Quantas pessoas cabem no Buggy e o passeio tem emoção?',

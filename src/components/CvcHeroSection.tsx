@@ -255,7 +255,7 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
             <CreditCard className="w-5 h-5 text-[#FBBF24] shrink-0" />
             <div>
               <div className="font-bold text-white">Até 3x Sem Juros</div>
-              <div className="text-[11px] text-slate-300">Ou 5% de desconto no Pix</div>
+              <div className="text-[11px] text-slate-300">Pix com confirmação imediata</div>
             </div>
           </div>
 

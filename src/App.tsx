@@ -20,6 +20,7 @@ import { UserReservationsModal } from './components/UserReservationsModal';
 import { AdminToursModal } from './components/AdminToursModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { InAppNotificationToast } from './components/InAppNotificationToast';
+import { ReservationConfirmationPage } from './components/ReservationConfirmationPage';
 import { TourPackage } from './types';
 import { VIP_TOURS } from './data/toursData';
 import { subscribeToTours } from './lib/firebase';
@@ -39,6 +40,7 @@ export function App() {
   const [isReservationsOpen, setIsReservationsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [reservationOrderNsu, setReservationOrderNsu] = useState<string | null>(null);
   const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
   const [isLoadingTours, setIsLoadingTours] = useState(true);
 
@@ -97,6 +99,20 @@ export function App() {
         search.includes('reservar')
       ) {
         setIsBookingOpen(true);
+      }
+
+      // InfinitePay Return Route: /reserva/{order_nsu}
+      const rawPath = window.location.pathname;
+      const match = rawPath.match(/^\/reserva\/([^/?#]+)/i);
+      const searchParams = new URLSearchParams(window.location.search);
+      const queryNsu = searchParams.get('order_nsu');
+
+      if (match && match[1]) {
+        setReservationOrderNsu(match[1]);
+      } else if (queryNsu) {
+        setReservationOrderNsu(queryNsu);
+      } else if (!rawPath.startsWith('/reserva/')) {
+        setReservationOrderNsu(null);
       }
     };
 
@@ -207,6 +223,18 @@ export function App() {
       },
     },
   };
+
+  if (reservationOrderNsu) {
+    return (
+      <ReservationConfirmationPage
+        orderNsu={reservationOrderNsu}
+        onGoHome={() => {
+          window.history.pushState({}, '', '/');
+          setReservationOrderNsu(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-[#0F172A] font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#FBBF24] selection:text-[#0A192F]">

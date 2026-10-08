@@ -200,7 +200,45 @@ export function trackCheckoutStart(tourTitle: string, totalAmount: number) {
   }
 }
 
-export function trackBookingComplete(bookingId: string, tourTitle: string, totalAmount: number) {
+export function trackCheckoutLinkGenerated(orderNsu: string, tourTitle: string, totalAmount: number) {
+  if (typeof window === 'undefined') return;
+
+  // @ts-ignore
+  window.dataLayer = window.dataLayer || [];
+  // @ts-ignore
+  window.dataLayer.push({
+    event: 'infinitepay_link_generated',
+    order_nsu: orderNsu,
+    tour_name: tourTitle,
+    value: totalAmount,
+    currency: 'BRL',
+    timestamp: new Date().toISOString(),
+  });
+
+  // @ts-ignore
+  if (typeof window.gtag === 'function') {
+    // @ts-ignore
+    window.gtag('event', 'generate_checkout_link', {
+      transaction_id: orderNsu,
+      item_name: tourTitle,
+      value: totalAmount,
+      currency: 'BRL',
+    });
+  }
+
+  // @ts-ignore
+  if (typeof window.fbq === 'function') {
+    // @ts-ignore
+    window.fbq('trackCustom', 'CheckoutLinkGenerated', {
+      order_nsu: orderNsu,
+      content_name: tourTitle,
+      value: totalAmount,
+      currency: 'BRL',
+    });
+  }
+}
+
+export function trackPurchaseApproved(orderNsu: string, tourTitle: string, totalAmount: number) {
   if (typeof window === 'undefined') return;
 
   // @ts-ignore
@@ -209,7 +247,7 @@ export function trackBookingComplete(bookingId: string, tourTitle: string, total
   window.dataLayer.push({
     event: 'purchase',
     ecommerce: {
-      transaction_id: bookingId,
+      transaction_id: orderNsu,
       value: totalAmount,
       currency: 'BRL',
       items: [
@@ -223,6 +261,17 @@ export function trackBookingComplete(bookingId: string, tourTitle: string, total
   });
 
   // @ts-ignore
+  if (typeof window.gtag === 'function') {
+    // @ts-ignore
+    window.gtag('event', 'purchase', {
+      transaction_id: orderNsu,
+      value: totalAmount,
+      currency: 'BRL',
+      items: [{ item_name: tourTitle, price: totalAmount }],
+    });
+  }
+
+  // @ts-ignore
   if (typeof window.fbq === 'function') {
     // @ts-ignore
     window.fbq('track', 'Purchase', {
@@ -231,4 +280,47 @@ export function trackBookingComplete(bookingId: string, tourTitle: string, total
       currency: 'BRL',
     });
   }
+}
+
+export function trackPaymentAbandoned(orderNsu: string, tourTitle: string, totalAmount: number, reason?: string) {
+  if (typeof window === 'undefined') return;
+
+  // @ts-ignore
+  window.dataLayer = window.dataLayer || [];
+  // @ts-ignore
+  window.dataLayer.push({
+    event: 'payment_abandoned',
+    order_nsu: orderNsu,
+    tour_name: tourTitle,
+    value: totalAmount,
+    reason: reason || 'not_completed',
+    currency: 'BRL',
+    timestamp: new Date().toISOString(),
+  });
+
+  // @ts-ignore
+  if (typeof window.gtag === 'function') {
+    // @ts-ignore
+    window.gtag('event', 'payment_abandoned', {
+      transaction_id: orderNsu,
+      item_name: tourTitle,
+      value: totalAmount,
+      currency: 'BRL',
+    });
+  }
+
+  // @ts-ignore
+  if (typeof window.fbq === 'function') {
+    // @ts-ignore
+    window.fbq('trackCustom', 'PaymentAbandoned', {
+      order_nsu: orderNsu,
+      content_name: tourTitle,
+      value: totalAmount,
+      currency: 'BRL',
+    });
+  }
+}
+
+export function trackBookingComplete(bookingId: string, tourTitle: string, totalAmount: number) {
+  trackPurchaseApproved(bookingId, tourTitle, totalAmount);
 }

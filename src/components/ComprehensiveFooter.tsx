@@ -238,7 +238,7 @@ export const ComprehensiveFooter: React.FC<ComprehensiveFooterProps> = ({
             <span className="text-slate-400 font-semibold">Formas de Pagamento:</span>
             <div className="flex items-center gap-2 bg-[#0A192F] px-3 py-1.5 rounded-xl border border-[#1E3A5F] text-[11px]">
               <QrCode className="w-4 h-4 text-emerald-400" />
-              <span>Pix à vista com desconto</span>
+              <span>Pix com confirmação imediata</span>
             </div>
             <div className="flex items-center gap-2 bg-[#0A192F] px-3 py-1.5 rounded-xl border border-[#1E3A5F] text-[11px]">
               <CreditCard className="w-4 h-4 text-[#FBBF24]" />

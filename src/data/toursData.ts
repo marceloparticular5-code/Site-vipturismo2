@@ -17,7 +17,7 @@ export const VIP_TOURS: TourPackage[] = [
     isVip: true,
     category: 'pacotes',
     remainingSlots: 3,
-    urgencyText: 'R$ 1.320,00 fechado para 2 pessoas (casal) em até 3x sem juros ou 5% de desconto no Pix',
+    urgencyText: 'R$ 1.320,00 fechado para 2 pessoas (casal) em até 3x sem juros no cartão ou Pix',
     description:
       'A viagem dos sonhos a dois: transfer executivo in/out no Aeroporto de Natal, passeio aos Parrachos de Maracajaú com lancha rápida, dia romântico em Pipa com falésias do Chapadão e pôr do sol, expedição 4x4 no Litoral Sul e buggy com emoção.',
     highlights: [
@@ -31,7 +31,7 @@ export const VIP_TOURS: TourPackage[] = [
       'Transfer in/out climatizado privativo para 2 pessoas',
       'Todos os ingressos e taxas de embarque náutico inclusos',
       'Veículos credenciados Cadastur com ar-condicionado',
-      'Parcelamento em até 3x sem juros no cartão ou desconto no Pix',
+      'Pague com Pix ou cartão em até 3x sem juros',
     ],
     imageUrl: '/images/pacote-casal/casal-vip-buggy-praia.webp',
   },

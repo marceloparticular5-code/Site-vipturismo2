@@ -1,0 +1,110 @@
+[
+  {
+    "id": "res-1791449335045-elm2n",
+    "order_nsu": "NVT-20261008-0002-911",
+    "tourId": "maracajau-vip",
+    "tourName": "Maracajaú + Dayuse VIP",
+    "date": "29/09/2026",
+    "timeWindow": "08:30 às 10:00",
+    "tideHeight": 0.2,
+    "adults": 2,
+    "children": 0,
+    "addons": [],
+    "totalAmount": 340,
+    "priceInCents": 34000,
+    "customer": {
+      "name": "Maria Teste",
+      "email": "mariateste@gmail.com",
+      "phone": "(84) 99999-8888",
+      "cpf": "12345678900"
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "Aprovada",
+    "checkoutUrl": "https://checkout.infinitepay.io/natalvipturismo?lenc=G3cBgGRinbfU2J5Is-sPYJzzQgZUl1Xff7rJpxEFwP_bvWtMnLgXUCJhJnmq5yPxuUW6tbMQjxAOFy663QkS1ud40peRmHLFJbNltUNTJYguNrhKQOvvAIpiSa4J1jyhQ7C1F_KV2tUR8EEZqcNQlIXQEQ5xGDYL3nWfD1VD2XqquLvAlH406i6C7EmmVJ-f3n_N6reotIfKoUgoHXq_pIBUF2rVKjFpwOySQlKcQ9BKBtUsJtbRJxa2KtSqm7JaE6FWzorEisS60ctsXgSKosgFAveI-x_zRiycLBQy7XGtnBW_tIGVp9g6PDGwQkLFFFLyCpLKx6dyFiuGWg.v1.a9bc7c01190f00df",
+    "createdAt": "2026-10-08T08:48:55.045Z",
+    "expiresAt": "2026-10-08T09:18:55.045Z",
+    "log": [
+      {
+        "timestamp": "2026-10-08T08:48:55.045Z",
+        "action": "link_created",
+        "details": {
+          "order_nsu": "NVT-20261008-0002-911",
+          "priceInCents": 34000,
+          "viaApi": true,
+          "checkoutUrl": "https://checkout.infinitepay.io/natalvipturismo?lenc=G3cBgGRinbfU2J5Is-sPYJzzQgZUl1Xff7rJpxEFwP_bvWtMnLgXUCJhJnmq5yPxuUW6tbMQjxAOFy663QkS1ud40peRmHLFJbNltUNTJYguNrhKQOvvAIpiSa4J1jyhQ7C1F_KV2tUR8EEZqcNQlIXQEQ5xGDYL3nWfD1VD2XqquLvAlH406i6C7EmmVJ-f3n_N6reotIfKoUgoHXq_pIBUF2rVKjFpwOySQlKcQ9BKBtUsJtbRJxa2KtSqm7JaE6FWzorEisS60ctsXgSKosgFAveI-x_zRiycLBQy7XGtnBW_tIGVp9g6PDGwQkLFFFLyCpLKx6dyFiuGWg.v1.a9bc7c01190f00df"
+        }
+      },
+      {
+        "timestamp": "2026-10-08T08:49:13.189Z",
+        "action": "payment_approved",
+        "details": {
+          "transaction_nsu": "TRX-INFINITEPAY-9999",
+          "receipt_url": "https://checkout.infinitepay.io/receipt/TRX-INFINITEPAY-9999",
+          "payment_method": "pix"
+        }
+      }
+    ],
+    "approvedAt": "2026-10-08T08:49:13.189Z",
+    "transaction_nsu": "TRX-INFINITEPAY-9999",
+    "receipt_url": "https://checkout.infinitepay.io/receipt/TRX-INFINITEPAY-9999",
+    "payment_method": "pix",
+    "emailSent": true,
+    "googleCalendarSynced": true
+  },
+  {
+    "id": "test-1791449324927",
+    "order_nsu": "NVT-20261008-0001-287",
+    "tourId": "maracajau-vip",
+    "tourName": "Maracajaú + Dayuse VIP (Caribe Brasileiro)",
+    "date": "28/09/2026",
+    "timeWindow": "08:30 às 10:00",
+    "tideHeight": 0.2,
+    "adults": 2,
+    "children": 0,
+    "addons": [
+      "fotos-gopro"
+    ],
+    "totalAmount": 400,
+    "priceInCents": 40000,
+    "customer": {
+      "name": "Cliente Teste InfinitePay",
+      "email": "marceloparticular5@gmail.com",
+      "phone": "(84) 98872-2044",
+      "cpf": "12345678900"
+    },
+    "status": "Aprovada",
+    "checkoutUrl": "https://checkout.infinitepay.io/natalvipturismo/MzTHsBUpEX",
+    "createdAt": "2026-10-08T08:48:44.927Z",
+    "expiresAt": "2026-10-08T09:18:44.927Z",
+    "log": [
+      {
+        "timestamp": "2026-10-08T08:48:44.927Z",
+        "action": "test_simulation_pix_paid"
+      },
+      {
+        "timestamp": "2026-10-08T08:48:44.945Z",
+        "action": "test_simulation_card_approved"
+      },
+      {
+        "timestamp": "2026-10-08T08:48:44.960Z",
+        "action": "test_simulation_abandoned"
+      },
+      {
+        "timestamp": "2026-10-08T08:48:44.976Z",
+        "action": "payment_approved",
+        "details": {
+          "transaction_nsu": "TRX-1791449324976",
+          "receipt_url": "https://checkout.infinitepay.io/receipt/TRX-1791449324976",
+          "payment_method": "cartao"
+        }
+      }
+    ],
+    "approvedAt": "2026-10-08T08:48:44.976Z",
+    "payment_method": "cartao",
+    "transaction_nsu": "TRX-1791449324976",
+    "receipt_url": "https://checkout.infinitepay.io/receipt/TRX-1791449324976",
+    "emailSent": true,
+    "googleCalendarSynced": true,
+    "installments": 3
+  }
+]

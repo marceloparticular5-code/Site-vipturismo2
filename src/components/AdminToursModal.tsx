@@ -51,6 +51,9 @@ import {
   Info,
   FolderOpen,
   BarChart3,
+  RefreshCw,
+  QrCode,
+  CreditCard,
 } from 'lucide-react';
 import { MediaLibraryModal } from './MediaLibraryModal';
 
@@ -71,6 +74,9 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
 
   const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
   const [bookings, setBookings] = useState<FirebaseBooking[]>([]);
+  const [infinitePayReservations, setInfinitePayReservations] = useState<any[]>([]);
+  const [simulationResult, setSimulationResult] = useState<any | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
   const [leads, setLeads] = useState<LeadFollowUp[]>([]);
   const [activeTab, setActiveTab] = useState<'tours' | 'editor' | 'bookings' | 'analytics'>('tours');
   const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
@@ -153,6 +159,45 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
       // ignore
     }
   }, [isOpen, isAdmin]);
+
+  // Load InfinitePay reservations from backend
+  const loadInfinitePay = async () => {
+    try {
+      const res = await fetch('/api/infinitepay/reservations');
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.reservations) {
+          setInfinitePayReservations(data.reservations);
+        }
+      }
+    } catch (err) {
+      console.warn('Erro ao carregar reservas InfinitePay:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && activeTab === 'bookings') {
+      loadInfinitePay();
+    }
+  }, [isOpen, activeTab]);
+
+  const handleRunSimulation = async (scenario: 'pix_paid' | 'card_approved' | 'abandoned' | 'webhook_duplicate') => {
+    setIsSimulating(true);
+    try {
+      const res = await fetch('/api/infinitepay/test-simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenario }),
+      });
+      const data = await res.json();
+      setSimulationResult(data?.report);
+      loadInfinitePay();
+    } catch (err: any) {
+      setSimulationResult({ erro: err?.message });
+    } finally {
+      setIsSimulating(false);
+    }
+  };
 
   // Metadados específicos para a rota /admin com 'noindex, nofollow, noarchive':
   // Impede que os motores de busca (Googlebot, Bingbot, etc.) indexem o painel administrativo,
@@ -1354,62 +1399,196 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
 
               {/* TAB 3: BOOKINGS OVERVIEW */}
               {activeTab === 'bookings' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-amber-400" />
-                      <span>Reservas e Vouchers Registrados no Firestore ({bookings.length})</span>
-                    </h3>
-                  </div>
+                <div className="space-y-6">
+                  {/* Simulation / Test Harness (Requirement 18) */}
+                  <div className="p-4 rounded-2xl bg-[#0B213D] border border-amber-400/40 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-2">
+                          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                          <span>Simulador & Testes de Integração InfinitePay</span>
+                        </h4>
+                        <p className="text-[11px] text-slate-300">
+                          Execute testes dos 4 cenários exigidos: Pix pago, Cartão aprovado, Pagamento abandonado e Webhook duplicado.
+                        </p>
+                      </div>
 
-                  <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#0A1628]">
-                    <table className="w-full text-left text-xs text-slate-300">
-                      <thead className="bg-slate-900/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
-                        <tr>
-                          <th className="p-3.5">Voucher</th>
-                          <th className="p-3.5">Passageiro</th>
-                          <th className="p-3.5">Passeio</th>
-                          <th className="p-3.5">Data / Horário</th>
-                          <th className="p-3.5">Valor</th>
-                          <th className="p-3.5">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/60">
-                        {bookings.map((booking) => (
-                          <tr key={booking.id || booking.voucherCode} className="hover:bg-slate-900/40">
-                            <td className="p-3.5 font-mono font-bold text-amber-300">
-                              {booking.voucherCode}
-                            </td>
-                            <td className="p-3.5">
-                              <div className="font-bold text-white">{booking.passengerName || 'Turista'}</div>
-                              <div className="text-[10px] text-slate-400">{booking.passengerPhone}</div>
-                            </td>
-                            <td className="p-3.5 font-medium text-slate-200">
-                              {booking.tourName}
-                            </td>
-                            <td className="p-3.5">
-                              <div>{booking.date}</div>
-                              <div className="text-[10px] text-slate-400">{booking.timeWindow}</div>
-                            </td>
-                            <td className="p-3.5 font-bold text-emerald-400">
-                              R$ {booking.totalAmount.toFixed(2)}
-                            </td>
-                            <td className="p-3.5">
-                              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold uppercase">
-                                {booking.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                      <button
+                        type="button"
+                        onClick={loadInfinitePay}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-amber-400 text-xs text-amber-300 font-bold flex items-center gap-1.5 cursor-pointer self-start"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Atualizar Lista</span>
+                      </button>
+                    </div>
 
-                    {bookings.length === 0 && (
-                      <div className="p-8 text-center text-slate-400 text-xs">
-                        Nenhuma reserva cadastrada no momento. Quando os clientes finalizarem pagamentos no site, elas aparecerão aqui em tempo real.
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={isSimulating}
+                        onClick={() => handleRunSimulation('pix_paid')}
+                        className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                        <span>1. Testar Pix Pago</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isSimulating}
+                        onClick={() => handleRunSimulation('card_approved')}
+                        className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span>2. Testar Cartão Aprovado (3x)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isSimulating}
+                        onClick={() => handleRunSimulation('abandoned')}
+                        className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>3. Testar Pagamento Abandonado</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isSimulating}
+                        onClick={() => handleRunSimulation('webhook_duplicate')}
+                        className="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>4. Testar Webhook Duplicado</span>
+                      </button>
+                    </div>
+
+                    {simulationResult && (
+                      <div className="p-3 rounded-xl bg-slate-950 border border-emerald-500/40 text-xs font-mono space-y-1 text-slate-200">
+                        <div className="font-bold text-emerald-400">Resultado do Teste:</div>
+                        <pre className="text-[11px] overflow-x-auto text-amber-200 whitespace-pre-wrap">
+                          {JSON.stringify(simulationResult, null, 2)}
+                        </pre>
                       </div>
                     )}
                   </div>
+
+                  {/* InfinitePay Reservations Table (Requirement 17) */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-amber-400" />
+                        <span>Reservas InfinitePay no Servidor ({infinitePayReservations.length})</span>
+                      </h3>
+                      <span className="text-[11px] text-slate-400">
+                        Status em tempo real: Aguardando, Aprovada e Expirada
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#0A1628]">
+                      <table className="w-full text-left text-xs text-slate-300">
+                        <thead className="bg-slate-900/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+                          <tr>
+                            <th className="p-3.5">Order NSU</th>
+                            <th className="p-3.5">Passageiro</th>
+                            <th className="p-3.5">Passeio</th>
+                            <th className="p-3.5">Data / Hora</th>
+                            <th className="p-3.5">Valor (BRL)</th>
+                            <th className="p-3.5">Status</th>
+                            <th className="p-3.5">Comprovante</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                          {infinitePayReservations.map((r) => {
+                            const isApproved = r.status === 'Aprovada';
+                            const isExpired = r.status === 'Expirada';
+                            const statusColor = isApproved
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              : isExpired
+                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                              : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+
+                            return (
+                              <tr key={r.order_nsu} className="hover:bg-slate-900/40">
+                                <td className="p-3.5 font-mono font-bold text-amber-300">
+                                  {r.order_nsu}
+                                </td>
+                                <td className="p-3.5">
+                                  <div className="font-bold text-white">{r.customer?.name || 'Cliente'}</div>
+                                  <div className="text-[10px] text-slate-400">
+                                    {r.customer?.phone} · CPF: {r.customer?.cpf || 'Não informado'}
+                                  </div>
+                                </td>
+                                <td className="p-3.5 font-medium text-slate-200">
+                                  {r.tourName}
+                                </td>
+                                <td className="p-3.5">
+                                  <div>{r.date}</div>
+                                  <div className="text-[10px] text-slate-400">{r.timeWindow}</div>
+                                </td>
+                                <td className="p-3.5 font-bold text-emerald-400">
+                                  R$ {Number(r.totalAmount || 0).toFixed(2)}
+                                </td>
+                                <td className="p-3.5">
+                                  <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase ${statusColor}`}>
+                                    {r.status}
+                                  </span>
+                                </td>
+                                <td className="p-3.5">
+                                  {r.receipt_url ? (
+                                    <a
+                                      href={r.receipt_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-bold underline"
+                                    >
+                                      <span>Ver Comprovante</span>
+                                      <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  ) : (
+                                    <span className="text-slate-500 text-[10px]">-</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+
+                      {infinitePayReservations.length === 0 && (
+                        <div className="p-8 text-center text-slate-400 text-xs">
+                          Nenhuma reserva InfinitePay registrada ainda. Gere um link de teste acima ou faça uma reserva no site.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Firestore History */}
+                  {bookings.length > 0 && (
+                    <div className="space-y-3 pt-4 border-t border-slate-800">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Histórico Geral do Firestore ({bookings.length})
+                      </h4>
+                      <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#0A1628]/60">
+                        <table className="w-full text-left text-xs text-slate-300">
+                          <tbody className="divide-y divide-slate-800/40">
+                            {bookings.map((booking) => (
+                              <tr key={booking.id || booking.voucherCode} className="hover:bg-slate-900/40 text-[11px]">
+                                <td className="p-3 font-mono text-amber-300">{booking.voucherCode}</td>
+                                <td className="p-3 text-white font-bold">{booking.passengerName}</td>
+                                <td className="p-3">{booking.tourName}</td>
+                                <td className="p-3">{booking.date}</td>
+                                <td className="p-3 text-emerald-400 font-bold">R$ {booking.totalAmount.toFixed(2)}</td>
+                                <td className="p-3 text-slate-400">{booking.status}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

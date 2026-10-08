@@ -265,8 +265,7 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
   }, 0);
 
   const subtotal = tourTotal + addonsTotal;
-  const pixDiscount = subtotal * 0.05;
-  const totalPix = subtotal - pixDiscount;
+  const cardInstallment3x = (subtotal / 3).toFixed(2);
   const cardInstallment12x = (subtotal / 12).toFixed(2);
 
   // Trigger Online Booking Checkout (Pre-filled)
@@ -1147,22 +1146,22 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                       <span className="font-bold">R$ {subtotal.toFixed(2)}</span>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-emerald-400 font-bold border-t border-slate-800 pt-1.5">
+                    <div className="flex items-center justify-between text-xs text-amber-300 font-bold border-t border-slate-800 pt-1.5">
                       <span className="flex items-center gap-1">
                         <QrCode className="w-3.5 h-3.5" />
-                        À vista no PIX (5% OFF):
+                        Total (Pix ou Cartão em até 3x):
                       </span>
-                      <span className="text-sm font-black text-emerald-300">
-                        R$ {totalPix.toFixed(2)}
+                      <span className="text-base font-black text-amber-300">
+                        R$ {subtotal.toFixed(2)}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="flex items-center justify-between text-[11px] text-slate-300">
                       <span className="flex items-center gap-1">
-                        <CreditCard className="w-3 h-3" />
-                        No Cartão de Crédito:
+                        <CreditCard className="w-3 h-3 text-[#FBBF24]" />
+                        Parcelamento sem juros:
                       </span>
-                      <span>em até 12x de R$ {cardInstallment12x}</span>
+                      <span className="font-semibold text-emerald-400">3x de R$ {cardInstallment3x} sem juros (ou até 12x)</span>
                     </div>
                   </div>
 

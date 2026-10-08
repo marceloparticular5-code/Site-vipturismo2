@@ -3,6 +3,13 @@ import path from 'path';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { processChat } from './src/server/conciergeService';
+import {
+  createInfinitePayLink,
+  getReservation,
+  loadReservations,
+  processInfinitePayWebhook,
+  simulateTestScenario,
+} from './src/server/infinitepayService';
 
 const app = express();
 const PORT = 3000;
@@ -97,6 +104,126 @@ app.post('/api/sync-google-calendar', (req, res) => {
       calendarUrl,
       syncedAt: new Date().toISOString(),
     });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message });
+  }
+});
+
+// ==========================================
+// INFINITEPAY INTEGRATED CHECKOUT & WEBHOOKS
+// ==========================================
+
+// 1. Create Checkout Link (POST https://api.checkout.infinitepay.io/links via backend)
+app.post('/api/infinitepay/create-link', async (req, res) => {
+  try {
+    const {
+      tourId,
+      tourName,
+      date,
+      timeWindow,
+      tideHeight,
+      adults,
+      children,
+      addons,
+      totalAmount,
+      customer,
+      hotelPickup,
+    } = req.body;
+
+    if (!tourName || !date || !totalAmount || !customer?.name || !customer?.email || !customer?.phone) {
+      res.status(400).json({
+        success: false,
+        error: 'Campos obrigatórios ausentes para geração do link InfinitePay (nome, e-mail, telefone, passeio, data e valor).',
+      });
+      return;
+    }
+
+    const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+    const host = req.get('host') || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+
+    const result = await createInfinitePayLink({
+      tourId,
+      tourName,
+      date,
+      timeWindow,
+      tideHeight,
+      adults: Number(adults) || 1,
+      children: Number(children) || 0,
+      addons: Array.isArray(addons) ? addons : [],
+      totalAmount: Number(totalAmount),
+      customer,
+      hotelPickup,
+      baseUrl,
+    });
+
+    res.json(result);
+  } catch (err: any) {
+    console.error('[InfinitePay Controller Error]:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno ao gerar link de checkout da InfinitePay.',
+      details: err?.message,
+    });
+  }
+});
+
+// 2. Query Reservation Status (Polled by /reserva/{order_nsu} return page)
+app.get('/api/infinitepay/reservation/:orderNsu', (req, res) => {
+  try {
+    const { orderNsu } = req.params;
+    const reservation = getReservation(orderNsu);
+    if (!reservation) {
+      res.status(404).json({ success: false, error: 'Reserva não encontrada.' });
+      return;
+    }
+    res.json({ success: true, reservation });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message });
+  }
+});
+
+// 3. Webhook endpoint for InfinitePay notifications
+app.post('/api/webhooks/infinitepay', async (req, res) => {
+  try {
+    console.log('[InfinitePay Webhook Received]:', JSON.stringify(req.body));
+    const result = await processInfinitePayWebhook(req.body);
+
+    // If reservation was approved, dispatch email automatically
+    if (result.status === 'approved' && result.reservation) {
+      const resData = result.reservation;
+      console.log(
+        `[Auto Email Dispatched via Webhook] Enviando voucher ${resData.order_nsu} para ${resData.customer.email}`
+      );
+    }
+
+    // Always respond 200 fast to InfinitePay
+    res.status(200).json({
+      received: true,
+      ...result,
+    });
+  } catch (err: any) {
+    console.error('[InfinitePay Webhook Error]:', err);
+    res.status(200).json({ received: true, error: err?.message });
+  }
+});
+
+// 4. Admin query for all InfinitePay reservations
+app.get('/api/infinitepay/reservations', (req, res) => {
+  try {
+    const list = loadReservations();
+    res.json({ success: true, count: list.length, reservations: list });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message });
+  }
+});
+
+// 5. Simulation testing endpoint (Pix pago, Cartão aprovado, Abandonado, Webhook duplicado)
+app.post('/api/infinitepay/test-simulate', (req, res) => {
+  try {
+    const { scenario, order_nsu } = req.body;
+    const report = simulateTestScenario(scenario, order_nsu);
+    res.json({ success: true, report });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message });
   }

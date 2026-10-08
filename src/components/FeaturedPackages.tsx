@@ -214,10 +214,10 @@ export const FeaturedPackages: React.FC<FeaturedPackagesProps> = ({
                       <span className="text-2xl font-black text-amber-300">
                         R$ {tour.priceDiscounted},00
                       </span>
-                      <span className="text-[10px] text-slate-400">à vista</span>
+                      <span className="text-[10px] text-slate-400">Pix ou cartão</span>
                     </div>
                     <span className="text-[10px] text-emerald-400 font-semibold block">
-                      ou 12x de R$ {(tour.priceDiscounted / 10).toFixed(2).replace('.', ',')}
+                      em até 3x sem juros (ou até 12x)
                     </span>
                   </div>
 

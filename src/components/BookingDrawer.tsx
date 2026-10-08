@@ -7,7 +7,7 @@ import { triggerBookingEmailConfirmation, BookingEmailConfirmationPayload } from
 import { generateGoogleCalendarUrl, downloadIcsFile } from '../lib/googleCalendarSync';
 import { EmailConfirmationModal } from './EmailConfirmationModal';
 import { NATIONALITIES, formatCurrencyValue, SupportedCurrency } from '../lib/i18n';
-import { trackBookingComplete } from '../lib/tracking';
+import { trackBookingComplete, trackCheckoutStart, trackCheckoutLinkGenerated } from '../lib/tracking';
 import { PHONE_WA, PHONE_DISPLAY } from '../config/contact';
 import {
   X,
@@ -30,6 +30,9 @@ import {
   Eye,
   ExternalLink,
   Globe,
+  RefreshCw,
+  Lock,
+  Heart,
 } from 'lucide-react';
 
 interface BookingDrawerProps {
@@ -95,6 +98,37 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailBookingPayload, setEmailBookingPayload] = useState<BookingEmailConfirmationPayload | null>(null);
 
+  // InfinitePay Checkout states
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [formValidationErrors, setFormValidationErrors] = useState<{ [key: string]: string }>({});
+
+  const handleDocumentChange = (val: string) => {
+    if (selectedNatCode === 'BR') {
+      const digits = val.replace(/\D/g, '').slice(0, 11);
+      const masked = digits
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      setCustomerDocument(masked);
+    } else {
+      setCustomerDocument(val);
+    }
+  };
+
+  const handlePhoneChange = (val: string) => {
+    if (selectedNatCode === 'BR') {
+      const digits = val.replace(/\D/g, '').slice(0, 11);
+      if (digits.length <= 10) {
+        setCustomerPhone(digits.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').trim());
+      } else {
+        setCustomerPhone(digits.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').trim());
+      }
+    } else {
+      setCustomerPhone(val);
+    }
+  };
+
   const tourList = (tours && tours.length > 0 ? tours : VIP_TOURS).filter((t) => t.active !== false);
   const currentTour = tourList.find((t) => t.id === selectedTourId) || tourList[0] || VIP_TOURS[0];
 
@@ -111,8 +145,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   }, 0);
 
   const grossTotal = adultsTotal + childrenTotal + addonsTotal;
-  const pixDiscount = paymentTab === 'pix' ? grossTotal * 0.05 : 0;
-  const finalTotal = grossTotal - pixDiscount;
+  // Regra: Pix e cartão possuem o mesmo preço oficial sem desconto exclusivo.
+  const finalTotal = grossTotal;
 
   // Capture abandoned reservation if customer filled info but closed drawer without completing
   const handleCloseDrawer = () => {
@@ -185,6 +219,122 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     setSelectedAddons((prev) =>
       prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId]
     );
+  };
+
+  const handleInfinitePayCheckout = async () => {
+    setGenerationError(null);
+    const errors: { [key: string]: string } = {};
+
+    if (!customerName || customerName.trim().length < 3) {
+      errors.name = 'Informe seu nome completo (mínimo 3 letras).';
+    }
+
+    const cleanDigits = customerPhone.replace(/\D/g, '');
+    if (cleanDigits.length < 10) {
+      errors.phone = 'Informe um WhatsApp válido com DDD.';
+    }
+
+    if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+      errors.email = 'Informe um e-mail válido para envio do voucher.';
+    }
+
+    if (selectedNatCode === 'BR' && customerDocument.replace(/\D/g, '').length !== 11) {
+      errors.document = 'Informe um CPF válido com 11 dígitos.';
+    }
+
+    if (isDateStringInPast(bookingDate)) {
+      errors.date = 'Selecione uma data a partir de hoje.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormValidationErrors(errors);
+      return;
+    }
+
+    setFormValidationErrors({});
+    setIsGeneratingLink(true);
+
+    try {
+      // 1. Pixel & GA4 Event: initiate checkout
+      trackCheckoutStart(currentTour.title, finalTotal);
+
+      const payload = {
+        tourId: currentTour.id,
+        tourName: currentTour.title,
+        date: bookingDate,
+        timeWindow: bookingTimeWindow,
+        tideHeight: preselectedTideHeight,
+        adults,
+        children,
+        addons: selectedAddons,
+        totalAmount: finalTotal,
+        customer: {
+          name: customerName.trim(),
+          email: customerEmail.trim(),
+          phone: customerPhone.trim(),
+          cpf: customerDocument.trim(),
+        },
+        hotelPickup: hotelPickup || 'Hotel em Ponta Negra / Via Costeira',
+      };
+
+      const res = await fetch('/api/infinitepay/create-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error('Falha na comunicação com o gateway InfinitePay.');
+      }
+
+      const data = await res.json();
+      if (data?.success && data?.checkoutUrl) {
+        trackCheckoutLinkGenerated(data.order_nsu, currentTour.title, finalTotal);
+        // Direct redirect without extra steps (Requirement 4)
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error(data?.error || 'Não foi possível gerar o link de pagamento.');
+      }
+    } catch (err: any) {
+      console.warn('[InfinitePay Checkout]: Falha inicial, tentando reconexão automática...', err);
+      // Automatic retry once (Requirement 15: "nova tentativa automática uma vez")
+      try {
+        const retryRes = await fetch('/api/infinitepay/create-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tourId: currentTour.id,
+            tourName: currentTour.title,
+            date: bookingDate,
+            timeWindow: bookingTimeWindow,
+            tideHeight: preselectedTideHeight,
+            adults,
+            children,
+            addons: selectedAddons,
+            totalAmount: finalTotal,
+            customer: {
+              name: customerName.trim(),
+              email: customerEmail.trim(),
+              phone: customerPhone.trim(),
+              cpf: customerDocument.trim(),
+            },
+            hotelPickup: hotelPickup || 'Hotel em Ponta Negra / Via Costeira',
+          }),
+        });
+        const retryData = await retryRes.json();
+        if (retryData?.checkoutUrl) {
+          window.location.href = retryData.checkoutUrl;
+          return;
+        }
+      } catch (retryErr) {
+        console.error('[InfinitePay Retry Error]:', retryErr);
+      }
+
+      setGenerationError(
+        'Houve uma oscilação na conexão com a InfinitePay. Clique novamente para gerar o link ou tente pelo link direto.'
+      );
+      setIsGeneratingLink(false);
+    }
   };
 
   const handleConfirmBooking = () => {
@@ -615,18 +765,27 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
                   <div>
                     <label className="text-xs text-slate-200 font-bold block mb-1">
-                      {NATIONALITIES.find((n) => n.code === selectedNatCode)?.documentType || 'Documento / Passport'}:
+                      {NATIONALITIES.find((n) => n.code === selectedNatCode)?.documentType || 'Documento / CPF'}: *
                     </label>
                     <input
                       type="text"
                       value={customerDocument}
-                      onChange={(e) => setCustomerDocument(e.target.value)}
+                      onChange={(e) => handleDocumentChange(e.target.value)}
                       placeholder={
-                        NATIONALITIES.find((n) => n.code === selectedNatCode)?.documentPlaceholder ||
-                        'Número do Documento / Passport'
+                        selectedNatCode === 'BR'
+                          ? '000.000.000-00 (CPF)'
+                          : NATIONALITIES.find((n) => n.code === selectedNatCode)?.documentPlaceholder ||
+                            'Número do Documento / Passport'
                       }
-                      className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+                      className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none ${
+                        formValidationErrors.document ? 'border-rose-500' : 'border-slate-600 focus:border-amber-400'
+                      }`}
                     />
+                    {formValidationErrors.document && (
+                      <span className="text-[11px] text-rose-400 font-bold mt-1 block">
+                        {formValidationErrors.document}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -639,31 +798,52 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                       onChange={(e) => setCustomerName(e.target.value)}
                       placeholder="Ex: Mariana Silva"
                       required
-                      className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+                      className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none ${
+                        formValidationErrors.name ? 'border-rose-500' : 'border-slate-600 focus:border-amber-400'
+                      }`}
                     />
+                    {formValidationErrors.name && (
+                      <span className="text-[11px] text-rose-400 font-bold mt-1 block">
+                        {formValidationErrors.name}
+                      </span>
+                    )}
                   </div>
                   <div>
-                    <label className="text-xs text-slate-200 font-bold block mb-1">WhatsApp / Telefone com DDI *</label>
+                    <label className="text-xs text-slate-200 font-bold block mb-1">WhatsApp com DDD *</label>
                     <input
                       type="tel"
                       value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      onChange={(e) => handlePhoneChange(e.target.value)}
                       placeholder="(84) 99999-9999"
                       required
-                      className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+                      className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none ${
+                        formValidationErrors.phone ? 'border-rose-500' : 'border-slate-600 focus:border-amber-400'
+                      }`}
                     />
+                    {formValidationErrors.phone && (
+                      <span className="text-[11px] text-rose-400 font-bold mt-1 block">
+                        {formValidationErrors.phone}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-slate-200 font-bold block mb-1">E-mail para envio do voucher digital</label>
+                    <label className="text-xs text-slate-200 font-bold block mb-1">E-mail para envio do voucher *</label>
                     <input
                       type="email"
                       value={customerEmail}
                       onChange={(e) => setCustomerEmail(e.target.value)}
                       placeholder="seu.email@exemplo.com"
-                      className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+                      className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none ${
+                        formValidationErrors.email ? 'border-rose-500' : 'border-slate-600 focus:border-amber-400'
+                      }`}
                     />
+                    {formValidationErrors.email && (
+                      <span className="text-[11px] text-rose-400 font-bold mt-1 block">
+                        {formValidationErrors.email}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <label className="text-xs text-slate-200 font-bold block mb-1">Hotel / Pousada para embarque</label>
@@ -678,32 +858,111 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 </div>
               </div>
 
-              {/* Action: Proceed to Gateway */}
+              {/* Order Summary & InfinitePay Highlights */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-[#091C35] to-[#061220] border-2 border-amber-400/40 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-xs font-black uppercase text-amber-300 tracking-wider">
+                    Resumo do Pedido Online
+                  </span>
+                  <span className="text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/40">
+                    Vaga Pré-Aprovada
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between text-slate-200">
+                    <span>{currentTour.title}</span>
+                    <strong className="text-white">R$ {(adultsTotal + childrenTotal).toFixed(2)}</strong>
+                  </div>
+                  {selectedAddons.length > 0 && (
+                    <div className="flex justify-between text-slate-300">
+                      <span>Opcionais ({selectedAddons.length} selecionados)</span>
+                      <strong className="text-white">R$ {addonsTotal.toFixed(2)}</strong>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-slate-300 pt-1 border-t border-slate-800/80">
+                    <span>Formas Aceitas:</span>
+                    <span className="text-emerald-300 font-bold">Pix ou cartão em até 3x sem juros</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-800 flex items-baseline justify-between">
+                  <span className="text-sm font-extrabold text-white">Total da Reserva:</span>
+                  <div className="text-right">
+                    <span className="text-2xl font-black text-amber-300 block">
+                      R$ {finalTotal.toFixed(2)}
+                    </span>
+                    <span className="text-[11px] text-emerald-400 font-semibold block">
+                      ou até 3x de R$ {(finalTotal / 3).toFixed(2).replace('.', ',')} sem juros
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error Alert if link generation failed */}
+              {generationError && (
+                <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold">{generationError}</p>
+                    <a
+                      href="https://checkout.infinitepay.io/natalvipturismo/MzTHsBUpEX"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-amber-300 underline font-bold mt-1"
+                    >
+                      <span>Abrir checkout oficial InfinitePay direto</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Action: Primary InfinitePay Checkout Button */}
               {isDateStringInPast(bookingDate) && (
                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>A data selecionada ({bookingDate}) já passou no calendário. Escolha uma data a partir de hoje para continuar.</span>
+                  <span>A data selecionada ({bookingDate}) já passou no calendário. Escolha uma data a partir de hoje.</span>
                 </div>
               )}
-              <button
-                type="button"
-                disabled={isDateStringInPast(bookingDate)}
-                onClick={() => {
-                  if (isDateStringInPast(bookingDate)) {
-                    alert('Por favor, selecione uma data válida (a partir de hoje).');
-                    return;
-                  }
-                  setStep('gateway');
-                }}
-                className={`w-full py-4 rounded-xl font-extrabold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                  isDateStringInPast(bookingDate)
-                    ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60'
-                    : 'btn-pulse-hover text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.4)] cursor-pointer'
-                }`}
-              >
-                <span>{isDateStringInPast(bookingDate) ? 'Data Inválida (Já Passou)' : 'Avançar para Pagamento Seguro'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  disabled={isDateStringInPast(bookingDate) || isGeneratingLink}
+                  onClick={handleInfinitePayCheckout}
+                  className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-2xl ${
+                    isDateStringInPast(bookingDate)
+                      ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60'
+                      : isGeneratingLink
+                      ? 'bg-amber-500 text-slate-950 cursor-wait opacity-80'
+                      : 'btn-pulse-hover text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.5)] cursor-pointer active:scale-95'
+                  }`}
+                >
+                  {isGeneratingLink ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      <span>Gerando Link Seguro InfinitePay...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-5 h-5" />
+                      <span>Reservar e Pagar Agora · InfinitePay</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400 px-1">
+                  <span className="flex items-center gap-1">
+                    <Lock className="w-3.5 h-3.5 text-emerald-400" /> Pagamento seguro InfinitePay
+                  </span>
+                  <span>•</span>
+                  <span>Cadastur 39.456.551/0001-08</span>
+                  <span>•</span>
+                  <span className="text-amber-300 font-semibold">Pix ou Cartão</span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -724,8 +983,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   <span className="flex items-center gap-1">
                     <QrCode className="w-3.5 h-3.5" /> PIX Instantâneo
                   </span>
-                  <span className="text-[10px] bg-emerald-700/30 text-emerald-950 font-black px-1.5 py-0.2 rounded">
-                    5% de Desconto
+                  <span className="text-[10px] bg-emerald-700/30 text-emerald-400 font-black px-1.5 py-0.2 rounded">
+                    Confirmação Imediata
                   </span>
                 </button>
 
@@ -761,12 +1020,6 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   <div className="flex justify-between text-slate-200">
                     <span>Opcionais selecionados ({selectedAddons.length})</span>
                     <span className="text-white font-bold">R$ {addonsTotal.toFixed(2)}</span>
-                  </div>
-                )}
-                {paymentTab === 'pix' && (
-                  <div className="flex justify-between text-emerald-300 font-bold bg-emerald-950/40 border border-emerald-500/30 p-2 rounded-lg">
-                    <span>Desconto Exclusivo PIX (5% OFF)</span>
-                    <span>- R$ {pixDiscount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="pt-3 border-t border-slate-700 flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-2">
@@ -966,7 +1219,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   <ShieldCheck className="w-4 h-4" />
                   <span>
                     {paymentTab === 'pix'
-                      ? 'Confirmar Pagamento PIX (5% OFF)'
+                      ? 'Confirmar Pagamento no PIX'
                       : 'Pagar com Cartão de Crédito'}
                   </span>
                 </button>

@@ -132,7 +132,7 @@ export const DEFAULT_INFRA_TASKS: InfraChecklistTask[] = [
     category: 'financas',
     title: 'PIX e Apps Bancários Habilitados',
     description: 'Biometria e limite diário de PIX configurados no celular para pagamentos rápidos no RN.',
-    requiredFor: 'Quitação com desconto exclusivo à vista de passeios, refeições e consumações à beira-mar.',
+    requiredFor: 'Pagamento prático com confirmação instantânea de passeios, refeições e consumações à beira-mar.',
     tip: 'Praticamente 99% das barracas e lanchonetes de praia em Natal aceitam PIX instantâneo.',
   },
   {

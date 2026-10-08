@@ -117,7 +117,7 @@ export const DivingSection: React.FC<DivingSectionProps> = ({
                     <span className="text-xs text-slate-400 font-medium">/ passageiro</span>
                   </div>
                   <span className="text-[11px] text-emerald-400 font-semibold">
-                    Em até 12x no cartão ou 5% OFF no PIX
+                    Pix ou cartão em até 3x sem juros (ou até 12x)
                   </span>
                 </div>
 
@@ -221,7 +221,7 @@ export const DivingSection: React.FC<DivingSectionProps> = ({
                     <span className="text-xs text-slate-400 font-medium">/ passageiro</span>
                   </div>
                   <span className="text-[11px] text-emerald-400 font-semibold">
-                    Em até 12x no cartão ou 5% OFF no PIX
+                    Pix ou cartão em até 3x sem juros (ou até 12x)
                   </span>
                 </div>
 

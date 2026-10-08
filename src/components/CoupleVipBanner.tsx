@@ -94,7 +94,7 @@ export const CoupleVipBanner: React.FC<CoupleVipBannerProps> = ({ onOpenBooking 
                 <span className="text-white/40 hidden sm:inline">|</span>
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-100">
                   <Flame className="w-4 h-4 text-[#FBBF24]" />
-                  <span>Desconto de <strong>5% no Pix à vista</strong> (R$ 1.254,00)</span>
+                  <span>Pix com <strong>confirmação imediata</strong> e aprovação segura</span>
                 </div>
               </div>
             </div>
@@ -125,7 +125,7 @@ export const CoupleVipBanner: React.FC<CoupleVipBannerProps> = ({ onOpenBooking 
                     ⚠️ <strong>Atenção:</strong> Este valor é fechado para o casal (2 pessoas juntas), <strong>NÃO é por pessoa!</strong>
                   </p>
                   <div className="text-xs sm:text-sm font-bold text-[#B45309] mt-2">
-                    Ou 3x de R$ 440,00 sem juros · 5% OFF no Pix à vista (R$ 1.254,00)
+                    Pague com Pix ou cartão em até 3x de R$ 440,00 sem juros
                   </div>
                 </div>
 
