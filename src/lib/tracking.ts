@@ -158,8 +158,9 @@ export function trackChatStart() {
   }
 }
 
-export function trackCheckoutStart(tourTitle: string, totalAmount: number) {
+export function trackCheckoutStart(tourTitle: string, totalAmount: number, passengersCount?: number) {
   if (typeof window === 'undefined') return;
+  const count = Math.max(1, passengersCount || 1);
 
   // @ts-ignore
   window.dataLayer = window.dataLayer || [];
@@ -173,6 +174,7 @@ export function trackCheckoutStart(tourTitle: string, totalAmount: number) {
         {
           item_name: tourTitle,
           price: totalAmount,
+          quantity: count,
           currency: 'BRL',
         },
       ],
@@ -185,7 +187,9 @@ export function trackCheckoutStart(tourTitle: string, totalAmount: number) {
     window.gtag('event', 'begin_checkout', {
       currency: 'BRL',
       value: totalAmount,
-      items: [{ item_name: tourTitle }],
+      num_items: count,
+      guests_count: count,
+      items: [{ item_name: tourTitle, quantity: count }],
     });
   }
 
@@ -196,12 +200,15 @@ export function trackCheckoutStart(tourTitle: string, totalAmount: number) {
       content_name: tourTitle,
       value: totalAmount,
       currency: 'BRL',
+      num_items: count,
+      guests: count,
     });
   }
 }
 
-export function trackCheckoutLinkGenerated(orderNsu: string, tourTitle: string, totalAmount: number) {
+export function trackCheckoutLinkGenerated(orderNsu: string, tourTitle: string, totalAmount: number, passengersCount?: number) {
   if (typeof window === 'undefined') return;
+  const count = Math.max(1, passengersCount || 1);
 
   // @ts-ignore
   window.dataLayer = window.dataLayer || [];
@@ -211,6 +218,7 @@ export function trackCheckoutLinkGenerated(orderNsu: string, tourTitle: string, 
     order_nsu: orderNsu,
     tour_name: tourTitle,
     value: totalAmount,
+    passengers_count: count,
     currency: 'BRL',
     timestamp: new Date().toISOString(),
   });
@@ -222,6 +230,7 @@ export function trackCheckoutLinkGenerated(orderNsu: string, tourTitle: string, 
       transaction_id: orderNsu,
       item_name: tourTitle,
       value: totalAmount,
+      num_items: count,
       currency: 'BRL',
     });
   }
@@ -234,12 +243,15 @@ export function trackCheckoutLinkGenerated(orderNsu: string, tourTitle: string, 
       content_name: tourTitle,
       value: totalAmount,
       currency: 'BRL',
+      num_items: count,
+      guests: count,
     });
   }
 }
 
-export function trackPurchaseApproved(orderNsu: string, tourTitle: string, totalAmount: number) {
+export function trackPurchaseApproved(orderNsu: string, tourTitle: string, totalAmount: number, passengersCount?: number) {
   if (typeof window === 'undefined') return;
+  const count = Math.max(1, passengersCount || 1);
 
   // @ts-ignore
   window.dataLayer = window.dataLayer || [];
@@ -250,10 +262,12 @@ export function trackPurchaseApproved(orderNsu: string, tourTitle: string, total
       transaction_id: orderNsu,
       value: totalAmount,
       currency: 'BRL',
+      passengers_count: count,
       items: [
         {
           item_name: tourTitle,
           price: totalAmount,
+          quantity: count,
           currency: 'BRL',
         },
       ],
@@ -267,7 +281,9 @@ export function trackPurchaseApproved(orderNsu: string, tourTitle: string, total
       transaction_id: orderNsu,
       value: totalAmount,
       currency: 'BRL',
-      items: [{ item_name: tourTitle, price: totalAmount }],
+      num_items: count,
+      guests_count: count,
+      items: [{ item_name: tourTitle, price: totalAmount, quantity: count }],
     });
   }
 
@@ -278,6 +294,8 @@ export function trackPurchaseApproved(orderNsu: string, tourTitle: string, total
       content_name: tourTitle,
       value: totalAmount,
       currency: 'BRL',
+      num_items: count,
+      guests: count,
     });
   }
 }

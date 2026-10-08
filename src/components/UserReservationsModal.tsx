@@ -291,8 +291,8 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
                         tourName: booking.tourName,
                         date: booking.date,
                         timeWindow: booking.timeWindow || '08:30 às 10:00',
-                        adultsCount: booking.participants || 1,
-                        childrenCount: 0,
+                        adultsCount: (booking as any).adultsCount || booking.participants || 1,
+                        childrenCount: (booking as any).childrenCount || 0,
                         totalPrice: booking.totalAmount,
                         paymentMethod: booking.paymentMethod || 'PIX',
                       })}
@@ -317,8 +317,8 @@ export const UserReservationsModal: React.FC<UserReservationsModalProps> = ({
                           date: booking.date,
                           timeWindow: booking.timeWindow || '08:30 às 10:00',
                           tideHeight: 0.2,
-                          adultsCount: booking.participants || 1,
-                          childrenCount: 0,
+                          adultsCount: (booking as any).adultsCount || booking.participants || 1,
+                          childrenCount: (booking as any).childrenCount || 0,
                           totalPrice: booking.totalAmount,
                           paymentMethod: booking.paymentMethod || 'PIX',
                         })

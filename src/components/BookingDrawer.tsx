@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AVAILABLE_ADDONS, VIP_TOURS } from '../data/toursData';
+import { AVAILABLE_ADDONS, VIP_TOURS, getTourPricing } from '../data/toursData';
 import { BookingState, VoucherData, TourPackage } from '../types';
 import { auth, saveBookingToFirestore } from '../lib/firebase';
 import { isDateStringInPast } from '../lib/dateUtils';
@@ -7,7 +7,7 @@ import { triggerBookingEmailConfirmation, BookingEmailConfirmationPayload } from
 import { generateGoogleCalendarUrl, downloadIcsFile } from '../lib/googleCalendarSync';
 import { EmailConfirmationModal } from './EmailConfirmationModal';
 import { NATIONALITIES, formatCurrencyValue, SupportedCurrency } from '../lib/i18n';
-import { trackBookingComplete, trackCheckoutStart, trackCheckoutLinkGenerated } from '../lib/tracking';
+import { trackBookingComplete, trackCheckoutStart, trackCheckoutLinkGenerated, trackPurchaseApproved } from '../lib/tracking';
 import { PHONE_WA, PHONE_DISPLAY } from '../config/contact';
 import {
   X,
@@ -132,13 +132,25 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const tourList = (tours && tours.length > 0 ? tours : VIP_TOURS).filter((t) => t.active !== false);
   const currentTour = tourList.find((t) => t.id === selectedTourId) || tourList[0] || VIP_TOURS[0];
 
-  // Price calculations
-  const isCouplePackage = currentTour.id === 'pacote-casal-vip';
-  const isBuggy = currentTour.id === 'genipabu-buggy-vip';
+  // Price calculations with getTourPricing
+  const isCouplePackage = currentTour.id === 'pacote-casal-vip' || currentTour.pricingType === 'couple_fixed';
+  const isVehicleFixed =
+    currentTour.id === 'transfer-vip-aeroporto' ||
+    currentTour.id === 'buggy-vip-privativo' ||
+    currentTour.id === 'genipabu-buggy-vip' ||
+    currentTour.id === 'quadriciclo-aventura' ||
+    currentTour.pricingType === 'vehicle_fixed';
+
+  const isTransfer = currentTour.id === 'transfer-vip-aeroporto';
+  const isBuggy = currentTour.id === 'buggy-vip-privativo' || currentTour.id === 'genipabu-buggy-vip';
+  const isQuadri = currentTour.id === 'quadriciclo-aventura';
+
   const baseTourPrice = currentTour.priceDiscounted;
-  // Pacote Casal VIP is a flat R$ 1.320 for the couple (2 people); Buggy is flat R$ 820 for up to 4 people
-  const adultsTotal = isCouplePackage || isBuggy ? baseTourPrice : adults * baseTourPrice;
-  const childrenTotal = isCouplePackage || isBuggy ? 0 : children * (baseTourPrice * 0.5);
+  const pricing = getTourPricing(currentTour, adults, children);
+  const adultsTotal = pricing.adultsTotal;
+  const childrenTotal = pricing.childrenTotal;
+  const maxCapacity = pricing.maxCapacity;
+
   const addonsTotal = selectedAddons.reduce((sum, addonId) => {
     const found = AVAILABLE_ADDONS.find((a) => a.id === addonId);
     return sum + (found ? found.price : 0);
@@ -225,6 +237,14 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     setGenerationError(null);
     const errors: { [key: string]: string } = {};
 
+    if (!adults || adults < 1) {
+      errors.adults = 'É obrigatório selecionar pelo menos 1 adulto (12 anos ou mais).';
+    }
+
+    if (adults + children > maxCapacity) {
+      errors.passengers = `A capacidade máxima para este passeio é de ${maxCapacity} passageiros. Para grupos maiores, entre em contato via WhatsApp.`;
+    }
+
     if (!customerName || customerName.trim().length < 3) {
       errors.name = 'Informe seu nome completo (mínimo 3 letras).';
     }
@@ -255,8 +275,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     setIsGeneratingLink(true);
 
     try {
-      // 1. Pixel & GA4 Event: initiate checkout
-      trackCheckoutStart(currentTour.title, finalTotal);
+      // 1. Pixel & GA4 Event: initiate checkout com valor total e quantidade de pessoas
+      trackCheckoutStart(currentTour.title, finalTotal, adults + children);
 
       const payload = {
         tourId: currentTour.id,
@@ -289,7 +309,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
       const data = await res.json();
       if (data?.success && data?.checkoutUrl) {
-        trackCheckoutLinkGenerated(data.order_nsu, currentTour.title, finalTotal);
+        trackCheckoutLinkGenerated(data.order_nsu, currentTour.title, finalTotal, adults + children);
         // Direct redirect without extra steps (Requirement 4)
         window.location.href = data.checkoutUrl;
       } else {
@@ -323,6 +343,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
         });
         const retryData = await retryRes.json();
         if (retryData?.checkoutUrl) {
+          trackCheckoutLinkGenerated(retryData.order_nsu || 'NVT-RETRY', currentTour.title, finalTotal, adults + children);
           window.location.href = retryData.checkoutUrl;
           return;
         }
@@ -389,6 +410,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     // Persist to Cloud Firestore
     try {
       trackBookingComplete(bookingCode, currentTour.title, finalTotal);
+      trackPurchaseApproved(bookingCode, currentTour.title, finalTotal, adults + children);
       const activeUid = auth.currentUser?.uid || `guest_${Date.now()}`;
       saveBookingToFirestore({
         userId: activeUid,
@@ -396,6 +418,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
         tourName: currentTour.title,
         date: bookingDate,
         timeWindow: bookingTimeWindow,
+        adultsCount: adults,
+        childrenCount: children,
         participants: adults + children,
         totalAmount: finalTotal,
         paymentMethod: paymentTab,
@@ -594,85 +618,191 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
               {/* Passengers Counters */}
               <div className="bg-slate-900/90 border border-slate-700 rounded-2xl p-4 sm:p-5 space-y-4">
-                <div className="text-xs sm:text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  Passageiros
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                  <div className="text-xs sm:text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    <span>Selecione a Quantidade de Pessoas</span>
+                  </div>
+                  <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-950/70 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                    Crianças até 2 anos: Free
+                  </span>
                 </div>
 
-                {isCouplePackage ? (
-                  <div className="p-3.5 rounded-xl bg-amber-400/15 border border-amber-400/50 text-amber-200 text-xs sm:text-sm font-semibold space-y-1">
+                {/* Exceção 1: Pacote Casal VIP */}
+                {isCouplePackage && (
+                  <div className="p-3.5 rounded-xl bg-amber-400/15 border border-amber-400/50 text-amber-200 text-xs sm:text-sm space-y-1.5">
                     <div className="flex items-center gap-2 text-amber-300 font-extrabold text-sm">
-                      <Heart className="w-4 h-4 fill-amber-300" />
-                      <span>Pacote Especial Casal VIP (Incluso 2 Pessoas)</span>
+                      <Heart className="w-4 h-4 fill-amber-300 shrink-0" />
+                      <span>Pacote Casal VIP · R$ 1.320,00 por casal (2 pessoas)</span>
                     </div>
-                    <p className="text-slate-100 font-normal leading-relaxed">
-                      Valor fechado de <strong>R$ 1.320,00 para o casal (2 pessoas juntas)</strong>. O valor não multiplica por pessoa.
+                    <p className="text-slate-100 font-normal leading-relaxed text-xs">
+                      Valor fechado de <strong>R$ 1.320,00 para 2 pessoas (casal)</strong> em até 3x de R$ 440,00 sem juros. O cálculo é por casal: cada 2 adultos equivalem a 1 casal (R$ 1.320).
                     </p>
                   </div>
-                ) : isBuggy ? (
-                  <div className="p-3.5 rounded-xl bg-amber-400/15 border border-amber-400/50 text-amber-200 text-xs sm:text-sm font-semibold space-y-1">
-                    <div className="flex items-center gap-2 text-amber-300 font-extrabold text-sm">
-                      <Users className="w-4 h-4" />
-                      <span>Buggy VIP Privativo (Capacidade até 4 pessoas)</span>
-                    </div>
-                    <p className="text-slate-100 font-normal leading-relaxed">
-                      Valor fechado de <strong>R$ 820,00 para o buggy exclusivo</strong> (divide para até 4 passageiros no veículo).
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm sm:text-base font-bold text-white block">Adultos</span>
-                        <span className="text-xs text-slate-300">
-                          R$ {baseTourPrice},00 por pessoa
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setAdults((prev) => Math.max(1, prev - 1))}
-                          className="w-9 h-9 rounded-lg bg-slate-800 text-white font-bold hover:bg-slate-700 transition-colors cursor-pointer text-lg"
-                        >
-                          -
-                        </button>
-                        <span className="font-black text-amber-300 text-base w-6 text-center">{adults}</span>
-                        <button
-                          type="button"
-                          onClick={() => setAdults((prev) => prev + 1)}
-                          className="w-9 h-9 rounded-lg bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 transition-colors cursor-pointer text-lg"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
+                )}
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                      <div>
-                        <span className="text-sm sm:text-base font-bold text-white block">Crianças (6 a 11 anos)</span>
-                        <span className="text-xs text-emerald-400 font-semibold">
-                          50% OFF (R$ {(baseTourPrice * 0.5).toFixed(2)}) · 0 a 5 anos cortesia
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setChildren((prev) => Math.max(0, prev - 1))}
-                          className="w-9 h-9 rounded-lg bg-slate-800 text-white font-bold hover:bg-slate-700 transition-colors cursor-pointer text-lg"
-                        >
-                          -
-                        </button>
-                        <span className="font-black text-amber-300 text-base w-6 text-center">{children}</span>
-                        <button
-                          type="button"
-                          onClick={() => setChildren((prev) => prev + 1)}
-                          className="w-9 h-9 rounded-lg bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 transition-colors cursor-pointer text-lg"
-                        >
-                          +
-                        </button>
-                      </div>
+                {/* Exceção 2: Transfer VIP Aeroporto */}
+                {isTransfer && (
+                  <div className="p-3.5 rounded-xl bg-sky-500/15 border border-sky-400/50 text-sky-200 text-xs sm:text-sm space-y-1.5">
+                    <div className="flex items-center gap-2 text-sky-300 font-extrabold text-sm">
+                      <ShieldCheck className="w-4 h-4 shrink-0" />
+                      <span>Transfer VIP Aeroporto · R$ 160,00 por veículo (até 4 passageiros)</span>
                     </div>
-                  </>
+                    <p className="text-slate-100 font-normal leading-relaxed text-xs">
+                      Valor fechado de <strong>R$ 160,00 por veículo executivo</strong> (ida e volta). O campo de passageiros valida a capacidade máxima do carro (até 4 pessoas) sem multiplicar o valor.
+                    </p>
+                  </div>
+                )}
+
+                {/* Exceção 3: Buggy Privativo ou Quadriciclo */}
+                {(isBuggy || isQuadri) && !isTransfer && !isCouplePackage && (
+                  <div className="p-3.5 rounded-xl bg-amber-400/15 border border-amber-400/50 text-amber-200 text-xs sm:text-sm space-y-1.5">
+                    <div className="flex items-center gap-2 text-amber-300 font-extrabold text-sm">
+                      <Users className="w-4 h-4 shrink-0" />
+                      <span>Veículo Privativo · Valor fechado pelo veículo</span>
+                    </div>
+                    <p className="text-slate-100 font-normal leading-relaxed text-xs">
+                      Valor fechado de <strong>R$ {baseTourPrice.toFixed(2)}</strong> pelo veículo exclusivo (capacidade de até {maxCapacity} passageiros).
+                    </p>
+                  </div>
+                )}
+
+                {/* Campo 1: Adultos (12 anos ou mais) */}
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                  <div className="pr-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm sm:text-base font-bold text-white block">
+                        Adultos (12 anos ou mais)
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-300 bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 rounded">
+                        Mínimo 1
+                      </span>
+                    </div>
+                    <span className="text-xs text-slate-300 block mt-0.5 font-medium">
+                      {isCouplePackage
+                        ? `R$ 1.320,00 por casal (2 pessoas) · ${pricing.couplesCount} casal(is) = R$ ${adultsTotal.toFixed(2)}`
+                        : isVehicleFixed
+                        ? `Incluso no veículo (capacidade até ${maxCapacity} pessoas)`
+                        : `R$ ${pricing.adultPrice.toFixed(2)} por adulto`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                    <button
+                      type="button"
+                      disabled={adults <= 1}
+                      onClick={() => setAdults((prev) => Math.max(1, prev - 1))}
+                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-800 text-white font-black hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-95 shadow-md border border-slate-600"
+                      aria-label="Diminuir adultos"
+                    >
+                      −
+                    </button>
+                    <span className="font-black text-amber-300 text-lg sm:text-xl w-7 text-center">
+                      {adults}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={adults + children >= maxCapacity}
+                      onClick={() => {
+                        if (adults + children < maxCapacity) {
+                          setAdults((prev) => prev + 1);
+                          setFormValidationErrors((prev) => {
+                            const cp = { ...prev };
+                            delete cp.adults;
+                            delete cp.passengers;
+                            return cp;
+                          });
+                        }
+                      }}
+                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-400 text-slate-950 font-black hover:bg-amber-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-95 shadow-md"
+                      aria-label="Aumentar adultos"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Campo 2: Crianças (3 a 11 anos) */}
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                  <div className="pr-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm sm:text-base font-bold text-white block">
+                        Crianças (3 a 11 anos)
+                      </span>
+                    </div>
+                    <span className="text-xs text-slate-300 block mt-0.5 font-medium">
+                      {isCouplePackage
+                        ? 'Crianças no pacote do casal'
+                        : isVehicleFixed
+                        ? `Incluso no veículo (máx. ${maxCapacity} pessoas no total)`
+                        : `R$ ${pricing.childPrice.toFixed(2)} por criança`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                    <button
+                      type="button"
+                      disabled={children <= 0}
+                      onClick={() => setChildren((prev) => Math.max(0, prev - 1))}
+                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-800 text-white font-black hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-95 shadow-md border border-slate-600"
+                      aria-label="Diminuir crianças"
+                    >
+                      −
+                    </button>
+                    <span className="font-black text-amber-300 text-lg sm:text-xl w-7 text-center">
+                      {children}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={adults + children >= maxCapacity}
+                      onClick={() => {
+                        if (adults + children < maxCapacity) {
+                          setChildren((prev) => prev + 1);
+                          setFormValidationErrors((prev) => {
+                            const cp = { ...prev };
+                            delete cp.passengers;
+                            return cp;
+                          });
+                        }
+                      }}
+                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-400 text-slate-950 font-black hover:bg-amber-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-95 shadow-md"
+                      aria-label="Aumentar crianças"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Linha de apoio e capacidade */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2 pt-1 border-t border-slate-800">
+                  <div className="text-slate-300 flex items-center gap-1.5">
+                    <span className="text-emerald-400 font-bold">●</span>
+                    <span>
+                      Total: <strong>{adults + children} passageiro(s)</strong> (Capacidade máx: {maxCapacity})
+                    </span>
+                  </div>
+                  <div className="text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 self-start sm:self-auto">
+                    Crianças até 2 anos: Free
+                  </div>
+                </div>
+
+                {/* Mensagens de validação em português */}
+                {formValidationErrors.adults && (
+                  <div className="p-2.5 rounded-lg bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs font-semibold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>{formValidationErrors.adults}</span>
+                  </div>
+                )}
+
+                {formValidationErrors.passengers && (
+                  <div className="p-2.5 rounded-lg bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs font-semibold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>{formValidationErrors.passengers}</span>
+                  </div>
+                )}
+
+                {adults + children >= maxCapacity && (
+                  <div className="p-2.5 rounded-lg bg-amber-950/70 border border-amber-500/40 text-amber-200 text-xs">
+                    Capacidade máxima deste passeio atingida ({maxCapacity} passageiros). Para reservas de grupos maiores, entre em contato via WhatsApp com nosso consultor VIP.
+                  </div>
                 )}
               </div>
 
@@ -869,14 +999,70 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   </span>
                 </div>
 
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between text-slate-200">
-                    <span>{currentTour.title}</span>
-                    <strong className="text-white">R$ {(adultsTotal + childrenTotal).toFixed(2)}</strong>
+                <div className="space-y-2 text-xs">
+                  <div className="font-bold text-white text-sm">
+                    {currentTour.title}
                   </div>
+
+                  {/* Detalhamento de passageiros e subtotais */}
+                  {isCouplePackage ? (
+                    <div className="space-y-1.5 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                      <div className="flex justify-between text-slate-200">
+                        <span>{pricing.couplesCount} Casal(is) ({adults} pessoas)</span>
+                        <strong className="text-white">R$ {adultsTotal.toFixed(2)}</strong>
+                      </div>
+                      {children > 0 && (
+                        <div className="flex justify-between text-slate-200">
+                          <span>{children} Criança(s) (3 a 11 anos)</span>
+                          <strong className="text-white">R$ {childrenTotal.toFixed(2)}</strong>
+                        </div>
+                      )}
+                      <div className="text-[11px] text-emerald-400 font-semibold pt-1 border-t border-slate-800/60">
+                        Crianças até 2 anos: Free
+                      </div>
+                    </div>
+                  ) : isVehicleFixed ? (
+                    <div className="space-y-1.5 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                      <div className="flex justify-between text-slate-200">
+                        <span>
+                          Veículo Executivo ({adults} adulto{adults > 1 ? 's' : ''}
+                          {children > 0 ? ` + ${children} criança${children > 1 ? 's' : ''}` : ''})
+                        </span>
+                        <strong className="text-white">R$ {baseTourPrice.toFixed(2)}</strong>
+                      </div>
+                      <div className="text-[11px] text-emerald-400 font-semibold pt-1 border-t border-slate-800/60">
+                        Preço fixo por veículo (até {maxCapacity} passageiros) · Crianças até 2 anos: Free
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                      <div className="flex justify-between text-slate-200">
+                        <span>
+                          {adults} {adults === 1 ? 'adulto' : 'adultos'} (12+ anos) × R$ {pricing.adultPrice.toFixed(2)}
+                        </span>
+                        <strong className="text-white">R$ {adultsTotal.toFixed(2)}</strong>
+                      </div>
+                      {children > 0 && (
+                        <div className="flex justify-between text-slate-200">
+                          <span>
+                            {children} {children === 1 ? 'criança' : 'crianças'} (3 a 11 anos) × R$ {pricing.childPrice.toFixed(2)}
+                          </span>
+                          <strong className="text-white">R$ {childrenTotal.toFixed(2)}</strong>
+                        </div>
+                      )}
+                      <div className="text-[11px] text-emerald-400 font-semibold pt-1 border-t border-slate-800/60 flex items-center justify-between">
+                        <span>
+                          {adults} {adults === 1 ? 'adulto' : 'adultos'}
+                          {children > 0 ? ` + ${children} ${children === 1 ? 'criança (3 a 11 anos)' : 'crianças (3 a 11 anos)'}` : ''}
+                        </span>
+                        <span className="text-emerald-300">Crianças até 2 anos: Free</span>
+                      </div>
+                    </div>
+                  )}
+
                   {selectedAddons.length > 0 && (
                     <div className="flex justify-between text-slate-300">
-                      <span>Opcionais ({selectedAddons.length} selecionados)</span>
+                      <span>Opcionais VIP ({selectedAddons.length} selecionado{selectedAddons.length > 1 ? 's' : ''})</span>
                       <strong className="text-white">R$ {addonsTotal.toFixed(2)}</strong>
                     </div>
                   )}
@@ -1009,10 +1195,10 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 <div className="flex justify-between text-slate-100 font-semibold">
                   <span>
                     {isCouplePackage
-                      ? 'Pacote Casal VIP (Fechado p/ 2 pessoas / casal)'
-                      : isBuggy
-                      ? 'Buggy VIP Privativo (Veículo até 4 passageiros)'
-                      : `${adults} Adulto(s)${children > 0 ? ` + ${children} Criança(s)` : ''}`}
+                      ? `${pricing.couplesCount} Casal(is) (${adults} pessoas)`
+                      : isVehicleFixed
+                      ? `Veículo Executivo (${adults} adulto${adults > 1 ? 's' : ''}${children > 0 ? ` + ${children} criança${children > 1 ? 's' : ''}` : ''})`
+                      : `${adults} Adulto(s) (12+ anos)${children > 0 ? ` + ${children} Criança(s) (3 a 11 anos)` : ''}`}
                   </span>
                   <span className="text-white font-bold">R$ {(adultsTotal + childrenTotal).toFixed(2)}</span>
                 </div>
@@ -1308,7 +1494,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                       {generatedVoucher.booking.customerName}
                     </span>
                     <span>
-                      {generatedVoucher.booking.adultsCount} Adulto(s) · Total: R${' '}
+                      {generatedVoucher.booking.adultsCount} Adulto(s)
+                      {generatedVoucher.booking.childrenCount ? ` + ${generatedVoucher.booking.childrenCount} Criança(s)` : ''} · Total: R${' '}
                       {generatedVoucher.booking.totalPrice.toFixed(2)}
                     </span>
                   </div>

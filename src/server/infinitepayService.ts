@@ -163,7 +163,7 @@ export async function createInfinitePayLink(params: CreateLinkParams): Promise<{
     handle: INFINITEPAY_HANDLE,
     items: [
       {
-        description: `${tourName.slice(0, 50)} - ${date}`,
+        description: `${tourName.slice(0, 45)} (${adults} ad${children > 0 ? ` + ${children} ch` : ''}) - ${date}`,
         quantity: 1,
         price: priceInCents,
       },

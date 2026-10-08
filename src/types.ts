@@ -26,6 +26,9 @@ export interface TourPackage {
   reviewsCount: number;
   priceOriginal: number;
   priceDiscounted: number;
+  childPrice?: number; // Preço para crianças de 3 a 11 anos (Pipa: 60,00 | Rio do Fogo: 110,00 | Maracajaú: 110,00). Se não definido, usa o mesmo valor do adulto.
+  pricingType?: 'per_person' | 'couple_fixed' | 'vehicle_fixed' | 'on_request';
+  maxCapacity?: number; // Capacidade máxima de passageiros do passeio
   duration: string;
   includesDiving: boolean;
   isVip: boolean;

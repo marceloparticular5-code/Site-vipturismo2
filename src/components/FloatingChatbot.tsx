@@ -25,7 +25,7 @@ import {
   Sparkles,
   MapPin,
 } from 'lucide-react';
-import { VIP_TOURS, AVAILABLE_ADDONS } from '../data/toursData';
+import { VIP_TOURS, AVAILABLE_ADDONS, getTourPricing } from '../data/toursData';
 import { saveLeadToFirestore } from '../lib/firebase';
 import { getTodayISO } from '../lib/dateUtils';
 import { TourPackage } from '../types';
@@ -252,12 +252,12 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
     return VIP_TOURS.find((t) => t.id === draft.tourId) || VIP_TOURS[0];
   }, [draft.tourId]);
 
-  // Price Calculation
-  const isBuggyOrPackage = draft.tourId === 'genipabu-buggy-vip' || draft.tourId === 'pacote-casal-vip';
-  const basePricePerPerson = selectedTour.priceDiscounted;
-  const tourTotal = isBuggyOrPackage
-    ? basePricePerPerson
-    : basePricePerPerson * draft.adults + basePricePerPerson * 0.5 * draft.children;
+  // Price Calculation using getTourPricing
+  const pricing = useMemo(() => {
+    return getTourPricing(selectedTour, draft.adults, draft.children);
+  }, [selectedTour, draft.adults, draft.children]);
+
+  const tourTotal = pricing.tourTotal;
 
   const addonsTotal = draft.selectedAddons.reduce((sum, addonId) => {
     const found = AVAILABLE_ADDONS.find((a) => a.id === addonId);
@@ -271,7 +271,7 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
   // Trigger Online Booking Checkout (Pre-filled)
   const handleProceedToCheckout = () => {
     // 1. Track begin_checkout
-    trackCheckoutStart(draft.tourTitle, subtotal);
+    trackCheckoutStart(draft.tourTitle, subtotal, draft.adults + draft.children);
 
     // 2. Save lead in background if not already saved
     if (draft.customerName || draft.customerPhone) {
@@ -874,31 +874,39 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                     👥 Quantas pessoas irão no passeio?
                   </p>
                   <p className="text-slate-300 text-xs mt-1">
-                    Crianças até 5 anos no colo não pagam em roteiros de van, e crianças de 6 a 10 têm 50% de desconto!
+                    Crianças até 2 anos: Free! Crianças de 3 a 11 anos possuem valor diferenciado em roteiros selecionados.
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
                     <div>
-                      <span className="font-bold text-white block text-xs">Adultos</span>
-                      <span className="text-[10px] text-slate-400">A partir de 11 anos</span>
+                      <span className="font-bold text-white block text-xs">Adultos (12 anos ou mais)</span>
+                      <span className="text-[10px] text-slate-400">
+                        {pricing.isCouple
+                          ? 'Incluso no pacote casal (2 pessoas)'
+                          : pricing.isVehicle
+                          ? 'Incluso no veículo privativo'
+                          : `R$ ${pricing.adultPrice.toFixed(2)} por adulto`}
+                      </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
+                        disabled={draft.adults <= 1}
                         onClick={() => setDraft((p) => ({ ...p, adults: Math.max(1, p.adults - 1) }))}
-                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-base cursor-pointer"
+                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-white font-black text-base cursor-pointer flex items-center justify-center"
                       >
-                        -
+                        −
                       </button>
                       <span className="font-black text-amber-300 text-sm w-4 text-center">
                         {draft.adults}
                       </span>
                       <button
                         type="button"
+                        disabled={draft.adults + draft.children >= pricing.maxCapacity}
                         onClick={() => setDraft((p) => ({ ...p, adults: p.adults + 1 }))}
-                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-base cursor-pointer"
+                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-white font-black text-base cursor-pointer flex items-center justify-center"
                       >
                         +
                       </button>
@@ -907,28 +915,43 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
 
                   <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
                     <div>
-                      <span className="font-bold text-white block text-xs">Crianças (6 a 10 anos)</span>
-                      <span className="text-[10px] text-amber-300">50% de desconto</span>
+                      <span className="font-bold text-white block text-xs">Crianças (3 a 11 anos)</span>
+                      <span className="text-[10px] text-amber-300">
+                        {pricing.isCouple
+                          ? 'Crianças no pacote casal'
+                          : pricing.isVehicle
+                          ? 'Incluso no veículo'
+                          : `R$ ${pricing.childPrice.toFixed(2)} por criança`}
+                      </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
+                        disabled={draft.children <= 0}
                         onClick={() => setDraft((p) => ({ ...p, children: Math.max(0, p.children - 1) }))}
-                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-base cursor-pointer"
+                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-white font-black text-base cursor-pointer flex items-center justify-center"
                       >
-                        -
+                        −
                       </button>
                       <span className="font-black text-amber-300 text-sm w-4 text-center">
                         {draft.children}
                       </span>
                       <button
                         type="button"
+                        disabled={draft.adults + draft.children >= pricing.maxCapacity}
                         onClick={() => setDraft((p) => ({ ...p, children: p.children + 1 }))}
-                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-black text-base cursor-pointer"
+                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-white font-black text-base cursor-pointer flex items-center justify-center"
                       >
                         +
                       </button>
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-300 px-1">
+                    <span>Total: {draft.adults + draft.children} passageiro(s)</span>
+                    <span className="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                      Crianças até 2 anos: Free
+                    </span>
                   </div>
 
                   <button

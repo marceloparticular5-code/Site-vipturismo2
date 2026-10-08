@@ -12,6 +12,9 @@ export const VIP_TOURS: TourPackage[] = [
     reviewsCount: 1420,
     priceOriginal: 1650,
     priceDiscounted: 1320,
+    childPrice: 0,
+    pricingType: 'couple_fixed',
+    maxCapacity: 8,
     duration: '4 Dias Completos',
     includesDiving: true,
     isVip: true,
@@ -47,12 +50,15 @@ export const VIP_TOURS: TourPackage[] = [
     reviewsCount: 2840,
     priceOriginal: 210,
     priceDiscounted: 170,
+    childPrice: 110, // Crianças de 3 a 11 anos: R$ 110,00
+    pricingType: 'per_person',
+    maxCapacity: 15,
     duration: 'Dia inteiro (Aprox. 7h)',
     includesDiving: true,
     isVip: true,
     category: 'passeios',
     remainingSlots: 4,
-    urgencyText: 'R$ 170,00 por pessoa · Dayuse incluso à beira-mar',
+    urgencyText: 'R$ 170,00 por adulto · R$ 110,00 criança (3 a 11 anos) · Dayuse incluso',
     description:
       'Navegue em lancha rápida até as piscinas de corais cristalinas mais famosas do Nordeste. Águas mornas repletas de peixes tropicais com apoio de plataforma VIP. Opção de quadriciclo pelas dunas e lagoas da região.',
     highlights: [
@@ -82,12 +88,15 @@ export const VIP_TOURS: TourPackage[] = [
     reviewsCount: 1690,
     priceOriginal: 220,
     priceDiscounted: 170,
+    childPrice: 110, // Crianças de 3 a 11 anos: R$ 110,00
+    pricingType: 'per_person',
+    maxCapacity: 15,
     duration: 'Dia inteiro (Aprox. 8h)',
     includesDiving: true,
     isVip: true,
     category: 'passeios',
     remainingSlots: 2,
-    urgencyText: 'R$ 170,00 por pessoa · Vagas limitadas para preservação ambiental',
+    urgencyText: 'R$ 170,00 por adulto · R$ 110,00 criança (3 a 11 anos)',
     description:
       'Um refúgio preservado de águas transparentes e calmas. Além das piscinas de corais, na maré baixa surge um incrível banco de areia no meio do oceano para fotos espetaculares.',
     highlights: [
@@ -116,12 +125,15 @@ export const VIP_TOURS: TourPackage[] = [
     reviewsCount: 3200,
     priceOriginal: 120,
     priceDiscounted: 80,
+    childPrice: 60, // Crianças de 3 a 11 anos: R$ 60,00
+    pricingType: 'per_person',
+    maxCapacity: 15,
     duration: 'Dia inteiro (Aprox. 9h)',
     includesDiving: false,
     isVip: true,
     category: 'passeios',
     remainingSlots: 5,
-    urgencyText: 'R$ 80,00 por pessoa - (VAN Executiva Climatizada)',
+    urgencyText: 'R$ 80,00 por adulto · R$ 60,00 criança (3 a 11 anos) - (VAN Executiva Climatizada)',
     description:
       'Visite a praia mais famosa e charmosa do Rio Grande do Norte. Mirante do Chapadão com vista panorâmica da Praia do Amor, banho de mar, tempo livre na vila de Pipa e opção de lancha para observar golfinhos de perto.',
     highlights: [
@@ -151,6 +163,9 @@ export const VIP_TOURS: TourPackage[] = [
     reviewsCount: 1150,
     priceOriginal: 140,
     priceDiscounted: 100,
+    childPrice: 100, // Crianças: mesmo valor do adulto (editável por passeio)
+    pricingType: 'per_person',
+    maxCapacity: 15,
     duration: 'Noite (17:30 às 23:30)',
     includesDiving: false,
     isVip: true,
@@ -184,6 +199,9 @@ export const VIP_TOURS: TourPackage[] = [
     reviewsCount: 1890,
     priceOriginal: 190,
     priceDiscounted: 150,
+    childPrice: 150, // Crianças: mesmo valor do adulto (editável por passeio)
+    pricingType: 'per_person',
+    maxCapacity: 6,
     duration: 'Dia inteiro (Aprox. 8h)',
     includesDiving: false,
     isVip: true,
@@ -219,12 +237,15 @@ export const VIP_TOURS: TourPackage[] = [
     reviewsCount: 2750,
     priceOriginal: 950,
     priceDiscounted: 820,
+    childPrice: 0,
+    pricingType: 'vehicle_fixed',
+    maxCapacity: 4,
     duration: 'Dia inteiro (Aprox. 7h)',
     includesDiving: false,
     isVip: true,
     category: 'passeios',
     remainingSlots: 3,
-    urgencyText: 'R$ 820,00 Privativo ou (÷ 2 Casais: R$ 205/pessoa)',
+    urgencyText: 'R$ 820,00 Privativo para até 4 passageiros (÷ 2 Casais: R$ 205/pessoa)',
     description:
       'O passeio mais clássico do Nordeste feito sob medida: buggy privativo apenas para você e seus acompanhantes (até 4 pessoas). Travessia de balsa rústica, dunas móveis com emoção dosada por você, lagoas de Pitangui e Jacumã com esquibunda e kamikaze.',
     highlights: [
@@ -254,12 +275,15 @@ export const VIP_TOURS: TourPackage[] = [
     reviewsCount: 3900,
     priceOriginal: 250,
     priceDiscounted: 160,
+    childPrice: 0,
+    pricingType: 'vehicle_fixed',
+    maxCapacity: 4,
     duration: 'Aprox. 45 min direto',
     includesDiving: false,
     isVip: true,
     category: 'transfer',
     remainingSlots: 5,
-    urgencyText: 'R$ 160,00 "2 Trajetos" na contratação de 1 ou mais passeios',
+    urgencyText: 'R$ 160,00 por veículo executivo (até 4 passageiros · 2 Trajetos)',
     description:
       'Comece e termine suas férias em Natal sem estresse. Motorista receptivo aguardando no desembarque com placa nominal, auxílio com malas e viagem direta em veículo moderno e higienizado até seu hotel em Ponta Negra, Via Costeira ou Praia dos Artistas.',
     highlights: [
@@ -288,6 +312,9 @@ export const VIP_TOURS: TourPackage[] = [
     reviewsCount: 890,
     priceOriginal: 350,
     priceDiscounted: 280,
+    childPrice: 0,
+    pricingType: 'vehicle_fixed',
+    maxCapacity: 2,
     duration: 'Aprox. 2h30 de trilha',
     includesDiving: false,
     isVip: true,
@@ -322,6 +349,9 @@ export const VIP_TOURS: TourPackage[] = [
     reviewsCount: 760,
     priceOriginal: 190,
     priceDiscounted: 150,
+    childPrice: 150, // Crianças: mesmo valor do adulto (editável por passeio)
+    pricingType: 'per_person',
+    maxCapacity: 15,
     duration: 'Tarde e pôr do sol (Aprox. 6h)',
     includesDiving: false,
     isVip: true,
@@ -375,3 +405,90 @@ export const AVAILABLE_ADDONS: BookingAddon[] = [
     iconName: 'Car',
   },
 ];
+
+export interface TourPricingCalculation {
+  adultPrice: number;
+  childPrice: number;
+  adultsTotal: number;
+  childrenTotal: number;
+  tourTotal: number;
+  isCouple: boolean;
+  isVehicle: boolean;
+  couplesCount: number;
+  maxCapacity: number;
+}
+
+/**
+ * Calculates tour pricing based on passenger counts (Adults 12+ and Children 3 to 11).
+ * Supports exception rules for Pacote Casal VIP, Transfer VIP Aeroporto, and Buggy Privativo.
+ */
+export function getTourPricing(
+  tour: TourPackage,
+  adults: number,
+  children: number
+): TourPricingCalculation {
+  const safeAdults = Math.max(0, adults);
+  const safeChildren = Math.max(0, children);
+  const basePrice = tour.priceDiscounted;
+
+  // 1. Pacote Casal VIP (Preço fechado para 2 pessoas / casal)
+  if (tour.id === 'pacote-casal-vip' || tour.pricingType === 'couple_fixed') {
+    const couples = Math.max(1, Math.ceil(safeAdults / 2));
+    const adultsTotal = couples * basePrice;
+    const childPrice = typeof tour.childPrice === 'number' ? tour.childPrice : 0;
+    const childrenTotal = safeChildren * childPrice;
+    return {
+      adultPrice: basePrice,
+      childPrice,
+      adultsTotal,
+      childrenTotal,
+      tourTotal: adultsTotal + childrenTotal,
+      isCouple: true,
+      isVehicle: false,
+      couplesCount: couples,
+      maxCapacity: tour.maxCapacity || 8,
+    };
+  }
+
+  // 2. Transfer VIP Aeroporto & Veículo Privativo (Buggy, Quadriciclo)
+  // Preço por veículo (até a capacidade máxima); passageiros validam a capacidade sem multiplicar o valor
+  if (
+    tour.id === 'transfer-vip-aeroporto' ||
+    tour.id === 'buggy-vip-privativo' ||
+    tour.id === 'genipabu-buggy-vip' ||
+    tour.id === 'quadriciclo-aventura' ||
+    tour.pricingType === 'vehicle_fixed'
+  ) {
+    const maxCap = tour.id === 'quadriciclo-aventura' ? 2 : (tour.maxCapacity || 4);
+    return {
+      adultPrice: basePrice,
+      childPrice: 0,
+      adultsTotal: basePrice,
+      childrenTotal: 0,
+      tourTotal: basePrice,
+      isCouple: false,
+      isVehicle: true,
+      couplesCount: 0,
+      maxCapacity: maxCap,
+    };
+  }
+
+  // 3. Passeios padrão por pessoa (Pipa R$ 60 criança, Rio do Fogo R$ 110 criança, Maracajaú R$ 110 criança)
+  // Se o passeio não tiver valor infantil definido, usa o mesmo valor do adulto
+  const adultPrice = basePrice;
+  const childPrice = typeof tour.childPrice === 'number' ? tour.childPrice : adultPrice;
+  const adultsTotal = safeAdults * adultPrice;
+  const childrenTotal = safeChildren * childPrice;
+
+  return {
+    adultPrice,
+    childPrice,
+    adultsTotal,
+    childrenTotal,
+    tourTotal: adultsTotal + childrenTotal,
+    isCouple: false,
+    isVehicle: false,
+    couplesCount: 0,
+    maxCapacity: tour.maxCapacity || 15,
+  };
+}

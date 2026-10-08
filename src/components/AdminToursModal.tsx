@@ -92,6 +92,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
   const [formLocation, setFormLocation] = useState('');
   const [formPriceOriginal, setFormPriceOriginal] = useState<number>(250);
   const [formPriceDiscounted, setFormPriceDiscounted] = useState<number>(199);
+  const [formChildPrice, setFormChildPrice] = useState<number | ''>('');
   const [formDuration, setFormDuration] = useState('Dia inteiro (Aprox. 7h)');
   const [formRating, setFormRating] = useState<number>(4.98);
   const [formReviewsCount, setFormReviewsCount] = useState<number>(1500);
@@ -311,6 +312,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
     setFormLocation('Natal e Litoral / RN');
     setFormPriceOriginal(250);
     setFormPriceDiscounted(199);
+    setFormChildPrice('');
     setFormDuration('Dia inteiro (Aprox. 7h)');
     setFormRating(5.0);
     setFormReviewsCount(120);
@@ -343,6 +345,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
     setFormLocation(tour.location || '');
     setFormPriceOriginal(tour.priceOriginal || tour.priceDiscounted + 50);
     setFormPriceDiscounted(tour.priceDiscounted);
+    setFormChildPrice(typeof tour.childPrice === 'number' ? tour.childPrice : '');
     setFormDuration(tour.duration || 'Dia inteiro');
     setFormRating(tour.rating || 4.9);
     setFormReviewsCount(tour.reviewsCount || 100);
@@ -443,6 +446,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
         location: formLocation.trim(),
         priceOriginal: Number(formPriceOriginal) || 0,
         priceDiscounted: Number(formPriceDiscounted) || 0,
+        childPrice: formChildPrice !== '' ? Number(formChildPrice) : undefined,
         duration: formDuration.trim(),
         rating: Number(formRating) || 5.0,
         reviewsCount: Number(formReviewsCount) || 1,
@@ -1162,6 +1166,25 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                         onChange={(e) => setFormPriceDiscounted(parseFloat(e.target.value))}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-amber-500/50 text-amber-300 text-xs font-bold focus:outline-none focus:border-amber-400"
                       />
+                    </div>
+
+                    {/* Preço Crianças (3 a 11 anos) */}
+                    <div>
+                      <label className="text-xs font-bold text-emerald-300 block mb-1">
+                        Preço Crianças 3 a 11 anos (R$)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Padrão: mesmo valor do adulto"
+                        value={formChildPrice}
+                        onChange={(e) => setFormChildPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-emerald-300 text-xs font-semibold focus:outline-none focus:border-amber-400"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">
+                        Se vazio, usa o mesmo valor do adulto
+                      </span>
                     </div>
 
                     {/* Duration */}
