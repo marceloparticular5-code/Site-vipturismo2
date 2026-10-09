@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { AVAILABLE_ADDONS, VIP_TOURS, getTourPricing } from '../data/toursData';
 import { BookingState, VoucherData, TourPackage } from '../types';
 import { auth, saveBookingToFirestore } from '../lib/firebase';
@@ -33,7 +34,46 @@ import {
   RefreshCw,
   Lock,
   Heart,
+  Calculator,
 } from 'lucide-react';
+
+export interface AnimatedPriceProps {
+  value: number;
+  prefix?: string;
+  suffix?: string;
+  className?: string;
+}
+
+/**
+ * Componente que exibe valores monetários com animação suave de contagem (Framer Motion odometer effect)
+ * sempre que a quantidade de adultos, crianças ou opcionais é alterada.
+ */
+export const AnimatedPrice: React.FC<AnimatedPriceProps> = ({
+  value,
+  prefix = 'R$ ',
+  suffix = '',
+  className = '',
+}) => {
+  const count = useMotionValue(value);
+  const rounded = useTransform(count, (latest) => {
+    const safeVal = Math.max(0, isNaN(latest) ? 0 : latest);
+    const formatted = safeVal.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return `${prefix}${formatted}${suffix}`;
+  });
+
+  useEffect(() => {
+    const controls = animate(count, value, {
+      duration: 0.55,
+      ease: [0.16, 1, 0.3, 1], // suave e fluido
+    });
+    return () => controls.stop();
+  }, [value, count]);
+
+  return <motion.span className={className}>{rounded}</motion.span>;
+};
 
 interface BookingDrawerProps {
   isOpen: boolean;
@@ -102,6 +142,10 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [formValidationErrors, setFormValidationErrors] = useState<{ [key: string]: string }>({});
+
+  // Feedback visual imediato e animação ao alterar quantidade de pessoas/passeio
+  const [priceAnimating, setPriceAnimating] = useState(false);
+  const [priceFeedbackMessage, setPriceFeedbackMessage] = useState<string | null>(null);
 
   const handleDocumentChange = (val: string) => {
     if (selectedNatCode === 'BR') {
@@ -225,12 +269,23 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     return () => clearInterval(interval);
   }, [step, paymentTab, pixTimer]);
 
+  useEffect(() => {
+    if (priceAnimating) {
+      const timer = setTimeout(() => {
+        setPriceAnimating(false);
+      }, 750);
+      return () => clearTimeout(timer);
+    }
+  }, [priceAnimating]);
+
   if (!isOpen) return null;
 
   const handleToggleAddon = (addonId: string) => {
     setSelectedAddons((prev) =>
       prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId]
     );
+    setPriceFeedbackMessage('Opcional atualizado');
+    setPriceAnimating(true);
   };
 
   const handleInfinitePayCheckout = async () => {
@@ -553,7 +608,11 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 </label>
                 <select
                   value={selectedTourId}
-                  onChange={(e) => setSelectedTourId(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedTourId(e.target.value);
+                    setPriceFeedbackMessage('Passeio alterado');
+                    setPriceAnimating(true);
+                  }}
                   className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-sm font-semibold text-white focus:outline-none focus:border-amber-400"
                 >
                   {tourList.map((t) => (
@@ -690,13 +749,21 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     <button
                       type="button"
                       disabled={adults <= 1}
-                      onClick={() => setAdults((prev) => Math.max(1, prev - 1))}
-                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-800 text-white font-black hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-95 shadow-md border border-slate-600"
+                      onClick={() => {
+                        setAdults((prev) => Math.max(1, prev - 1));
+                        setPriceFeedbackMessage('1 adulto removido');
+                        setPriceAnimating(true);
+                      }}
+                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-800 text-white font-black hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-90 shadow-md border border-slate-600"
                       aria-label="Diminuir adultos"
                     >
                       −
                     </button>
-                    <span className="font-black text-amber-300 text-lg sm:text-xl w-7 text-center">
+                    <span
+                      className={`font-black text-lg sm:text-xl w-7 text-center transition-all duration-300 ${
+                        priceAnimating ? 'text-amber-200 scale-125' : 'text-amber-300'
+                      }`}
+                    >
                       {adults}
                     </span>
                     <button
@@ -705,6 +772,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                       onClick={() => {
                         if (adults + children < maxCapacity) {
                           setAdults((prev) => prev + 1);
+                          setPriceFeedbackMessage('+1 adulto adicionado');
+                          setPriceAnimating(true);
                           setFormValidationErrors((prev) => {
                             const cp = { ...prev };
                             delete cp.adults;
@@ -713,7 +782,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                           });
                         }
                       }}
-                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-400 text-slate-950 font-black hover:bg-amber-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-95 shadow-md"
+                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-400 text-slate-950 font-black hover:bg-amber-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-90 shadow-md"
                       aria-label="Aumentar adultos"
                     >
                       +
@@ -741,13 +810,21 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     <button
                       type="button"
                       disabled={children <= 0}
-                      onClick={() => setChildren((prev) => Math.max(0, prev - 1))}
-                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-800 text-white font-black hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-95 shadow-md border border-slate-600"
+                      onClick={() => {
+                        setChildren((prev) => Math.max(0, prev - 1));
+                        setPriceFeedbackMessage('1 criança removida');
+                        setPriceAnimating(true);
+                      }}
+                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-800 text-white font-black hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-90 shadow-md border border-slate-600"
                       aria-label="Diminuir crianças"
                     >
                       −
                     </button>
-                    <span className="font-black text-amber-300 text-lg sm:text-xl w-7 text-center">
+                    <span
+                      className={`font-black text-lg sm:text-xl w-7 text-center transition-all duration-300 ${
+                        priceAnimating ? 'text-amber-200 scale-125' : 'text-amber-300'
+                      }`}
+                    >
                       {children}
                     </span>
                     <button
@@ -756,6 +833,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                       onClick={() => {
                         if (adults + children < maxCapacity) {
                           setChildren((prev) => prev + 1);
+                          setPriceFeedbackMessage('+1 criança adicionada');
+                          setPriceAnimating(true);
                           setFormValidationErrors((prev) => {
                             const cp = { ...prev };
                             delete cp.passengers;
@@ -763,7 +842,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                           });
                         }
                       }}
-                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-400 text-slate-950 font-black hover:bg-amber-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-95 shadow-md"
+                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-400 text-slate-950 font-black hover:bg-amber-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer text-xl flex items-center justify-center active:scale-90 shadow-md"
                       aria-label="Aumentar crianças"
                     >
                       +
@@ -782,6 +861,137 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   <div className="text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 self-start sm:self-auto">
                     Crianças até 2 anos: Free
                   </div>
+                </div>
+
+                {/* Painel Imediato de Transparência e Feedback Visual do Cálculo */}
+                <div
+                  className={`p-3.5 sm:p-4 rounded-xl border transition-all duration-300 ${
+                    priceAnimating
+                      ? 'bg-amber-500/15 border-amber-400 ring-2 ring-amber-400/80 shadow-[0_0_24px_rgba(251,191,36,0.35)] scale-[1.01]'
+                      : 'bg-slate-950/80 border-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex items-center gap-2">
+                      <Calculator className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                        Cálculo Automático & Transparência
+                      </span>
+                    </div>
+                    {priceAnimating ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-400 text-slate-950 animate-pulse shadow">
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        <span>{priceFeedbackMessage || 'Valor recalculado!'}</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                        <span>Atualizado em tempo real</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Detalhe da fórmula de cálculo */}
+                  {isCouplePackage ? (
+                    <div className="space-y-1.5 text-xs text-slate-200">
+                      <div className="flex items-center justify-between py-1 border-b border-slate-800/80">
+                        <span className="text-slate-300">
+                          {pricing.couplesCount} Casal(is) [{adults} pessoa{adults > 1 ? 's' : ''}] × R$ 1.320,00:
+                        </span>
+                        <strong className="text-white font-bold">
+                          <AnimatedPrice value={adultsTotal} />
+                        </strong>
+                      </div>
+                      {children > 0 && (
+                        <div className="flex items-center justify-between py-1 border-b border-slate-800/80">
+                          <span className="text-slate-300">
+                            {children} Criança{children > 1 ? 's' : ''} (3 a 11 anos):
+                          </span>
+                          <strong className="text-white font-bold">
+                            <AnimatedPrice value={childrenTotal} />
+                          </strong>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between pt-1 font-bold text-amber-300">
+                        <span>Total dos Passageiros:</span>
+                        <AnimatedPrice
+                          value={adultsTotal + childrenTotal}
+                          className={`text-sm sm:text-base transition-all duration-300 ${
+                            priceAnimating ? 'scale-110 text-amber-200' : ''
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  ) : isVehicleFixed ? (
+                    <div className="space-y-1.5 text-xs text-slate-200">
+                      <div className="flex items-center justify-between py-1 border-b border-slate-800/80">
+                        <span className="text-slate-300">
+                          Veículo Executivo ({adults} adulto{adults > 1 ? 's' : ''}
+                          {children > 0 ? ` + ${children} criança${children > 1 ? 's' : ''}` : ''}):
+                        </span>
+                        <strong className="text-white font-bold">
+                          <AnimatedPrice value={baseTourPrice} />
+                        </strong>
+                      </div>
+                      <div className="flex items-center justify-between pt-1 font-bold text-amber-300">
+                        <span>Preço fechado pelo veículo:</span>
+                        <AnimatedPrice
+                          value={baseTourPrice}
+                          className={`text-sm sm:text-base transition-all duration-300 ${
+                            priceAnimating ? 'scale-110 text-amber-200' : ''
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 text-xs text-slate-200">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div
+                          className={`flex items-center justify-between p-2 rounded-lg border transition-all duration-300 ${
+                            priceAnimating
+                              ? 'bg-amber-400/10 border-amber-400/50'
+                              : 'bg-slate-900/80 border-slate-800'
+                          }`}
+                        >
+                          <span className="text-slate-300">
+                            {adults} {adults === 1 ? 'adulto' : 'adultos'} × R$ {pricing.adultPrice.toFixed(2)}
+                          </span>
+                          <strong className="text-amber-300 font-bold ml-2">
+                            <AnimatedPrice value={adultsTotal} />
+                          </strong>
+                        </div>
+                        <div
+                          className={`flex items-center justify-between p-2 rounded-lg border transition-all duration-300 ${
+                            priceAnimating
+                              ? 'bg-amber-400/10 border-amber-400/50'
+                              : 'bg-slate-900/80 border-slate-800'
+                          }`}
+                        >
+                          <span className="text-slate-300">
+                            {children} {children === 1 ? 'criança' : 'crianças'} × R$ {pricing.childPrice.toFixed(2)}
+                          </span>
+                          <strong className="text-amber-300 font-bold ml-2">
+                            <AnimatedPrice value={childrenTotal} />
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-1 text-slate-300 gap-1 border-t border-slate-800/80">
+                        <span className="text-[11px] text-slate-400">
+                          ({adults} × R$ {pricing.adultPrice.toFixed(2)}) + ({children} × R$ {pricing.childPrice.toFixed(2)})
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-white">Subtotal dos Passageiros:</span>
+                          <AnimatedPrice
+                            value={adultsTotal + childrenTotal}
+                            className={`font-black text-sm sm:text-base text-amber-300 transition-all duration-300 ${
+                              priceAnimating ? 'scale-110 text-amber-200' : ''
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Mensagens de validação em português */}
@@ -1006,15 +1216,25 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
                   {/* Detalhamento de passageiros e subtotais */}
                   {isCouplePackage ? (
-                    <div className="space-y-1.5 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                    <div
+                      className={`space-y-1.5 p-3 rounded-xl border transition-all duration-300 ${
+                        priceAnimating
+                          ? 'bg-amber-400/10 border-amber-400/60 ring-1 ring-amber-400/50'
+                          : 'bg-slate-950/70 border-slate-800'
+                      }`}
+                    >
                       <div className="flex justify-between text-slate-200">
                         <span>{pricing.couplesCount} Casal(is) ({adults} pessoas)</span>
-                        <strong className="text-white">R$ {adultsTotal.toFixed(2)}</strong>
+                        <strong className="text-white">
+                          <AnimatedPrice value={adultsTotal} />
+                        </strong>
                       </div>
                       {children > 0 && (
                         <div className="flex justify-between text-slate-200">
                           <span>{children} Criança(s) (3 a 11 anos)</span>
-                          <strong className="text-white">R$ {childrenTotal.toFixed(2)}</strong>
+                          <strong className="text-white">
+                            <AnimatedPrice value={childrenTotal} />
+                          </strong>
                         </div>
                       )}
                       <div className="text-[11px] text-emerald-400 font-semibold pt-1 border-t border-slate-800/60">
@@ -1022,32 +1242,50 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                       </div>
                     </div>
                   ) : isVehicleFixed ? (
-                    <div className="space-y-1.5 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                    <div
+                      className={`space-y-1.5 p-3 rounded-xl border transition-all duration-300 ${
+                        priceAnimating
+                          ? 'bg-amber-400/10 border-amber-400/60 ring-1 ring-amber-400/50'
+                          : 'bg-slate-950/70 border-slate-800'
+                      }`}
+                    >
                       <div className="flex justify-between text-slate-200">
                         <span>
                           Veículo Executivo ({adults} adulto{adults > 1 ? 's' : ''}
                           {children > 0 ? ` + ${children} criança${children > 1 ? 's' : ''}` : ''})
                         </span>
-                        <strong className="text-white">R$ {baseTourPrice.toFixed(2)}</strong>
+                        <strong className="text-white">
+                          <AnimatedPrice value={baseTourPrice} />
+                        </strong>
                       </div>
                       <div className="text-[11px] text-emerald-400 font-semibold pt-1 border-t border-slate-800/60">
                         Preço fixo por veículo (até {maxCapacity} passageiros) · Crianças até 2 anos: Free
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-1.5 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                    <div
+                      className={`space-y-1.5 p-3 rounded-xl border transition-all duration-300 ${
+                        priceAnimating
+                          ? 'bg-amber-400/10 border-amber-400/60 ring-1 ring-amber-400/50'
+                          : 'bg-slate-950/70 border-slate-800'
+                      }`}
+                    >
                       <div className="flex justify-between text-slate-200">
                         <span>
                           {adults} {adults === 1 ? 'adulto' : 'adultos'} (12+ anos) × R$ {pricing.adultPrice.toFixed(2)}
                         </span>
-                        <strong className="text-white">R$ {adultsTotal.toFixed(2)}</strong>
+                        <strong className="text-white">
+                          <AnimatedPrice value={adultsTotal} />
+                        </strong>
                       </div>
                       {children > 0 && (
                         <div className="flex justify-between text-slate-200">
                           <span>
                             {children} {children === 1 ? 'criança' : 'crianças'} (3 a 11 anos) × R$ {pricing.childPrice.toFixed(2)}
                           </span>
-                          <strong className="text-white">R$ {childrenTotal.toFixed(2)}</strong>
+                          <strong className="text-white">
+                            <AnimatedPrice value={childrenTotal} />
+                          </strong>
                         </div>
                       )}
                       <div className="text-[11px] text-emerald-400 font-semibold pt-1 border-t border-slate-800/60 flex items-center justify-between">
@@ -1063,7 +1301,9 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   {selectedAddons.length > 0 && (
                     <div className="flex justify-between text-slate-300">
                       <span>Opcionais VIP ({selectedAddons.length} selecionado{selectedAddons.length > 1 ? 's' : ''})</span>
-                      <strong className="text-white">R$ {addonsTotal.toFixed(2)}</strong>
+                      <strong className="text-white">
+                        <AnimatedPrice value={addonsTotal} />
+                      </strong>
                     </div>
                   )}
                   <div className="flex justify-between text-slate-300 pt-1 border-t border-slate-800/80">
@@ -1072,14 +1312,32 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800 flex items-baseline justify-between">
-                  <span className="text-sm font-extrabold text-white">Total da Reserva:</span>
+                <div
+                  className={`pt-2 border-t border-slate-800 flex items-baseline justify-between transition-all duration-300 rounded-xl px-2.5 py-2 ${
+                    priceAnimating
+                      ? 'bg-amber-400/15 ring-2 ring-amber-400/80 shadow-[0_0_24px_rgba(251,191,36,0.35)]'
+                      : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-extrabold text-white">Total da Reserva:</span>
+                    {priceAnimating && (
+                      <span className="text-[10px] font-black text-slate-950 bg-amber-400 px-2 py-0.5 rounded-full animate-bounce shadow">
+                        ⚡ Recalculado
+                      </span>
+                    )}
+                  </div>
                   <div className="text-right">
-                    <span className="text-2xl font-black text-amber-300 block">
-                      R$ {finalTotal.toFixed(2)}
-                    </span>
+                    <AnimatedPrice
+                      value={finalTotal}
+                      className={`text-2xl font-black block transition-all duration-300 ${
+                        priceAnimating
+                          ? 'text-amber-200 scale-110 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)]'
+                          : 'text-amber-300'
+                      }`}
+                    />
                     <span className="text-[11px] text-emerald-400 font-semibold block">
-                      ou até 3x de R$ {(finalTotal / 3).toFixed(2).replace('.', ',')} sem juros
+                      ou até 3x de <AnimatedPrice value={finalTotal / 3} prefix="R$ " suffix=" sem juros" />
                     </span>
                   </div>
                 </div>
@@ -1200,12 +1458,16 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                       ? `Veículo Executivo (${adults} adulto${adults > 1 ? 's' : ''}${children > 0 ? ` + ${children} criança${children > 1 ? 's' : ''}` : ''})`
                       : `${adults} Adulto(s) (12+ anos)${children > 0 ? ` + ${children} Criança(s) (3 a 11 anos)` : ''}`}
                   </span>
-                  <span className="text-white font-bold">R$ {(adultsTotal + childrenTotal).toFixed(2)}</span>
+                  <span className="text-white font-bold">
+                    <AnimatedPrice value={adultsTotal + childrenTotal} />
+                  </span>
                 </div>
                 {addonsTotal > 0 && (
                   <div className="flex justify-between text-slate-200">
                     <span>Opcionais selecionados ({selectedAddons.length})</span>
-                    <span className="text-white font-bold">R$ {addonsTotal.toFixed(2)}</span>
+                    <span className="text-white font-bold">
+                      <AnimatedPrice value={addonsTotal} />
+                    </span>
                   </div>
                 )}
                 <div className="pt-3 border-t border-slate-700 flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-2">
@@ -1219,9 +1481,10 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   </div>
 
                   <div className="sm:text-right">
-                    <span className="font-black text-amber-300 text-2xl sm:text-3xl block">
-                      R$ {finalTotal.toFixed(2)}
-                    </span>
+                    <AnimatedPrice
+                      value={finalTotal}
+                      className="font-black text-amber-300 text-2xl sm:text-3xl block"
+                    />
                     <div className="flex items-center sm:justify-end gap-1 text-[10px] text-slate-400 mt-0.5">
                       <span>Ver moeda:</span>
                       {(['BRL', 'USD', 'EUR', 'ARS'] as SupportedCurrency[]).map((cur) => (

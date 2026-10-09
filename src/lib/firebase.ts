@@ -201,6 +201,8 @@ export interface FirebaseBooking {
   tourName: string;
   date: string;
   timeWindow: string;
+  adultsCount?: number;
+  childrenCount?: number;
   participants: number;
   totalAmount: number;
   paymentMethod: string;
