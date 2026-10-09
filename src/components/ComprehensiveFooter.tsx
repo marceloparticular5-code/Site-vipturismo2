@@ -127,7 +127,7 @@ export const ComprehensiveFooter: React.FC<ComprehensiveFooterProps> = ({
                   onClick={() => onOpenBooking('buggy-vip-privativo')}
                   className="hover:text-[#FBBF24] transition-colors cursor-pointer text-left"
                 >
-                  Buggy VIP Privativo (Genipabu)
+                  Litoral Norte de Buggy Privativo Premium
                 </button>
               </li>
               <li>
@@ -135,7 +135,7 @@ export const ComprehensiveFooter: React.FC<ComprehensiveFooterProps> = ({
                   onClick={() => onOpenBooking('off-road-litoral-sul')}
                   className="hover:text-[#FBBF24] transition-colors cursor-pointer text-left"
                 >
-                  Off-Road Litoral Sul 4x4
+                  Litoral Sul 4x4
                 </button>
               </li>
               <li>

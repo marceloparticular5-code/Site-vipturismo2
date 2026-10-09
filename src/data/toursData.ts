@@ -191,7 +191,7 @@ export const VIP_TOURS: TourPackage[] = [
   // 6. Off-Road Litoral Sul 4x4
   {
     id: 'off-road-litoral-sul',
-    title: 'Litoral Sul 4X4 (Lagoas & Falésias)',
+    title: 'Litoral Sul 4x4 (Lagoas & Falésias)',
     subtitle: 'Expedição em veículos 4x4 Pajero Dakar pelas lagoas cristalinas, falésias e dunas',
     badge: 'Experiência 4x4 VIP',
     location: 'Litoral Sul (Nísia Floresta, Camurupim e Búzios)',
@@ -226,10 +226,10 @@ export const VIP_TOURS: TourPackage[] = [
     imageUrl: '/images/litoral-sul/litoral-sul-pajero-sunset.webp',
   },
 
-  // 7. Litoral Norte de Buggy (Genipabu)
+  // 7. Litoral Norte de Buggy Privativo Premium
   {
     id: 'buggy-vip-privativo',
-    title: 'Litoral Norte de Buggy (Genipabu)',
+    title: 'Litoral Norte de Buggy Privativo Premium',
     subtitle: 'O lendário passeio de buggy pelas dunas móveis com balsa e lagoas',
     badge: 'Privativo Exclusivo',
     location: 'Dunas de Genipabu / Extremoz (Litoral Norte)',

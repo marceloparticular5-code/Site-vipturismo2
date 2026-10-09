@@ -619,7 +619,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     <option key={t.id} value={t.id}>
                       {t.id === 'pacote-casal-vip'
                         ? `${t.title} — R$ ${t.priceDiscounted.toFixed(2)} (VALOR TOTAL PARA 2 PESSOAS / CASAL)`
-                        : t.id === 'genipabu-buggy-vip'
+                        : t.id === 'genipabu-buggy-vip' || t.id === 'buggy-vip-privativo'
                         ? `${t.title} — R$ ${t.priceDiscounted.toFixed(2)} (Buggy privativo até 4 pessoas)`
                         : `${t.title} — R$ ${t.priceDiscounted.toFixed(2)} por pessoa`}
                     </option>

@@ -744,7 +744,7 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({
                     { id: 'litoral-sul-4x4-vip', title: 'Off-Road Litoral Sul 4x4 Premium', price: 150, badge: 'Aventura 4x4', desc: 'Rota dos nativos em Pajero Dakar com praias secretas e falésias.' },
                     { id: 'pipa-praia-do-amor', title: 'Passeio Pipa + Praia do Amor', price: 80, badge: 'Melhor Custo', desc: 'Van executiva, Chapadão, Baía dos Golfinhos e centrinho de Pipa.' },
                     { id: 'pipa-by-night', title: 'Pipa By Night', price: 100, badge: 'Noite Romântica', desc: 'Vila charmosa, bistrôs, bares ao ar livre e gastronomia potiguar.' },
-                    { id: 'genipabu-buggy-vip', title: 'Buggy VIP Premium Privativo', price: 820, badge: 'Privativo 4 Pessoas', desc: 'Dunas de Genipabu com emoção, lagoas de Pitangui e Jacumã (divide até 4 pessoas).' },
+                    { id: 'genipabu-buggy-vip', title: 'Litoral Norte de Buggy Privativo Premium', price: 820, badge: 'Privativo 4 Pessoas', desc: 'Dunas de Genipabu com emoção, lagoas de Pitangui e Jacumã (divide até 4 pessoas).' },
                     { id: 'transfer-aeroporto-vip', title: 'Transfer VIP Aeroporto', price: 160, badge: 'Promocional', desc: 'Busca pontual no aeroporto com ar-condicionado (ida e volta).' },
                     { id: 'pacote-casal-vip', title: 'Pacote Casal VIP', price: 1320, badge: 'Pacote Completo', desc: 'Mergulho em Maracajaú + Buggy privativo + Transfer exclusivo para o casal.' },
                   ].map((tour) => (

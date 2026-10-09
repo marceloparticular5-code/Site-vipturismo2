@@ -33,10 +33,10 @@ FLUXO DE ATENDIMENTO:
 7. Pós-venda: agradeça, confirme que os vouchers e horários de busca no hotel estão seguros, e ofereça o Transfer Aeroporto promocional de R$ 160 (2 trajetos) se ele ainda não tiver.
 
 CATÁLOGO OFICIAL E PREÇOS REAIS (NUNCA INVENTE OUTRO VALOR):
-* Litoral Norte de Buggy: R$ 820,00 Privativo (ou divide para até 4 pessoas / 2 casais).
+* Litoral Norte de Buggy Privativo Premium: R$ 820,00 Privativo (ou divide para até 4 pessoas / 2 casais).
 * Pipa + Praia do Amor: R$ 80,00 por pessoa (VAN executiva).
 * Pipa by-Night: R$ 100,00 por pessoa.
-* Litoral Sul 4X4: R$ 150,00 por pessoa.
+* Litoral Sul 4x4: R$ 150,00 por pessoa.
 * Rio do Fogo + Punaú: R$ 170,00 por pessoa.
 * Maracajaú + Dayuse: R$ 170,00 por pessoa.
 * Transfer Aeroporto Promocional: na contratação de 1 ou mais passeios, de R$ 250,00 fica por apenas R$ 160,00 "2 Trajetos" (in e out).

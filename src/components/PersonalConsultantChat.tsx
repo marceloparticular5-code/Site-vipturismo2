@@ -59,7 +59,7 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
   const quickQuestions = [
     'Quais os passeios e valores?',
     'Buscam no meu hotel?',
-    'Litoral Norte de Buggy (Genipabu)',
+    'Litoral Norte de Buggy Privativo Premium',
     'Como funciona o pagamento no Pix?',
     'Falar com atendente humano',
   ];

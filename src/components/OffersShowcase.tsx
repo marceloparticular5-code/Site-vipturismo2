@@ -455,7 +455,7 @@ export const OffersShowcase: React.FC<OffersShowcaseProps> = ({
                                   <span className="text-xs font-bold text-slate-700">
                                     {tour.id === 'pacote-casal-vip'
                                       ? '/ 2 pessoas (casal)'
-                                      : tour.id === 'genipabu-buggy-vip'
+                                      : tour.id === 'genipabu-buggy-vip' || tour.id === 'buggy-vip-privativo'
                                       ? '/ buggy (até 4 pess.)'
                                       : '/ pessoa'}
                                   </span>

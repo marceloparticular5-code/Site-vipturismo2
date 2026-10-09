@@ -146,8 +146,8 @@ export const CvcHeroSection: React.FC<CvcHeroSectionProps> = ({
                       <option value="rio-do-fogo-vip">Passeio Rio do Fogo (R$ 170 · Banco de Areia)</option>
                       <option value="pipa-praia-do-amor">Passeio Pipa + Praia do Amor (R$ 80)</option>
                       <option value="pipa-by-night">Pipa By Night (R$ 100 · Sextas e Sábados)</option>
-                      <option value="buggy-vip-privativo">Buggy VIP Premium Privativo (Genipabu · Sob Consulta)</option>
-                      <option value="off-road-litoral-sul">Off-Road Litoral Sul 4x4 (Pajero · Sob Consulta)</option>
+                      <option value="buggy-vip-privativo">Litoral Norte de Buggy Privativo Premium (R$ 820 · até 4 pessoas)</option>
+                      <option value="off-road-litoral-sul">Litoral Sul 4x4 (R$ 150 · Pajero Dakar)</option>
                     </optgroup>
                     <optgroup label="Pacotes & Transfer">
                       <option value="pacote-casal-vip">Pacote Casal VIP (R$ 1.320 total para 2 pessoas / casal · 4 Dias + Transfer)</option>
