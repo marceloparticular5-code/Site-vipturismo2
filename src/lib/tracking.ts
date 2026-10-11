@@ -214,7 +214,7 @@ export function trackCheckoutLinkGenerated(orderNsu: string, tourTitle: string, 
   window.dataLayer = window.dataLayer || [];
   // @ts-ignore
   window.dataLayer.push({
-    event: 'infinitepay_link_generated',
+    event: 'stripe_checkout_initiated',
     order_nsu: orderNsu,
     tour_name: tourTitle,
     value: totalAmount,

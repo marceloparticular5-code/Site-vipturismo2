@@ -101,11 +101,11 @@ export function App() {
         setIsBookingOpen(true);
       }
 
-      // InfinitePay Return Route: /reserva/{order_nsu}
+      // Stripe & Reservation Return Route: /reserva/{order_nsu} or ?session_id=...
       const rawPath = window.location.pathname;
       const match = rawPath.match(/^\/reserva\/([^/?#]+)/i);
       const searchParams = new URLSearchParams(window.location.search);
-      const queryNsu = searchParams.get('order_nsu');
+      const queryNsu = searchParams.get('order_nsu') || searchParams.get('order') || searchParams.get('session_id');
 
       if (match && match[1]) {
         setReservationOrderNsu(match[1]);

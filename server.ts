@@ -4,18 +4,38 @@ import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { processChat } from './src/server/conciergeService';
 import {
-  createInfinitePayLink,
+  createStripeCheckoutSession,
   getReservation,
   loadReservations,
-  processInfinitePayWebhook,
-  simulateTestScenario,
-} from './src/server/infinitepayService';
+  processStripeWebhook,
+  simulateStripeScenario,
+} from './src/server/stripeService';
 
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: '75mb' }));
+// Enable rawBody preservation for Stripe webhook signature verification
+app.use(
+  express.json({
+    limit: '75mb',
+    verify: (req: any, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true, limit: '75mb' }));
+
+// CORS configuration to allow legitimate site requests
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, stripe-signature');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
+  }
+  next();
+});
 
 // Static uploads and public assets with caching
 const publicDir = path.join(process.cwd(), 'public');
@@ -110,11 +130,11 @@ app.post('/api/sync-google-calendar', (req, res) => {
 });
 
 // ==========================================
-// INFINITEPAY INTEGRATED CHECKOUT & WEBHOOKS
+// STRIPE INTEGRATED CHECKOUT & WEBHOOKS
 // ==========================================
 
-// 1. Create Checkout Link (POST https://api.checkout.infinitepay.io/links via backend)
-app.post('/api/infinitepay/create-link', async (req, res) => {
+// 1. Create Stripe Checkout Session (POST /api/stripe/create-checkout-session)
+const handleCreateCheckout = async (req: express.Request, res: express.Response) => {
   try {
     const {
       tourId,
@@ -125,15 +145,15 @@ app.post('/api/infinitepay/create-link', async (req, res) => {
       adults,
       children,
       addons,
-      totalAmount,
       customer,
       hotelPickup,
+      paymentMethodPreference,
     } = req.body;
 
-    if (!tourName || !date || !totalAmount || !customer?.name || !customer?.email || !customer?.phone) {
+    if (!tourId || !date || !customer?.name || !customer?.email || !customer?.phone) {
       res.status(400).json({
         success: false,
-        error: 'Campos obrigatórios ausentes para geração do link InfinitePay (nome, e-mail, telefone, passeio, data e valor).',
+        error: 'Campos obrigatórios ausentes para checkout Stripe (nome, e-mail, telefone, passeio e data).',
       });
       return;
     }
@@ -142,7 +162,7 @@ app.post('/api/infinitepay/create-link', async (req, res) => {
     const host = req.get('host') || 'localhost:3000';
     const baseUrl = `${protocol}://${host}`;
 
-    const result = await createInfinitePayLink({
+    const result = await createStripeCheckoutSession({
       tourId,
       tourName,
       date,
@@ -151,25 +171,28 @@ app.post('/api/infinitepay/create-link', async (req, res) => {
       adults: Number(adults) || 1,
       children: Number(children) || 0,
       addons: Array.isArray(addons) ? addons : [],
-      totalAmount: Number(totalAmount),
       customer,
       hotelPickup,
       baseUrl,
+      paymentMethodPreference,
     });
 
     res.json(result);
   } catch (err: any) {
-    console.error('[InfinitePay Controller Error]:', err);
+    console.error('[Stripe Controller Error]:', err);
     res.status(500).json({
       success: false,
-      error: 'Erro interno ao gerar link de checkout da InfinitePay.',
+      error: 'Erro interno ao gerar sessão de pagamento Stripe.',
       details: err?.message,
     });
   }
-});
+};
 
-// 2. Query Reservation Status (Polled by /reserva/{order_nsu} return page)
-app.get('/api/infinitepay/reservation/:orderNsu', (req, res) => {
+app.post('/api/stripe/create-checkout-session', handleCreateCheckout);
+app.post('/api/stripe/create-link', handleCreateCheckout);
+
+// 2. Query Reservation Status (Polled by /reserva/{order_nsu} confirmation page)
+const handleGetReservation = (req: express.Request, res: express.Response) => {
   try {
     const { orderNsu } = req.params;
     const reservation = getReservation(orderNsu);
@@ -181,53 +204,62 @@ app.get('/api/infinitepay/reservation/:orderNsu', (req, res) => {
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message });
   }
-});
+};
 
-// 3. Webhook endpoint for InfinitePay notifications
-app.post('/api/webhooks/infinitepay', async (req, res) => {
+app.get('/api/stripe/reservation/:orderNsu', handleGetReservation);
+
+// 3. Webhook endpoint for Stripe notifications (Pix assíncrono e Cartão aprovado)
+const handleStripeWebhook = async (req: any, res: express.Response) => {
   try {
-    console.log('[InfinitePay Webhook Received]:', JSON.stringify(req.body));
-    const result = await processInfinitePayWebhook(req.body);
+    const sig = req.headers['stripe-signature'] as string | undefined;
+    console.log('[Stripe Webhook Received] Headers:', { sig: sig ? 'present' : 'none' });
 
-    // If reservation was approved, dispatch email automatically
-    if (result.status === 'approved' && result.reservation) {
+    const result = await processStripeWebhook(req.rawBody || req.body, sig, req.body);
+
+    // If reservation status is CONFIRMADA, dispatch confirmation email automatically
+    if (result.status === 'CONFIRMADA' && result.reservation) {
       const resData = result.reservation;
       console.log(
-        `[Auto Email Dispatched via Webhook] Enviando voucher ${resData.order_nsu} para ${resData.customer.email}`
+        `[Auto Email Dispatched via Stripe Webhook] Enviando voucher ${resData.order_nsu} para ${resData.customer.email}`
       );
     }
 
-    // Always respond 200 fast to InfinitePay
     res.status(200).json({
       received: true,
       ...result,
     });
   } catch (err: any) {
-    console.error('[InfinitePay Webhook Error]:', err);
+    console.error('[Stripe Webhook Error]:', err);
     res.status(200).json({ received: true, error: err?.message });
   }
-});
+};
 
-// 4. Admin query for all InfinitePay reservations
-app.get('/api/infinitepay/reservations', (req, res) => {
+app.post('/api/webhooks/stripe', handleStripeWebhook);
+
+// 4. Admin query for all Stripe reservations
+const handleGetReservations = (req: express.Request, res: express.Response) => {
   try {
     const list = loadReservations();
     res.json({ success: true, count: list.length, reservations: list });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message });
   }
-});
+};
 
-// 5. Simulation testing endpoint (Pix pago, Cartão aprovado, Abandonado, Webhook duplicado)
-app.post('/api/infinitepay/test-simulate', (req, res) => {
+app.get('/api/stripe/reservations', handleGetReservations);
+
+// 5. Simulation testing endpoint for Stripe (Pix, Cartão 1x, 2x, 3x sem juros, Recusado, Expirado, Duplicado)
+const handleTestSimulate = (req: express.Request, res: express.Response) => {
   try {
     const { scenario, order_nsu } = req.body;
-    const report = simulateTestScenario(scenario, order_nsu);
+    const report = simulateStripeScenario(scenario, order_nsu);
     res.json({ success: true, report });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message });
   }
-});
+};
+
+app.post('/api/stripe/test-simulate', handleTestSimulate);
 
 app.post('/api/leads', (req, res) => {
   try {

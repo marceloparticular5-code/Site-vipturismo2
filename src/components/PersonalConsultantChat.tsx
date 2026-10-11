@@ -143,7 +143,7 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
           'Sim! Buscamos na porta do seu hotel em Ponta Negra, Via Costeira e Praia dos Artistas, sem custo extra 🚐\nEm qual hotel você vai ficar?';
       } else if (query.toLowerCase().includes('pagar') || query.toLowerCase().includes('pix') || query.toLowerCase().includes('cartão')) {
         fallback =
-          'No Pix você só paga uma entrada para reservar e o restante no dia do passeio! Ou no cartão pelo link seguro: https://loja.infinitepay.io/natalvipturismo\nVocê prefere Pix ou cartão?';
+          'Aceitamos Pix instantâneo com confirmação automática ou cartão de crédito em até 3x sem juros processado pela Stripe!\nVocê prefere garantir no Pix ou parcelar no cartão?';
       }
 
       setMessages((prev) => [
@@ -272,16 +272,18 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
                     </button>
                   )}
 
-                  {msg.content.includes('infinitepay.io') && (
-                    <a
-                      href="https://loja.infinitepay.io/natalvipturismo"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow transition-all"
+                  {msg.content.includes('Stripe') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenBooking(msg.suggestedTourId || 'maracajau-vip');
+                        onClose();
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer"
                     >
                       <CreditCard className="w-3.5 h-3.5" />
-                      <span>💳 Pagar no Cartão (InfinitePay)</span>
-                    </a>
+                      <span>💳 Pagar Seguro (Pix / Cartão 3x)</span>
+                    </button>
                   )}
 
                   {(msg.content.includes('98872-2044') || msg.content.includes('WhatsApp')) && (

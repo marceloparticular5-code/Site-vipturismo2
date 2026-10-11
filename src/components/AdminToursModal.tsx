@@ -74,7 +74,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
 
   const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
   const [bookings, setBookings] = useState<FirebaseBooking[]>([]);
-  const [infinitePayReservations, setInfinitePayReservations] = useState<any[]>([]);
+  const [stripeReservations, setStripeReservations] = useState<any[]>([]);
   const [simulationResult, setSimulationResult] = useState<any | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [leads, setLeads] = useState<LeadFollowUp[]>([]);
@@ -161,38 +161,47 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
     }
   }, [isOpen, isAdmin]);
 
-  // Load InfinitePay reservations from backend
-  const loadInfinitePay = async () => {
+  // Load Stripe reservations from backend
+  const loadStripe = async () => {
     try {
-      const res = await fetch('/api/infinitepay/reservations');
+      const res = await fetch('/api/stripe/reservations');
       if (res.ok) {
         const data = await res.json();
         if (data?.reservations) {
-          setInfinitePayReservations(data.reservations);
+          setStripeReservations(data.reservations);
         }
       }
     } catch (err) {
-      console.warn('Erro ao carregar reservas InfinitePay:', err);
+      console.warn('Erro ao carregar reservas Stripe:', err);
     }
   };
 
   useEffect(() => {
     if (isOpen && activeTab === 'bookings') {
-      loadInfinitePay();
+      loadStripe();
     }
   }, [isOpen, activeTab]);
 
-  const handleRunSimulation = async (scenario: 'pix_paid' | 'card_approved' | 'abandoned' | 'webhook_duplicate') => {
+  const handleRunSimulation = async (
+    scenario:
+      | 'pix_approved'
+      | 'card_1x'
+      | 'card_2x'
+      | 'card_3x'
+      | 'card_declined'
+      | 'pix_expired'
+      | 'duplicate_webhook'
+  ) => {
     setIsSimulating(true);
     try {
-      const res = await fetch('/api/infinitepay/test-simulate', {
+      const res = await fetch('/api/stripe/test-simulate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scenario }),
       });
       const data = await res.json();
       setSimulationResult(data?.report);
-      loadInfinitePay();
+      loadStripe();
     } catch (err: any) {
       setSimulationResult({ erro: err?.message });
     } finally {
@@ -1423,22 +1432,22 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
               {/* TAB 3: BOOKINGS OVERVIEW */}
               {activeTab === 'bookings' && (
                 <div className="space-y-6">
-                  {/* Simulation / Test Harness (Requirement 18) */}
+                  {/* Simulation / Test Harness Stripe */}
                   <div className="p-4 rounded-2xl bg-[#0B213D] border border-amber-400/40 space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <h4 className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-2">
                           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                          <span>Simulador & Testes de Integração InfinitePay</span>
+                          <span>Simulador & Testes de Integração Stripe (Pix & Cartão)</span>
                         </h4>
                         <p className="text-[11px] text-slate-300">
-                          Execute testes dos 4 cenários exigidos: Pix pago, Cartão aprovado, Pagamento abandonado e Webhook duplicado.
+                          Execute testes de todos os cenários Stripe: Pix aprovado, Cartão em 1x, 2x e 3x sem juros, Cartão recusado, Pix expirado e Webhook duplicado com idempotência.
                         </p>
                       </div>
 
                       <button
                         type="button"
-                        onClick={loadInfinitePay}
+                        onClick={loadStripe}
                         className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-amber-400 text-xs text-amber-300 font-bold flex items-center gap-1.5 cursor-pointer self-start"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
@@ -1450,47 +1459,77 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                       <button
                         type="button"
                         disabled={isSimulating}
-                        onClick={() => handleRunSimulation('pix_paid')}
+                        onClick={() => handleRunSimulation('pix_approved')}
                         className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       >
                         <QrCode className="w-3.5 h-3.5" />
-                        <span>1. Testar Pix Pago</span>
+                        <span>1. Testar Pix Aprovado</span>
                       </button>
 
                       <button
                         type="button"
                         disabled={isSimulating}
-                        onClick={() => handleRunSimulation('card_approved')}
+                        onClick={() => handleRunSimulation('card_1x')}
                         className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
-                        <span>2. Testar Cartão Aprovado (3x)</span>
+                        <span>2. Cartão 1x</span>
                       </button>
 
                       <button
                         type="button"
                         disabled={isSimulating}
-                        onClick={() => handleRunSimulation('abandoned')}
+                        onClick={() => handleRunSimulation('card_2x')}
+                        className="px-3 py-2 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span>3. Cartão 2x sem juros</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isSimulating}
+                        onClick={() => handleRunSimulation('card_3x')}
+                        className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span>4. Cartão 3x sem juros</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isSimulating}
+                        onClick={() => handleRunSimulation('card_declined')}
+                        className="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>5. Cartão Recusado</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isSimulating}
+                        onClick={() => handleRunSimulation('pix_expired')}
                         className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       >
                         <Clock className="w-3.5 h-3.5" />
-                        <span>3. Testar Pagamento Abandonado</span>
+                        <span>6. Pix Expirado</span>
                       </button>
 
                       <button
                         type="button"
                         disabled={isSimulating}
-                        onClick={() => handleRunSimulation('webhook_duplicate')}
+                        onClick={() => handleRunSimulation('duplicate_webhook')}
                         className="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       >
                         <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>4. Testar Webhook Duplicado</span>
+                        <span>7. Webhook Duplicado</span>
                       </button>
                     </div>
 
                     {simulationResult && (
                       <div className="p-3 rounded-xl bg-slate-950 border border-emerald-500/40 text-xs font-mono space-y-1 text-slate-200">
-                        <div className="font-bold text-emerald-400">Resultado do Teste:</div>
+                        <div className="font-bold text-emerald-400">Resultado do Teste Stripe:</div>
                         <pre className="text-[11px] overflow-x-auto text-amber-200 whitespace-pre-wrap">
                           {JSON.stringify(simulationResult, null, 2)}
                         </pre>
@@ -1498,15 +1537,15 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                     )}
                   </div>
 
-                  {/* InfinitePay Reservations Table (Requirement 17) */}
+                  {/* Stripe Reservations Table */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h3 className="text-base font-bold text-white flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-amber-400" />
-                        <span>Reservas InfinitePay no Servidor ({infinitePayReservations.length})</span>
+                        <span>Reservas Stripe no Servidor ({stripeReservations.length})</span>
                       </h3>
                       <span className="text-[11px] text-slate-400">
-                        Status em tempo real: Aguardando, Aprovada e Expirada
+                        Status em tempo real: aguardando pagamento, CONFIRMADA, recusada e expirada
                       </span>
                     </div>
 
@@ -1514,24 +1553,27 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                       <table className="w-full text-left text-xs text-slate-300">
                         <thead className="bg-slate-900/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                           <tr>
-                            <th className="p-3.5">Order NSU</th>
+                            <th className="p-3.5">Código Reserva</th>
                             <th className="p-3.5">Passageiro</th>
                             <th className="p-3.5">Passeio</th>
                             <th className="p-3.5">Data / Hora</th>
                             <th className="p-3.5">Valor (BRL)</th>
                             <th className="p-3.5">Status</th>
-                            <th className="p-3.5">Comprovante</th>
+                            <th className="p-3.5">Comprovante Stripe</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60">
-                          {infinitePayReservations.map((r) => {
-                            const isApproved = r.status === 'Aprovada';
-                            const isExpired = r.status === 'Expirada';
+                          {stripeReservations.map((r) => {
+                            const isApproved = r.status === 'CONFIRMADA' || r.status === 'Aprovada';
+                            const isExpired = r.status === 'expirada' || r.status === 'Expirada';
+                            const isDeclined = r.status === 'recusada';
                             const statusColor = isApproved
                               ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                               : isExpired
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                              : isDeclined
                               ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                              : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+                              : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40';
 
                             return (
                               <tr key={r.order_nsu} className="hover:bg-slate-900/40">
@@ -1580,9 +1622,9 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                         </tbody>
                       </table>
 
-                      {infinitePayReservations.length === 0 && (
+                      {stripeReservations.length === 0 && (
                         <div className="p-8 text-center text-slate-400 text-xs">
-                          Nenhuma reserva InfinitePay registrada ainda. Gere um link de teste acima ou faça uma reserva no site.
+                          Nenhuma reserva Stripe registrada ainda. Inicie uma reserva no site ou execute um teste acima.
                         </div>
                       )}
                     </div>

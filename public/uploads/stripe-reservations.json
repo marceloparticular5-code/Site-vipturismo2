@@ -1,0 +1,98 @@
+[
+  {
+    "id": "NVT-2026-5858",
+    "order_nsu": "NVT-2026-5858",
+    "stripe_session_id": "cs_test_NVT-2026-5858_1791736614502",
+    "tourId": "maracajau-vip",
+    "tourName": "Maracajaú + Dayuse (Caribe Brasileiro)",
+    "date": "15/12/2026",
+    "timeWindow": "08:30 às 10:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [
+      "fotos-gopro"
+    ],
+    "totalAmount": 510,
+    "priceInCents": 51000,
+    "customer": {
+      "name": "Marcelo Silva",
+      "email": "marcelo.teste@gmail.com",
+      "phone": "(84) 98872-2044",
+      "cpf": "123.456.789-00"
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "CONFIRMADA",
+    "checkoutUrl": "http://localhost:3000/reserva/NVT-2026-5858?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com520400005303986540510.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-58586304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com520400005303986540510.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-58586304",
+    "pix_expires_at": "2026-10-11T17:36:54.502Z",
+    "payment_method": "cartao",
+    "createdAt": "2026-10-11T16:36:54.502Z",
+    "expiresAt": "2026-10-11T17:36:54.502Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T16:36:54.502Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 51000,
+          "totalAmount": 510,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      },
+      {
+        "timestamp": "2026-10-11T16:37:04.103Z",
+        "action": "test_simulation_pix_approved",
+        "details": {
+          "provider": "Stripe Pix",
+          "amount": 510
+        }
+      },
+      {
+        "timestamp": "2026-10-11T16:37:08.435Z",
+        "action": "test_simulation_card_1x",
+        "details": {
+          "provider": "Stripe Credit Card",
+          "installments": 1,
+          "installmentAmount": 510
+        }
+      },
+      {
+        "timestamp": "2026-10-11T16:37:12.517Z",
+        "action": "test_simulation_card_2x",
+        "details": {
+          "provider": "Stripe Credit Card",
+          "installments": 2,
+          "installmentAmount": 255
+        }
+      },
+      {
+        "timestamp": "2026-10-11T16:37:16.093Z",
+        "action": "test_simulation_card_3x",
+        "details": {
+          "provider": "Stripe Credit Card",
+          "installments": 3,
+          "installmentAmount": 170
+        }
+      },
+      {
+        "timestamp": "2026-10-11T16:37:22.630Z",
+        "action": "test_simulation_card_declined",
+        "details": {
+          "reason": "card_declined_insufficient_funds"
+        }
+      },
+      {
+        "timestamp": "2026-10-11T16:37:25.698Z",
+        "action": "test_simulation_pix_expired",
+        "details": {
+          "reason": "pix_time_window_expired"
+        }
+      }
+    ],
+    "installments": 3,
+    "confirmedAt": "2026-10-11T16:37:16.093Z",
+    "receipt_url": "https://dashboard.stripe.com/test/payments/NVT-2026-5858"
+  }
+]

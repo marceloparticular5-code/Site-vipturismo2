@@ -138,9 +138,9 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailBookingPayload, setEmailBookingPayload] = useState<BookingEmailConfirmationPayload | null>(null);
 
-  // InfinitePay Checkout states
-  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
-  const [generationError, setGenerationError] = useState<string | null>(null);
+  // Stripe Checkout states
+  const [isProcessingStripe, setIsProcessingStripe] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
   const [formValidationErrors, setFormValidationErrors] = useState<{ [key: string]: string }>({});
 
   // Feedback visual imediato e animação ao alterar quantidade de pessoas/passeio
@@ -288,8 +288,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     setPriceAnimating(true);
   };
 
-  const handleInfinitePayCheckout = async () => {
-    setGenerationError(null);
+  const handleStripeCheckout = async () => {
+    setStripeError(null);
     const errors: { [key: string]: string } = {};
 
     if (!adults || adults < 1) {
@@ -327,10 +327,11 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     }
 
     setFormValidationErrors({});
-    setIsGeneratingLink(true);
+    setIsProcessingStripe(true);
+    setStripeError(null);
 
     try {
-      // 1. Pixel & GA4 Event: initiate checkout com valor total e quantidade de pessoas
+      // 1. Pixel & GA4 Event: initiate checkout com valor total e passageiros
       trackCheckoutStart(currentTour.title, finalTotal, adults + children);
 
       const payload = {
@@ -342,7 +343,6 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
         adults,
         children,
         addons: selectedAddons,
-        totalAmount: finalTotal,
         customer: {
           name: customerName.trim(),
           email: customerEmail.trim(),
@@ -350,31 +350,38 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
           cpf: customerDocument.trim(),
         },
         hotelPickup: hotelPickup || 'Hotel em Ponta Negra / Via Costeira',
+        paymentMethodPreference: paymentTab,
       };
 
-      const res = await fetch('/api/infinitepay/create-link', {
+      const res = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        throw new Error('Falha na comunicação com o gateway InfinitePay.');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData?.error || 'Falha na comunicação com o gateway seguro Stripe.');
       }
 
       const data = await res.json();
       if (data?.success && data?.checkoutUrl) {
-        trackCheckoutLinkGenerated(data.order_nsu, currentTour.title, finalTotal, adults + children);
-        // Direct redirect without extra steps (Requirement 4)
+        trackCheckoutLinkGenerated(
+          data.reservation?.order_nsu || data.sessionId,
+          currentTour.title,
+          finalTotal,
+          adults + children
+        );
+        // Redirecionamento direto e seguro para o checkout Stripe ou tela de pagamento Pix
         window.location.href = data.checkoutUrl;
       } else {
-        throw new Error(data?.error || 'Não foi possível gerar o link de pagamento.');
+        throw new Error(data?.error || 'Não foi possível gerar a sessão de pagamento.');
       }
     } catch (err: any) {
-      console.warn('[InfinitePay Checkout]: Falha inicial, tentando reconexão automática...', err);
-      // Automatic retry once (Requirement 15: "nova tentativa automática uma vez")
+      console.warn('[Stripe Checkout]: Tentando reconexão automática...', err);
+      // Automatic retry once
       try {
-        const retryRes = await fetch('/api/infinitepay/create-link', {
+        const retryRes = await fetch('/api/stripe/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -386,7 +393,6 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
             adults,
             children,
             addons: selectedAddons,
-            totalAmount: finalTotal,
             customer: {
               name: customerName.trim(),
               email: customerEmail.trim(),
@@ -394,22 +400,28 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               cpf: customerDocument.trim(),
             },
             hotelPickup: hotelPickup || 'Hotel em Ponta Negra / Via Costeira',
+            paymentMethodPreference: paymentTab,
           }),
         });
         const retryData = await retryRes.json();
         if (retryData?.checkoutUrl) {
-          trackCheckoutLinkGenerated(retryData.order_nsu || 'NVT-RETRY', currentTour.title, finalTotal, adults + children);
+          trackCheckoutLinkGenerated(
+            retryData.reservation?.order_nsu || retryData.sessionId || 'NVT-RETRY',
+            currentTour.title,
+            finalTotal,
+            adults + children
+          );
           window.location.href = retryData.checkoutUrl;
           return;
         }
       } catch (retryErr) {
-        console.error('[InfinitePay Retry Error]:', retryErr);
+        console.error('[Stripe Retry Error]:', retryErr);
       }
 
-      setGenerationError(
-        'Houve uma oscilação na conexão com a InfinitePay. Clique novamente para gerar o link ou tente pelo link direto.'
+      setStripeError(
+        'Houve uma oscilação na conexão com a Stripe. Verifique sua internet e clique no botão abaixo para tentar novamente.'
       );
-      setIsGeneratingLink(false);
+      setIsProcessingStripe(false);
     }
   };
 
@@ -1198,7 +1210,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 </div>
               </div>
 
-              {/* Order Summary & InfinitePay Highlights */}
+              {/* Order Summary & Stripe Highlights */}
               <div className="p-4 rounded-2xl bg-gradient-to-br from-[#091C35] to-[#061220] border-2 border-amber-400/40 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                   <span className="text-xs font-black uppercase text-amber-300 tracking-wider">
@@ -1343,26 +1355,37 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 </div>
               </div>
 
-              {/* Error Alert if link generation failed */}
-              {generationError && (
-                <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-start gap-2">
+              {/* Error Alert if Stripe checkout session generation failed */}
+              {stripeError && (
+                <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-semibold">{generationError}</p>
-                    <a
-                      href="https://checkout.infinitepay.io/natalvipturismo/MzTHsBUpEX"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-amber-300 underline font-bold mt-1"
-                    >
-                      <span>Abrir checkout oficial InfinitePay direto</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                  <div className="flex-1 space-y-1.5">
+                    <p className="font-semibold">{stripeError}</p>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleStripeCheckout}
+                        className="px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 transition-colors cursor-pointer"
+                      >
+                        Tentar Novamente
+                      </button>
+                      <a
+                        href={`https://wa.me/${PHONE_WA}?text=${encodeURIComponent(
+                          `Olá! Gostaria de ajuda para concluir minha reserva de ${currentTour.title}.`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-emerald-300 underline font-bold"
+                      >
+                        <span>Falar no WhatsApp</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Action: Primary InfinitePay Checkout Button */}
+              {/* Action: Primary Stripe Checkout Button */}
               {isDateStringInPast(bookingDate) && (
                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
@@ -1373,25 +1396,25 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               <div className="space-y-2">
                 <button
                   type="button"
-                  disabled={isDateStringInPast(bookingDate) || isGeneratingLink}
-                  onClick={handleInfinitePayCheckout}
+                  disabled={isDateStringInPast(bookingDate) || isProcessingStripe}
+                  onClick={handleStripeCheckout}
                   className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-2xl ${
                     isDateStringInPast(bookingDate)
                       ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60'
-                      : isGeneratingLink
+                      : isProcessingStripe
                       ? 'bg-amber-500 text-slate-950 cursor-wait opacity-80'
                       : 'btn-pulse-hover text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.5)] cursor-pointer active:scale-95'
                   }`}
                 >
-                  {isGeneratingLink ? (
+                  {isProcessingStripe ? (
                     <>
                       <RefreshCw className="w-5 h-5 animate-spin" />
-                      <span>Gerando Link Seguro InfinitePay...</span>
+                      <span>Iniciando Checkout Seguro Stripe...</span>
                     </>
                   ) : (
                     <>
                       <ShieldCheck className="w-5 h-5" />
-                      <span>Reservar e Pagar Agora · InfinitePay</span>
+                      <span>Reservar e Pagar Agora · Stripe</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -1399,12 +1422,12 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
                 <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400 px-1">
                   <span className="flex items-center gap-1">
-                    <Lock className="w-3.5 h-3.5 text-emerald-400" /> Pagamento seguro InfinitePay
+                    <Lock className="w-3.5 h-3.5 text-emerald-400" /> Pagamento 100% Seguro Stripe
                   </span>
                   <span>•</span>
                   <span>Cadastur 39.456.551/0001-08</span>
                   <span>•</span>
-                  <span className="text-amber-300 font-semibold">Pix ou Cartão</span>
+                  <span className="text-amber-300 font-semibold">Pix ou Cartão (até 3x sem juros)</span>
                 </div>
               </div>
             </div>
@@ -1444,7 +1467,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   <span className="flex items-center gap-1">
                     <CreditCard className="w-3.5 h-3.5" /> Cartão de Crédito
                   </span>
-                  <span className="text-[10px] opacity-80">Até 12x Sem Juros</span>
+                  <span className="text-[10px] text-amber-300 font-bold">Até 3x Sem Juros</span>
                 </button>
               </div>
 
@@ -1622,14 +1645,14 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
                     <div>
                       <label className="block text-[11px] text-slate-400 mb-1">
-                        Parcelamento sem juros:
+                        Parcelamento no cartão (até 3x sem juros):
                       </label>
                       <select
                         value={installments}
                         onChange={(e) => setInstallments(Number(e.target.value))}
                         className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-400"
                       >
-                        {[1, 2, 3, 4, 5, 6, 10, 12].map((n) => (
+                        {[1, 2, 3].map((n) => (
                           <option key={n} value={n}>
                             {n}x de R$ {(grossTotal / n).toFixed(2).replace('.', ',')} sem juros
                           </option>
@@ -1637,16 +1660,12 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                       </select>
                     </div>
 
-                    <a
-                      href="https://loja.infinitepay.io/natalvipturismo"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-2.5 px-3 rounded-xl bg-slate-900/90 border border-emerald-500/40 text-emerald-400 hover:bg-slate-800 text-xs font-bold flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer shadow-sm"
-                    >
-                      <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Ou pagar direto no Link Oficial InfinitePay</span>
-                      <ExternalLink className="w-3 h-3 text-emerald-400" />
-                    </a>
+                    <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                        <ShieldCheck className="w-4 h-4" /> Segurança Stripe PCI-DSS
+                      </span>
+                      <span>Parcelas: 1x a 3x sem juros</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1662,15 +1681,25 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={handleConfirmBooking}
-                  className="flex-1 py-3.5 rounded-xl font-extrabold text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  disabled={isProcessingStripe}
+                  onClick={handleStripeCheckout}
+                  className="flex-1 py-3.5 rounded-xl font-extrabold text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:from-amber-200 hover:to-amber-400 shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>
-                    {paymentTab === 'pix'
-                      ? 'Confirmar Pagamento no PIX'
-                      : 'Pagar com Cartão de Crédito'}
-                  </span>
+                  {isProcessingStripe ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Processando com Stripe...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>
+                        {paymentTab === 'pix'
+                          ? 'Gerar QR Code PIX · Stripe'
+                          : `Pagar em até 3x no Cartão · Stripe`}
+                      </span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

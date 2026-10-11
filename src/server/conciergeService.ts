@@ -29,7 +29,7 @@ FLUXO DE ATENDIMENTO:
    - Dúvida: reforce a garantia da maré e embarque no hotel.
    - "Vou pensar": pergunte gentilmente o que falta para decidir hoje.
    - Comparação com concorrente: destaque diferenciais (veículos novos, pontualidade, sem aperto) sem falar mal de ninguém.
-6. Fechamento: assuma a decisão com escolha entre opções ("Prefere garantir no Pix ou no cartão?"). Envie o link oficial de pagamento/checkout: https://loja.infinitepay.io/natalvipturismo e confirme os próximos passos.
+6. Fechamento: assuma a decisão com escolha entre opções ("Prefere garantir no Pix ou no cartão?"). Envie as orientações de pagamento seguro via Pix ou Cartão em até 3x sem juros pela Stripe e confirme os próximos passos.
 7. Pós-venda: agradeça, confirme que os vouchers e horários de busca no hotel estão seguros, e ofereça o Transfer Aeroporto promocional de R$ 160 (2 trajetos) se ele ainda não tiver.
 
 CATÁLOGO OFICIAL E PREÇOS REAIS (NUNCA INVENTE OUTRO VALOR):
@@ -44,8 +44,8 @@ CATÁLOGO OFICIAL E PREÇOS REAIS (NUNCA INVENTE OUTRO VALOR):
 * Auto do Potengi + City-Tour: R$ 150,00 por pessoa.
 
 FORMAS DE PAGAMENTO:
-- PIX: Entrada para reserva da vaga e restante nos dias dos respectivos passeios.
-- Cartão de crédito: Link seguro da InfinitePay (https://loja.infinitepay.io/natalvipturismo).
+- PIX: Entrada para reserva da vaga com confirmação imediata.
+- Cartão de crédito: Parcelamento em até 3x sem juros com segurança Stripe.
 
 DIFERENCIAIS DA NATAL VIP TURISMO:
 - Profissionais altamente qualificados e credenciados Cadastur.
@@ -112,7 +112,7 @@ export async function processChat(
         return {
           reply: replyText,
           suggestedTourId,
-          checkoutUrl: 'https://loja.infinitepay.io/natalvipturismo',
+          checkoutUrl: `/#reservar?tour=${suggestedTourId || 'maracajau-vip'}`,
         };
       }
     } catch (err) {
@@ -174,7 +174,7 @@ export async function processChat(
       'Sim! Buscamos na porta do seu hotel em Ponta Negra, Via Costeira e Praia dos Artistas, sem custo extra 🚐\nEm qual hotel você vai se hospedar?';
   } else if (queryLower.includes('pagar') || queryLower.includes('pagamento') || queryLower.includes('pix') || queryLower.includes('cartao') || queryLower.includes('cartão') || queryLower.includes('reserva')) {
     reply =
-      'No Pix você só paga uma entrada para reservar e o restante no dia do passeio! Ou no cartão pelo link seguro: https://loja.infinitepay.io/natalvipturismo\nVocê prefere Pix ou cartão?';
+      'Aceitamos Pix com aprovação imediata ou cartão de crédito em até 3x sem juros pela Stripe!\nVocê prefere garantir no Pix ou parcelar no cartão?';
   } else if (queryLower.includes('maré') || queryLower.includes('mare')) {
     reply =
       'Para as piscinas naturais de Maracajaú e Rio do Fogo, recomendo os dias com maré de 0.0 a 0.5m para água cristalina!\nVocê já tem os dias exatos em que estará por aqui?';
@@ -190,7 +190,7 @@ export async function processChat(
   return {
     reply,
     suggestedTourId,
-    checkoutUrl: 'https://loja.infinitepay.io/natalvipturismo',
+    checkoutUrl: `/#reservar?tour=${suggestedTourId || 'maracajau-vip'}`,
   };
 }
 
