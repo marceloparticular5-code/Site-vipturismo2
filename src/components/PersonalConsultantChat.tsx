@@ -272,7 +272,7 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
                     </button>
                   )}
 
-                  {msg.content.includes('Stripe') && (
+                  {(msg.content.includes('InfinitePay') || msg.content.includes('Stripe') || msg.content.includes('pagamento')) && (
                     <button
                       type="button"
                       onClick={() => {
@@ -282,7 +282,7 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
                       className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow transition-all cursor-pointer"
                     >
                       <CreditCard className="w-3.5 h-3.5" />
-                      <span>💳 Pagar Seguro (Pix / Cartão 3x)</span>
+                      <span>💳 Pagar Seguro (Pix / Cartão até 3x)</span>
                     </button>
                   )}
 

@@ -143,6 +143,7 @@ export interface CreateStripeSessionParams {
   hotelPickup?: string;
   baseUrl: string;
   paymentMethodPreference?: 'pix' | 'cartao';
+  installments?: number;
 }
 
 export async function createStripeCheckoutSession(params: CreateStripeSessionParams): Promise<{
@@ -166,7 +167,10 @@ export async function createStripeCheckoutSession(params: CreateStripeSessionPar
     hotelPickup,
     baseUrl,
     paymentMethodPreference,
+    installments = 1,
   } = params;
+
+  const safeInstallments = Math.min(3, Math.max(1, Number(installments) || 1));
 
   // 1. Calculate price strictly on the backend (Centavos BRL)
   const calc = calculateBackendPrice(tourId, adults, children, addons);
@@ -281,10 +285,10 @@ export async function createStripeCheckoutSession(params: CreateStripeSessionPar
     totalAmount: calc.totalBRL,
     priceInCents: calc.priceInCents,
     customer: {
-      name: customer.name.trim(),
-      email: customer.email.trim(),
-      phone: customer.phone.trim(),
-      cpf: customer.cpf.trim(),
+      name: customer.name ? customer.name.trim() : 'Turista Vip',
+      email: customer.email ? customer.email.trim() : 'contato@natalvipturismo.com',
+      phone: customer.phone ? customer.phone.trim() : '(84) 99999-9999',
+      cpf: customer.cpf ? customer.cpf.trim() : '',
     },
     hotelPickup: hotelPickup || 'Hotel em Ponta Negra / Via Costeira',
     status: 'aguardando pagamento',
@@ -293,6 +297,9 @@ export async function createStripeCheckoutSession(params: CreateStripeSessionPar
     pix_copia_e_cola: pixCopiaECola,
     pix_expires_at: expiresAt.toISOString(),
     payment_method: paymentMethodPreference || 'pix',
+    installments: safeInstallments,
+    installmentAmount: Number((calc.totalBRL / safeInstallments).toFixed(2)),
+    installmentAmountFormatted: (calc.totalBRL / safeInstallments).toFixed(2).replace('.', ','),
     createdAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),
     log: [
@@ -371,12 +378,12 @@ export async function processStripeWebhook(
   let amountPaidCents = 0;
   let isPaymentApproved = false;
 
-  // Process checkout.session.completed
-  if (event.type === 'checkout.session.completed') {
+  // Process checkout.session.completed or async_payment_succeeded (Pix)
+  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
     const session = event.data.object as Stripe.Checkout.Session;
-    orderNsu = session.client_reference_id || session.metadata?.order_nsu || '';
+    orderNsu = session.client_reference_id || session.metadata?.order_nsu || session.metadata?.orderNsu || '';
     amountPaidCents = session.amount_total || 0;
-    isPaymentApproved = session.payment_status === 'paid';
+    isPaymentApproved = session.payment_status === 'paid' || event.type === 'checkout.session.async_payment_succeeded';
 
     if (session.payment_method_types?.includes('pix')) {
       paymentMethod = 'pix';
@@ -385,16 +392,17 @@ export async function processStripeWebhook(
     }
   } else if (event.type === 'payment_intent.succeeded') {
     const pi = event.data.object as Stripe.PaymentIntent;
-    orderNsu = pi.metadata?.order_nsu || '';
+    orderNsu = pi.metadata?.order_nsu || pi.metadata?.orderNsu || '';
     amountPaidCents = pi.amount_received || pi.amount || 0;
     isPaymentApproved = true;
     paymentMethod = pi.payment_method_types?.includes('pix') ? 'pix' : 'cartao';
   } else if (event.type === 'payment_intent.payment_failed') {
     const pi = event.data.object as Stripe.PaymentIntent;
-    orderNsu = pi.metadata?.order_nsu || '';
+    orderNsu = pi.metadata?.order_nsu || pi.metadata?.orderNsu || '';
     const res = getReservation(orderNsu);
     if (res) {
       res.status = 'recusada';
+      res.paymentErrorMessage = pi.last_payment_error?.message || 'Cartão recusado pelo banco emissor.';
       res.log.push({
         timestamp: new Date().toISOString(),
         action: 'payment_failed',

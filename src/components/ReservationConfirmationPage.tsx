@@ -39,7 +39,7 @@ export const ReservationConfirmationPage: React.FC<ReservationConfirmationPagePr
   // Poll reservation status from server
   const fetchStatus = async () => {
     try {
-      const res = await fetch(`/api/stripe/reservation/${encodeURIComponent(orderNsu)}`);
+      const res = await fetch(`/api/infinitepay/reservation/${encodeURIComponent(orderNsu)}?check=true`);
       if (!res.ok) {
         if (res.status === 404) {
           setError('Reserva não encontrada. Verifique o código localizador.');
@@ -196,7 +196,7 @@ export const ReservationConfirmationPage: React.FC<ReservationConfirmationPagePr
             <div>
               <span className="text-sm font-black text-white tracking-wider block">NATAL VIP TURISMO</span>
               <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">
-                Checkout Seguro Stripe · Cadastur 39.456.551/0001-08
+                Checkout Seguro InfinitePay · Cadastur 39.456.551/0001-08
               </span>
             </div>
           </div>
@@ -271,7 +271,7 @@ export const ReservationConfirmationPage: React.FC<ReservationConfirmationPagePr
                 Quase lá! Conclua seu pagamento
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto leading-relaxed">
-                Assim que a Stripe confirmar a aprovação do seu Pix ou Cartão de Crédito, esta tela será atualizada
+                Assim que a InfinitePay confirmar a aprovação do seu Pix ou Cartão de Crédito, esta tela será atualizada
                 automaticamente para <strong>CONFIRMADA</strong> e seu voucher oficial será emitido.
               </p>
             </div>
@@ -379,7 +379,7 @@ export const ReservationConfirmationPage: React.FC<ReservationConfirmationPagePr
 
             <div className="pt-4 border-t border-slate-800/80 flex items-center justify-center gap-4 text-[11px] text-slate-400">
               <span className="flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Pagamento 100% Seguro Stripe
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Pagamento 100% Seguro InfinitePay
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
@@ -399,7 +399,7 @@ export const ReservationConfirmationPage: React.FC<ReservationConfirmationPagePr
 
               <div className="space-y-1">
                 <span className="text-xs font-black uppercase tracking-widest text-emerald-400 block">
-                  Pagamento Aprovado e Confirmado pela Stripe
+                  Pagamento Aprovado e Confirmado pela InfinitePay
                 </span>
                 <h1 className="text-2xl sm:text-4xl font-black text-white font-['Playfair_Display',serif]">
                   Reserva Confirmada com Sucesso!
@@ -517,7 +517,7 @@ export const ReservationConfirmationPage: React.FC<ReservationConfirmationPagePr
                     className="px-5 py-3 rounded-xl bg-slate-900 border border-emerald-500/50 text-emerald-300 hover:bg-slate-800 font-bold text-xs flex items-center gap-2 transition-colors"
                   >
                     <Receipt className="w-4 h-4" />
-                    <span>Ver Comprovante Stripe</span>
+                    <span>Ver Comprovante Oficial</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 )}

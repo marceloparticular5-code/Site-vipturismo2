@@ -1,0 +1,208 @@
+[
+  {
+    "id": "NVT-2026-6856",
+    "order_nsu": "NVT-2026-6856",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "Maria Fernandes",
+      "email": "maria.fernandes@example.com",
+      "phone": "84999991234",
+      "cpf": "987.654.321-00"
+    },
+    "hotelPickup": "Hotel Ocean Palace",
+    "status": "CONFIRMADA",
+    "checkoutUrl": "https://checkout.infinitepay.io/natalvipturismo?lenc=G7oBIByJ6Xag5uKRDtTU3JBUFjHz-jPFJOKZ0Fwqjet0CgS1XG4Hzrm1y5Q2rGjq681-4Fvq3LrBKALnsDmDqM17KY23yujHVd6LCNGsIlWcaO0g058HPjlygfWlAgmevlphgO7pXWk220z22ekNRtPbFg0sr0G11bllKiV1fS7UFpvZsqfw-KgibYTvMvUzBr0LgrcYp1oW7wA__Ikk0uUF3eqfyCFYrU00GP_PQ5V4DvpmEmKQFqRsxUwOK4O0hVSm_o-BkcwA-XGSS71gk3zPIP9ym6KhrXXa12Zsn4BOk_-HP62K4FQW3DQduNfiZL05zoAkfOduNzvEoUegdK3GDTdqCZtSpM5oN1QtLVMlCyIi6sgA.v1.feaa9febe811092c",
+    "payment_method": "cartao",
+    "installments": 3,
+    "installmentAmount": 440,
+    "installmentAmountFormatted": "440,00",
+    "createdAt": "2026-10-11T18:43:38.220Z",
+    "expiresAt": "2026-10-11T19:43:38.220Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T18:43:38.220Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isMockFallback": false
+        }
+      },
+      {
+        "timestamp": "2026-10-11T18:43:38.323Z",
+        "action": "payment_confirmed_via_webhook",
+        "details": {
+          "transactionNsu": "tx_inf_card3x_9981",
+          "slug": "slug_fatura_3x",
+          "captureMethod": "credit_card",
+          "installments": 3,
+          "paidAmountCents": 132000,
+          "receiptUrl": "https://comprovante.infinitepay.io/comprovante/tx_inf_card3x_9981"
+        }
+      }
+    ],
+    "confirmedAt": "2026-10-11T18:43:38.323Z",
+    "transaction_nsu": "tx_inf_card3x_9981",
+    "invoice_slug": "slug_fatura_3x",
+    "receipt_url": "https://comprovante.infinitepay.io/comprovante/tx_inf_card3x_9981",
+    "capture_method": "credit_card"
+  },
+  {
+    "id": "NVT-2026-2207",
+    "order_nsu": "NVT-2026-2207",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "Maria Fernandes",
+      "email": "maria.fernandes@example.com",
+      "phone": "84999991234",
+      "cpf": "987.654.321-00"
+    },
+    "hotelPickup": "Hotel Ocean Palace",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "https://checkout.infinitepay.io/natalvipturismo?lenc=G7oBAByJ6Xag5uKRDtTU3JBUFjHz-jPFJOKZ0Fwqjet0CgS1XG4Hzrm1yxQKK5q2l97sB76lbvPq7Qg0daoQHZkxb6Yy3kpjH3d5LyJEs4pUcaK1w8x-XvgUSArvywUaPXtVwwHhy7vSbLaZ7HPQG4ymtzIWqN6Daqtzy1RK6gIlF-TQrPsYnj-qSBvhu0z9kMHuvBAsxmOtineIH_5EEunyAm_3T-QQrNYmOoz_56FKPAd9MwkxSAtS9mKmCU4GaXPpTP0jAzOZAfLjWLd6wSb5PoTiy24mDn2t0742nfsEdJr8P_xrVQRn0uCm68C9FijvTXIOZOE7d7vZIQ49AqVrNW64kUvYlCN1RrujaWmZKlkRCVFHBg.v1.9e41af36e1c9f42d",
+    "payment_method": "cartao",
+    "installments": 2,
+    "installmentAmount": 660,
+    "installmentAmountFormatted": "660,00",
+    "createdAt": "2026-10-11T18:43:38.113Z",
+    "expiresAt": "2026-10-11T19:43:38.113Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T18:43:38.113Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isMockFallback": false
+        }
+      },
+      {
+        "timestamp": "2026-10-11T18:43:38.325Z",
+        "action": "amount_mismatch",
+        "details": {
+          "paidAmountCents": 5000,
+          "expectedCents": 132000
+        }
+      }
+    ]
+  },
+  {
+    "id": "NVT-2026-8118",
+    "order_nsu": "NVT-2026-8118",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "Maria Fernandes",
+      "email": "maria.fernandes@example.com",
+      "phone": "84999991234",
+      "cpf": "987.654.321-00"
+    },
+    "hotelPickup": "Hotel Ocean Palace",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "https://checkout.infinitepay.io/natalvipturismo?lenc=G7oBIByJ6Xag5uKRDtTU3JBUFjHz-jPFJOKZ0Fwqjet0CgS1XG4Hzrm1y5Q2rGjq681-4Fvq3LrBKALnsDmDqM17KY23yujHVd6LCNGsIlWcaO0g058HPjlygfWlAgmevlphgO7pXWk220z22ekNRtPbFg0sr0G11bllKiV1fS7UNr3etqfw-KgibYTvMvUzBr0LgrcYp1oW7wA__Ikk0uUF3eqfyCFYrU00GP_PQ5V4DvpmEmKQFqRsxUwOK4O0hVSm_o-BkcwA-XGSS71gk3zPIP9ym6KhrXXa12Zsn4BOk_-HP62K4FQW3DQduNfiZL05zoAkfOduNzvEoUegdK3GDTdqCZtSpM5oN1QtLVMlCyIi6sgA.v1.af2ce277b84cfc3a",
+    "payment_method": "cartao",
+    "installments": 1,
+    "installmentAmount": 1320,
+    "installmentAmountFormatted": "1320,00",
+    "createdAt": "2026-10-11T18:43:38.010Z",
+    "expiresAt": "2026-10-11T19:43:38.010Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T18:43:38.010Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isMockFallback": false
+        }
+      }
+    ]
+  },
+  {
+    "id": "NVT-2026-9030",
+    "order_nsu": "NVT-2026-9030",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "Maria Fernandes",
+      "email": "maria.fernandes@example.com",
+      "phone": "84999991234",
+      "cpf": "987.654.321-00"
+    },
+    "hotelPickup": "Hotel Ocean Palace",
+    "status": "CONFIRMADA",
+    "checkoutUrl": "https://checkout.infinitepay.io/natalvipturismo?lenc=G7oBIByJ6Xag5uKRDtTU3JBUFjHz-jPFJOKZ0Fwqjet0CgS1XG4Hzrm1y5Q2rGjq681-4Fvq3LrBKALnsDmDqM17KY23yujHVd6LCNGsIlWcaO0g058HPjlygfWlAgmevlphgO7pXWk220z22ekNRtPbFg0sr0G11bllKiV1fS7Udp1Rt6fw-KgibYTvMvUzBr0LgrcYp1oW7wA__Ikk0uUF3eqfyCFYrU00GP_PQ5V4DvpmEmKQFqRsxUwOK4O0hVSm_o-BkcwA-XGSS71gk3zPIP9ym6KhrXXa12Zsn4BOk_-HP62K4FQW3DQduNfiZL05zoAkfOduNzvEoUegdK3GDTdqCZtSpM5oN1QtLVMlCyIi6sgA.v1.992186b5f0a26b10",
+    "payment_method": "pix",
+    "installments": 1,
+    "installmentAmount": 1320,
+    "installmentAmountFormatted": "1320,00",
+    "createdAt": "2026-10-11T18:43:37.763Z",
+    "expiresAt": "2026-10-11T19:43:37.763Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T18:43:37.763Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isMockFallback": false
+        }
+      },
+      {
+        "timestamp": "2026-10-11T18:43:38.324Z",
+        "action": "payment_confirmed_via_webhook",
+        "details": {
+          "transactionNsu": "tx_inf_pix_5521",
+          "slug": "",
+          "captureMethod": "pix",
+          "installments": 1,
+          "paidAmountCents": 132000,
+          "receiptUrl": "https://comprovante.infinitepay.io/comprovante/tx_inf_pix_5521"
+        }
+      }
+    ],
+    "confirmedAt": "2026-10-11T18:43:38.324Z",
+    "transaction_nsu": "tx_inf_pix_5521",
+    "invoice_slug": "",
+    "receipt_url": "https://comprovante.infinitepay.io/comprovante/tx_inf_pix_5521",
+    "capture_method": "pix"
+  }
+]

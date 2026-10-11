@@ -1,5 +1,551 @@
 [
   {
+    "id": "NVT-2026-9602",
+    "order_nsu": "NVT-2026-9602",
+    "stripe_session_id": "cs_test_NVT-2026-9602_1791739530147",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": "123.456.789-00"
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "CONFIRMADA",
+    "checkoutUrl": "https://natalvipturismo.com/reserva/NVT-2026-9602?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-96026304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-96026304",
+    "pix_expires_at": "2026-10-11T18:25:30.147Z",
+    "payment_method": "cartao",
+    "installments": 1,
+    "installmentAmount": 440,
+    "installmentAmountFormatted": "440,00",
+    "createdAt": "2026-10-11T17:25:30.147Z",
+    "expiresAt": "2026-10-11T18:25:30.147Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:25:30.147Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      },
+      {
+        "timestamp": "2026-10-11T17:25:30.148Z",
+        "action": "payment_confirmed_by_webhook",
+        "details": {
+          "eventType": "payment_intent.succeeded",
+          "paymentMethod": "cartao",
+          "installments": 1,
+          "amountPaidCents": 132000
+        }
+      }
+    ],
+    "confirmedAt": "2026-10-11T17:25:30.148Z",
+    "receipt_url": "https://dashboard.stripe.com/payments/NVT-2026-9602"
+  },
+  {
+    "id": "NVT-2026-7914",
+    "order_nsu": "NVT-2026-7914",
+    "stripe_session_id": "cs_test_NVT-2026-7914_1791739530147",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": "123.456.789-00"
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "recusada",
+    "checkoutUrl": "https://natalvipturismo.com/reserva/NVT-2026-7914?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-79146304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-79146304",
+    "pix_expires_at": "2026-10-11T18:25:30.147Z",
+    "payment_method": "cartao",
+    "installments": 2,
+    "installmentAmount": 660,
+    "installmentAmountFormatted": "660,00",
+    "createdAt": "2026-10-11T17:25:30.147Z",
+    "expiresAt": "2026-10-11T18:25:30.147Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:25:30.147Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      },
+      {
+        "timestamp": "2026-10-11T17:25:30.150Z",
+        "action": "payment_failed",
+        "details": "Cartão recusado pelo banco emissor."
+      }
+    ],
+    "paymentErrorMessage": "Cartão recusado pelo banco emissor."
+  },
+  {
+    "id": "NVT-2026-6390",
+    "order_nsu": "NVT-2026-6390",
+    "stripe_session_id": "cs_test_NVT-2026-6390_1791739530146",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": "123.456.789-00"
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "https://natalvipturismo.com/reserva/NVT-2026-6390?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-63906304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-63906304",
+    "pix_expires_at": "2026-10-11T18:25:30.146Z",
+    "payment_method": "cartao",
+    "installments": 1,
+    "installmentAmount": 1320,
+    "installmentAmountFormatted": "1320,00",
+    "createdAt": "2026-10-11T17:25:30.146Z",
+    "expiresAt": "2026-10-11T18:25:30.146Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:25:30.146Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "NVT-2026-4317",
+    "order_nsu": "NVT-2026-4317",
+    "stripe_session_id": "cs_test_NVT-2026-4317_1791739530145",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": "123.456.789-00"
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "CONFIRMADA",
+    "checkoutUrl": "https://natalvipturismo.com/reserva/NVT-2026-4317?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-43176304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-43176304",
+    "pix_expires_at": "2026-10-11T18:25:30.145Z",
+    "payment_method": "pix",
+    "installments": 1,
+    "installmentAmount": 1320,
+    "installmentAmountFormatted": "1320,00",
+    "createdAt": "2026-10-11T17:25:30.145Z",
+    "expiresAt": "2026-10-11T18:25:30.145Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:25:30.145Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      },
+      {
+        "timestamp": "2026-10-11T17:25:30.150Z",
+        "action": "payment_confirmed_by_webhook",
+        "details": {
+          "eventType": "checkout.session.async_payment_succeeded",
+          "paymentMethod": "pix",
+          "installments": 1,
+          "amountPaidCents": 132000
+        }
+      }
+    ],
+    "confirmedAt": "2026-10-11T17:25:30.150Z",
+    "receipt_url": "https://dashboard.stripe.com/payments/NVT-2026-4317"
+  },
+  {
+    "id": "NVT-2026-2193",
+    "order_nsu": "NVT-2026-2193",
+    "stripe_session_id": "cs_test_NVT-2026-2193_1791739473470",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": ""
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "undefined/reserva/NVT-2026-2193?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-21936304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-21936304",
+    "pix_expires_at": "2026-10-11T18:24:33.470Z",
+    "payment_method": "pix",
+    "createdAt": "2026-10-11T17:24:33.470Z",
+    "expiresAt": "2026-10-11T18:24:33.470Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:24:33.470Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "NVT-2026-4550",
+    "order_nsu": "NVT-2026-4550",
+    "stripe_session_id": "cs_test_NVT-2026-4550_1791739473470",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": ""
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "undefined/reserva/NVT-2026-4550?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-45506304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-45506304",
+    "pix_expires_at": "2026-10-11T18:24:33.470Z",
+    "payment_method": "pix",
+    "createdAt": "2026-10-11T17:24:33.470Z",
+    "expiresAt": "2026-10-11T18:24:33.470Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:24:33.470Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "NVT-2026-9608",
+    "order_nsu": "NVT-2026-9608",
+    "stripe_session_id": "cs_test_NVT-2026-9608_1791739473470",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": ""
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "undefined/reserva/NVT-2026-9608?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-96086304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-96086304",
+    "pix_expires_at": "2026-10-11T18:24:33.470Z",
+    "payment_method": "pix",
+    "createdAt": "2026-10-11T17:24:33.470Z",
+    "expiresAt": "2026-10-11T18:24:33.470Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:24:33.470Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "NVT-2026-3086",
+    "order_nsu": "NVT-2026-3086",
+    "stripe_session_id": "cs_test_NVT-2026-3086_1791739473468",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": ""
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "undefined/reserva/NVT-2026-3086?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-30866304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-30866304",
+    "pix_expires_at": "2026-10-11T18:24:33.468Z",
+    "payment_method": "pix",
+    "createdAt": "2026-10-11T17:24:33.468Z",
+    "expiresAt": "2026-10-11T18:24:33.468Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:24:33.468Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "NVT-2026-7257",
+    "order_nsu": "NVT-2026-7257",
+    "stripe_session_id": "cs_test_NVT-2026-7257_1791739453467",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": ""
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "undefined/reserva/NVT-2026-7257?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-72576304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-72576304",
+    "pix_expires_at": "2026-10-11T18:24:13.467Z",
+    "payment_method": "pix",
+    "createdAt": "2026-10-11T17:24:13.467Z",
+    "expiresAt": "2026-10-11T18:24:13.467Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:24:13.467Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "NVT-2026-8615",
+    "order_nsu": "NVT-2026-8615",
+    "stripe_session_id": "cs_test_NVT-2026-8615_1791739453467",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": ""
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "undefined/reserva/NVT-2026-8615?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-86156304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-86156304",
+    "pix_expires_at": "2026-10-11T18:24:13.467Z",
+    "payment_method": "pix",
+    "createdAt": "2026-10-11T17:24:13.467Z",
+    "expiresAt": "2026-10-11T18:24:13.467Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:24:13.467Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "NVT-2026-6162",
+    "order_nsu": "NVT-2026-6162",
+    "stripe_session_id": "cs_test_NVT-2026-6162_1791739453466",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": ""
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "undefined/reserva/NVT-2026-6162?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-61626304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-61626304",
+    "pix_expires_at": "2026-10-11T18:24:13.466Z",
+    "payment_method": "pix",
+    "createdAt": "2026-10-11T17:24:13.466Z",
+    "expiresAt": "2026-10-11T18:24:13.466Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:24:13.466Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "NVT-2026-3435",
+    "order_nsu": "NVT-2026-3435",
+    "stripe_session_id": "cs_test_NVT-2026-3435_1791739453465",
+    "tourId": "pacote-casal-vip",
+    "tourName": "Pacote Casal VIP · 4 Dias + Transfer",
+    "date": "2026-10-25",
+    "timeWindow": "08:00 - 16:00",
+    "adults": 2,
+    "children": 1,
+    "addons": [],
+    "totalAmount": 1320,
+    "priceInCents": 132000,
+    "customer": {
+      "name": "João Silva",
+      "email": "joao.silva@example.com",
+      "phone": "84999998888",
+      "cpf": ""
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "aguardando pagamento",
+    "checkoutUrl": "undefined/reserva/NVT-2026-3435?sandbox=true",
+    "pix_qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=00020126580014br.gov.bcb.pix0136contato%40natalvipturismo.com5204000053039865401320.005802BR5925NATAL%20VIP%20TURISMO%20LTDA6005NATAL62070503NVT-2026-34356304",
+    "pix_copia_e_cola": "00020126580014br.gov.bcb.pix0136contato@natalvipturismo.com5204000053039865401320.005802BR5925NATAL VIP TURISMO LTDA6005NATAL62070503NVT-2026-34356304",
+    "pix_expires_at": "2026-10-11T18:24:13.465Z",
+    "payment_method": "pix",
+    "createdAt": "2026-10-11T17:24:13.465Z",
+    "expiresAt": "2026-10-11T18:24:13.465Z",
+    "log": [
+      {
+        "timestamp": "2026-10-11T17:24:13.465Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 132000,
+          "totalAmount": 1320,
+          "adults": 2,
+          "children": 1,
+          "isSandboxMode": true
+        }
+      }
+    ]
+  },
+  {
     "id": "NVT-2026-5858",
     "order_nsu": "NVT-2026-5858",
     "stripe_session_id": "cs_test_NVT-2026-5858_1791736614502",
