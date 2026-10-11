@@ -23,6 +23,9 @@ import {
 
 interface FollowUpSystemProps {
   onOpenBookingWithTour?: (tourId: string) => void;
+  isBookingOpen?: boolean;
+  isChatOpen?: boolean;
+  isCheckoutPage?: boolean;
 }
 
 // Gera dinamicamente a lista dos próximos meses a partir do mês e ano atuais
@@ -76,6 +79,9 @@ const isPromoAlreadyDismissed = (): boolean => {
 
 export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
   onOpenBookingWithTour,
+  isBookingOpen = false,
+  isChatOpen = false,
+  isCheckoutPage = false,
 }) => {
   // Exit-intent / Promo pop-up state
   const [showExitModal, setShowExitModal] = useState(false);
@@ -84,6 +90,9 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
 
   // Synchronous ref to prevent any re-trigger loop during dismissal
   const isDismissedRef = React.useRef<boolean>(isPromoAlreadyDismissed());
+
+  // Prevent popup if booking drawer is open, chat is open, or on checkout/confirmation page
+  const isSuppressed = isBookingOpen || isChatOpen || isCheckoutPage;
 
   // Lista dinâmica de meses válidos a partir do mês atual
   const availableTravelMonths = React.useMemo(() => getAvailableTravelMonths(12), []);
@@ -185,15 +194,15 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
   }, [showExitModal]);
 
-  // Exit intent detection on desktop (protegido contra re-abertura involuntária)
+  // Exit intent detection on desktop (protegido contra re-abertura involuntária e suprimido no checkout/reserva/chat)
   useEffect(() => {
-    if (isDismissedRef.current || isPromoAlreadyDismissed()) {
-      setHasDismissedPromo(true);
+    if (isDismissedRef.current || isPromoAlreadyDismissed() || isSuppressed) {
+      if (isPromoAlreadyDismissed()) setHasDismissedPromo(true);
       return;
     }
 
     const handleMouseLeave = (e: MouseEvent) => {
-      if (isDismissedRef.current || isPromoAlreadyDismissed()) return;
+      if (isDismissedRef.current || isPromoAlreadyDismissed() || isSuppressed) return;
 
       if (e.clientY <= 15 && !showExitModal) {
         setShowExitModal(true);
@@ -202,22 +211,42 @@ export const FollowUpSystem: React.FC<FollowUpSystemProps> = ({
 
     document.addEventListener('mouseleave', handleMouseLeave);
     return () => document.removeEventListener('mouseleave', handleMouseLeave);
-  }, [showExitModal]);
+  }, [showExitModal, isSuppressed]);
 
-  // Timed trigger: after 45s of browsing if not dismissed
+  // Timed trigger on mobile/desktop: after 40s of browsing if not dismissed and not suppressed
   useEffect(() => {
-    if (isDismissedRef.current || isPromoAlreadyDismissed()) {
-      setHasDismissedPromo(true);
+    if (isDismissedRef.current || isPromoAlreadyDismissed() || isSuppressed) {
+      if (isPromoAlreadyDismissed()) setHasDismissedPromo(true);
       return;
     }
 
     const timer = setTimeout(() => {
-      if (!isDismissedRef.current && !isPromoAlreadyDismissed() && !showExitModal) {
+      if (!isDismissedRef.current && !isPromoAlreadyDismissed() && !isSuppressed && !showExitModal) {
         setShowExitModal(true);
       }
-    }, 45000);
+    }, 40000);
     return () => clearTimeout(timer);
-  }, [showExitModal]);
+  }, [showExitModal, isSuppressed]);
+
+  // Mobile scroll trigger: after 50% scroll on mobile devices
+  useEffect(() => {
+    if (isDismissedRef.current || isPromoAlreadyDismissed() || isSuppressed) {
+      return;
+    }
+
+    const handleScroll = () => {
+      if (isDismissedRef.current || isPromoAlreadyDismissed() || isSuppressed || showExitModal) return;
+
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight > 0 && scrollTop / docHeight >= 0.5) {
+        setShowExitModal(true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [showExitModal, isSuppressed]);
 
   // Auto-close countdown after successful lead submission
   useEffect(() => {
