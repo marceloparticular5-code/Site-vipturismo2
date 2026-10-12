@@ -29,6 +29,9 @@ export interface StripeReservation {
   checkoutUrl: string;
   payment_method?: 'pix' | 'cartao';
   installments?: number;
+  installmentAmount?: number;
+  installmentAmountFormatted?: string;
+  paymentErrorMessage?: string;
   receipt_url?: string;
   pix_qr_code_url?: string;
   pix_copia_e_cola?: string;

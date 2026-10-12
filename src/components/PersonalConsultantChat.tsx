@@ -143,7 +143,7 @@ export const PersonalConsultantChat: React.FC<PersonalConsultantChatProps> = ({
           'Sim! Buscamos na porta do seu hotel em Ponta Negra, Via Costeira e Praia dos Artistas, sem custo extra 🚐\nEm qual hotel você vai ficar?';
       } else if (query.toLowerCase().includes('pagar') || query.toLowerCase().includes('pix') || query.toLowerCase().includes('cartão')) {
         fallback =
-          'Aceitamos Pix instantâneo com confirmação automática ou cartão de crédito em até 3x sem juros processado pela Stripe!\nVocê prefere garantir no Pix ou parcelar no cartão?';
+          'Aceitamos Pix instantâneo com confirmação imediata ou cartão de crédito em até 3x sem juros processado pela InfinitePay!\nVocê prefere garantir no Pix ou parcelar no cartão?';
       }
 
       setMessages((prev) => [

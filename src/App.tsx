@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { CvcHeroSection } from './components/CvcHeroSection';
 import { OffersShowcase } from './components/OffersShowcase';
 import { CoupleVipBanner } from './components/CoupleVipBanner';
+import { PrivateServicesSection } from './components/PrivateServicesSection';
 import { IncredibleDestinations } from './components/IncredibleDestinations';
 import { SocialProofSection } from './components/SocialProofSection';
 import { TravelTipsSection } from './components/TravelTipsSection';
@@ -101,17 +102,17 @@ export function App() {
         setIsBookingOpen(true);
       }
 
-      // Stripe & Reservation Return Route: /reserva/{order_nsu} or ?session_id=...
+      // InfinitePay Reservation Return Route: /reserva/{order_nsu}, /confirmacao?order_nsu=..., etc.
       const rawPath = window.location.pathname;
-      const match = rawPath.match(/^\/reserva\/([^/?#]+)/i);
+      const match = rawPath.match(/^\/reserva\/([^/?#]+)/i) || rawPath.match(/^\/confirmacao\/([^/?#]+)/i);
       const searchParams = new URLSearchParams(window.location.search);
-      const queryNsu = searchParams.get('order_nsu') || searchParams.get('order') || searchParams.get('session_id');
+      const queryNsu = searchParams.get('order_nsu') || searchParams.get('order') || searchParams.get('session_id') || searchParams.get('nsu');
 
       if (match && match[1]) {
         setReservationOrderNsu(match[1]);
-      } else if (queryNsu) {
+      } else if (queryNsu && (rawPath.startsWith('/confirmacao') || rawPath.startsWith('/reserva') || searchParams.has('order_nsu'))) {
         setReservationOrderNsu(queryNsu);
-      } else if (!rawPath.startsWith('/reserva/')) {
+      } else if (!rawPath.startsWith('/reserva/') && !rawPath.startsWith('/confirmacao')) {
         setReservationOrderNsu(null);
       }
     };
@@ -287,6 +288,16 @@ export function App() {
           variants={fadeUpVariants}
         >
           <CoupleVipBanner onOpenBooking={handleOpenBooking} />
+        </motion.div>
+
+        {/* 4.1 Serviços Privados Premium (Novo Campo / Seção) */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpVariants}
+        >
+          <PrivateServicesSection onOpenBooking={handleOpenBooking} />
         </motion.div>
 
         {/* 5. Conheça Destinos Incríveis */}

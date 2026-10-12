@@ -174,7 +174,7 @@ export async function processChat(
       'Sim! Buscamos na porta do seu hotel em Ponta Negra, Via Costeira e Praia dos Artistas, sem custo extra 🚐\nEm qual hotel você vai se hospedar?';
   } else if (queryLower.includes('pagar') || queryLower.includes('pagamento') || queryLower.includes('pix') || queryLower.includes('cartao') || queryLower.includes('cartão') || queryLower.includes('reserva')) {
     reply =
-      'Aceitamos Pix com aprovação imediata ou cartão de crédito em até 3x sem juros pela Stripe!\nVocê prefere garantir no Pix ou parcelar no cartão?';
+      'Aceitamos Pix com aprovação imediata ou cartão de crédito em até 3x sem juros pela InfinitePay!\nVocê prefere garantir no Pix ou parcelar no cartão?';
   } else if (queryLower.includes('maré') || queryLower.includes('mare')) {
     reply =
       'Para as piscinas naturais de Maracajaú e Rio do Fogo, recomendo os dias com maré de 0.0 a 0.5m para água cristalina!\nVocê já tem os dias exatos em que estará por aqui?';

@@ -70,6 +70,112 @@ export function saveReservations(list: InfinitePayReservation[]) {
   }
 }
 
+export interface CatalogItemConfig {
+  id: string;
+  description: string;
+  priceInCents: number;
+  isVehicleFixed: boolean;
+}
+
+export const INFINITEPAY_CATALOG: Record<string, CatalogItemConfig> = {
+  'pacote-casal-vip': {
+    id: 'pacote-casal-vip',
+    description: 'Pacote Casal Vip',
+    priceInCents: 132000,
+    isVehicleFixed: true,
+  },
+  'buggy-vip-privativo': {
+    id: 'buggy-vip-privativo',
+    description: 'Buggy Privativo Premium',
+    priceInCents: 82000,
+    isVehicleFixed: true,
+  },
+  'buggy-litoral-norte-compartilhado': {
+    id: 'buggy-litoral-norte-compartilhado',
+    description: 'Buggy Litoral Norte Compartilhado',
+    priceInCents: 41000,
+    isVehicleFixed: false,
+  },
+  'off-road-litoral-sul': {
+    id: 'off-road-litoral-sul',
+    description: 'Litoral Sul 4X4',
+    priceInCents: 15000,
+    isVehicleFixed: false,
+  },
+  'pipa-praia-do-amor': {
+    id: 'pipa-praia-do-amor',
+    description: 'Pipa + Praia do Amor',
+    priceInCents: 8000,
+    isVehicleFixed: false,
+  },
+  'pipa-by-night': {
+    id: 'pipa-by-night',
+    description: 'Pipa By-Night',
+    priceInCents: 10000,
+    isVehicleFixed: false,
+  },
+  'rio-do-fogo-vip': {
+    id: 'rio-do-fogo-vip',
+    description: 'Rio do Fogo + Punaú',
+    priceInCents: 17000,
+    isVehicleFixed: false,
+  },
+  'maracajau-vip': {
+    id: 'maracajau-vip',
+    description: 'Parrachos de Maracajaú + Dayuse + Parque Aquático Infantil',
+    priceInCents: 17000,
+    isVehicleFixed: false,
+  },
+  'quadriciclo-aventura': {
+    id: 'quadriciclo-aventura',
+    description: 'Quadriciclo + Lagoa da Juventude',
+    priceInCents: 28000,
+    isVehicleFixed: true,
+  },
+  'transfer-vip-aeroporto': {
+    id: 'transfer-vip-aeroporto',
+    description: 'Transfer Aeroporto Privativo Premium',
+    priceInCents: 25000,
+    isVehicleFixed: true,
+  },
+  'auto-do-potengi': {
+    id: 'auto-do-potengi',
+    description: 'Auto do Potengi + City-Tour',
+    priceInCents: 15000,
+    isVehicleFixed: false,
+  },
+  'buggy-litoral-norte-sunset': {
+    id: 'buggy-litoral-norte-sunset',
+    description: 'Litoral Norte Buggy VIP Premium + Pôr do Sol',
+    priceInCents: 130000,
+    isVehicleFixed: true,
+  },
+  'litoral-sul-4x4-vip-premium': {
+    id: 'litoral-sul-4x4-vip-premium',
+    description: 'Litoral Sul 4x4 VIP Premium',
+    priceInCents: 100000,
+    isVehicleFixed: true,
+  },
+  'pipa-praia-do-amor-vip-premium': {
+    id: 'pipa-praia-do-amor-vip-premium',
+    description: 'Pipa + Praia do Amor VIP Premium',
+    priceInCents: 55000,
+    isVehicleFixed: true,
+  },
+  'pipa-by-night-vip-premium': {
+    id: 'pipa-by-night-vip-premium',
+    description: 'Pipa By-Night VIP Premium',
+    priceInCents: 65000,
+    isVehicleFixed: true,
+  },
+  'city-tour-historico-vip-premium': {
+    id: 'city-tour-historico-vip-premium',
+    description: 'City-Tour Histórico',
+    priceInCents: 55000,
+    isVehicleFixed: true,
+  },
+};
+
 /**
  * Backend price calculation - calculates total in cents strictly on the server.
  * Adults + Children (3 a 11 anos) + Selected Addons.
@@ -188,19 +294,39 @@ export async function createInfinitePayLink(params: CreateInfinitePaySessionPara
   const rawHandle = process.env.INFINITEPAY_HANDLE || process.env.INFINITE_HANDLE || 'natalvipturismo';
   const infiniteTag = rawHandle.replace(/^\$/, '').trim();
 
-  // Clean URLs with domain
-  const cleanBase = baseUrl.replace(/\/$/, '');
-  const redirectUrl = `${cleanBase}/reserva/${orderNsu}?payment_return=true`;
+  // Clean URLs with domain - ensures valid HTTPS complete URL
+  let cleanBase = baseUrl.replace(/\/$/, '');
+  if (
+    !cleanBase.startsWith('https://') &&
+    !cleanBase.includes('localhost') &&
+    !cleanBase.includes('127.0.0.1')
+  ) {
+    cleanBase = cleanBase.replace(/^http:\/\//, 'https://');
+  }
+  const redirectUrl = `${cleanBase}/confirmacao?order_nsu=${orderNsu}`;
   const webhookUrl = `${cleanBase}/api/webhooks/infinitepay`;
 
-  // Item description in cents
+  // Item description in cents based on official catalog
+  const catalogEntry =
+    INFINITEPAY_CATALOG[tourId] ||
+    Object.values(INFINITEPAY_CATALOG).find(
+      (c) => c.description.toLowerCase() === calc.tour.title.toLowerCase()
+    );
+
+  const description = catalogEntry ? catalogEntry.description : calc.tour.title;
+  const isVehicle = catalogEntry
+    ? catalogEntry.isVehicleFixed
+    : calc.tour.pricingType === 'vehicle_fixed' || calc.tour.pricingType === 'couple_fixed';
+
+  // Rule: Para serviços por pessoa, quantity = nº de passageiros; para serviços privativos/por veículo, quantity = 1
+  const quantity = isVehicle ? 1 : Math.max(1, calc.safeAdults + calc.safeChildren);
+  const priceInCents = catalogEntry ? catalogEntry.priceInCents : Math.round((calc.totalBRL / quantity) * 100);
+
   const items = [
     {
-      description: `${calc.tour.title} · Natal Vip Turismo (${calc.safeAdults} Ad.${
-        calc.safeChildren > 0 ? ` + ${calc.safeChildren} Cr.` : ''
-      })`,
-      price: calc.priceInCents,
-      quantity: 1,
+      description,
+      quantity,
+      price: priceInCents,
     },
   ];
 

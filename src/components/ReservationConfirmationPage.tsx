@@ -256,7 +256,7 @@ export const ReservationConfirmationPage: React.FC<ReservationConfirmationPagePr
           </div>
         )}
 
-        {/* 1. AGUARDANDO PAGAMENTO (Live Checking Status via Stripe) */}
+        {/* 1. AGUARDANDO PAGAMENTO (Live Checking Status via InfinitePay) */}
         {!loading && isPending && reservation && !isDeclined && !isExpired && (
           <div className="bg-gradient-to-br from-[#0B2544] via-[#091C35] to-[#071322] border-2 border-amber-400/60 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6 text-white text-center">
             <div className="w-16 h-16 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center mx-auto">
@@ -292,7 +292,7 @@ export const ReservationConfirmationPage: React.FC<ReservationConfirmationPagePr
                   <div className="p-3 bg-white rounded-2xl shadow-xl border-4 border-amber-400/50">
                     <img
                       src={reservation.pix_qr_code_url}
-                      alt="QR Code PIX Stripe"
+                      alt="QR Code PIX InfinitePay"
                       className="w-40 h-40 object-contain"
                     />
                   </div>
@@ -362,7 +362,7 @@ export const ReservationConfirmationPage: React.FC<ReservationConfirmationPagePr
                   className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Pagar com Cartão (até 3x sem juros) na Stripe</span>
+                  <span>Pagar com Pix ou Cartão (até 3x sem juros) na InfinitePay</span>
                   <ExternalLink className="w-4 h-4" />
                 </button>
               )}

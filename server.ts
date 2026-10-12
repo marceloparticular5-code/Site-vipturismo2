@@ -160,8 +160,9 @@ const handleCreateInfinitePayCheckout = async (req: express.Request, res: expres
       return;
     }
 
-    const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
     const host = req.get('host') || 'localhost:3000';
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    const protocol = isLocal ? (req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http') : 'https';
     const baseUrl = `${protocol}://${host}`;
 
     const result = await createInfinitePayLink({

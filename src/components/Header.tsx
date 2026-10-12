@@ -13,6 +13,7 @@ import {
   Tag,
   Car,
   Heart,
+  Crown,
   ChevronDown,
 } from 'lucide-react';
 import { auth, loginWithGoogle, logoutUser, isUserAdmin } from '../lib/firebase';
@@ -157,6 +158,13 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Heart className="w-3.5 h-3.5 text-[#FBBF24]" />
               <span>Pacotes Casal</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('servicos-privativos')}
+              className="hover:text-[#FBBF24] transition-colors cursor-pointer py-1 relative flex items-center gap-1.5 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#FBBF24] hover:after:w-full after:transition-all"
+            >
+              <Crown className="w-3.5 h-3.5 text-[#FBBF24]" />
+              <span>Privativos VIP</span>
             </button>
             <button
               onClick={() => onOpenBooking('transfer-vip-aeroporto')}

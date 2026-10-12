@@ -288,8 +288,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     setPriceAnimating(true);
   };
 
-  const handleStripeCheckout = async () => {
-    setStripeError(null);
+  const handleInfinitePayCheckout = async () => {
+    setInfinitePayError(null);
     const errors: { [key: string]: string } = {};
 
     if (!adults || adults < 1) {
@@ -633,8 +633,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     <option key={t.id} value={t.id}>
                       {t.id === 'pacote-casal-vip'
                         ? `${t.title} — R$ ${t.priceDiscounted.toFixed(2)} (VALOR TOTAL PARA 2 PESSOAS / CASAL)`
-                        : t.id === 'genipabu-buggy-vip' || t.id === 'buggy-vip-privativo'
-                        ? `${t.title} — R$ ${t.priceDiscounted.toFixed(2)} (Buggy privativo até 4 pessoas)`
+                        : t.pricingType === 'vehicle_fixed' || t.id === 'genipabu-buggy-vip' || t.id === 'buggy-vip-privativo'
+                        ? `${t.title} — R$ ${t.priceDiscounted.toFixed(2)} (${t.badge || 'Privativo'} até ${t.maxCapacity || 4} pess.)`
                         : `${t.title} — R$ ${t.priceDiscounted.toFixed(2)} por pessoa`}
                     </option>
                   ))}
@@ -727,12 +727,12 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   </div>
                 )}
 
-                {/* Exceção 3: Buggy Privativo ou Quadriciclo */}
-                {(isBuggy || isQuadri) && !isTransfer && !isCouplePackage && (
+                {/* Exceção 3: Veículo Privativo ou Quadriciclo */}
+                {(isBuggy || isQuadri || isVehicleFixed) && !isTransfer && !isCouplePackage && (
                   <div className="p-3.5 rounded-xl bg-amber-400/15 border border-amber-400/50 text-amber-200 text-xs sm:text-sm space-y-1.5">
                     <div className="flex items-center gap-2 text-amber-300 font-extrabold text-sm">
                       <Users className="w-4 h-4 shrink-0" />
-                      <span>Veículo Privativo · Valor fechado pelo veículo</span>
+                      <span>{currentTour.badge || 'Veículo Privativo Premium'} · Valor fechado pelo veículo</span>
                     </div>
                     <p className="text-slate-100 font-normal leading-relaxed text-xs">
                       Valor fechado de <strong>R$ {baseTourPrice.toFixed(2)}</strong> pelo veículo exclusivo (capacidade de até {maxCapacity} passageiros).
