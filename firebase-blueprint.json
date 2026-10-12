@@ -7,18 +7,67 @@
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
         "title": { "type": "string", "maxLength": 200 },
+        "subtitle": { "type": "string", "maxLength": 500 },
         "priceDiscounted": { "type": "number" },
+        "priceOriginal": { "type": "number" },
+        "childPrice": { "type": "number" },
+        "pricingType": { "type": "string", "maxLength": 50 },
+        "duration": { "type": "string", "maxLength": 100 },
+        "departures": { "type": "string", "maxLength": 200 },
+        "type": { "type": "string", "maxLength": 50 },
+        "order": { "type": "number" },
         "description": { "type": "string", "maxLength": 5000 },
         "imageUrl": { "type": "string", "maxLength": 2048 },
-        "galleryImages": { "type": "array" }
+        "imageAlt": { "type": "string", "maxLength": 300 },
+        "galleryImages": { "type": "array" },
+        "galleryAlts": { "type": "array" },
+        "active": { "type": "boolean" },
+        "isVip": { "type": "boolean" },
+        "includesDiving": { "type": "boolean" }
       },
       "required": ["id", "title", "priceDiscounted", "description", "imageUrl"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Usuário administrador do painel da agência",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "role": { "type": "string", "enum": ["owner", "editor"] },
+        "ativo": { "type": "boolean" },
+        "criado_em": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "email", "role", "ativo", "criado_em"]
+    },
+    "PriceHistory": {
+      "title": "PriceHistory",
+      "description": "Histórico de alteração de preços em centavos e reais",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "tourId": { "type": "string", "maxLength": 128 },
+        "tourTitle": { "type": "string", "maxLength": 200 },
+        "alterado_por": { "type": "string", "maxLength": 256 },
+        "data_alteracao": { "type": "string", "maxLength": 64 },
+        "preco_adulto_anterior": { "type": "number" },
+        "preco_adulto_novo": { "type": "number" }
+      },
+      "required": ["id", "tourId", "alterado_por", "data_alteracao", "preco_adulto_anterior", "preco_adulto_novo"]
     }
   },
   "firestore": {
     "/tours/{tourId}": {
       "schema": "Tour",
       "description": "Catálogo de passeios VIP gerenciados pela agência"
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Controle de acesso de administradores (owner/editor)"
+    },
+    "/price_history/{historyId}": {
+      "schema": "PriceHistory",
+      "description": "Registro de auditoria de alterações de valores e tarifas"
     }
   }
 }

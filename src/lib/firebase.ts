@@ -23,11 +23,12 @@ import {
   User,
 } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { TourPackage, LeadFollowUp } from '../types';
+import { TourPackage, LeadFollowUp, AdminUser, PriceHistoryItem } from '../types';
 import { VIP_TOURS } from '../data/toursData';
 
-// Admin email configured for agency management
+// Admin email configured for agency management (Super Admin / Owner)
 export const ADMIN_EMAIL = 'marceloparticular5@gmail.com';
+export const ADMIN_OWNER_EMAIL = 'marceloparticular5@gmail.com';
 export const ADMIN_EMAILS = [
   'marceloparticular5@gmail.com',
   'admin@natalvipturismo.com',
@@ -436,7 +437,13 @@ export function subscribeToTours(callback: (tours: TourPackage[]) => void): () =
             reviewsCount: typeof data.reviewsCount === 'number' ? data.reviewsCount : 100,
             priceOriginal: typeof data.priceOriginal === 'number' ? data.priceOriginal : 0,
             priceDiscounted: typeof data.priceDiscounted === 'number' ? data.priceDiscounted : 0,
+            childPrice: typeof data.childPrice === 'number' ? data.childPrice : undefined,
+            pricingType: data.pricingType || undefined,
+            maxCapacity: typeof data.maxCapacity === 'number' ? data.maxCapacity : undefined,
             duration: data.duration || 'Dia inteiro',
+            departures: data.departures || undefined,
+            type: data.type || undefined,
+            order: typeof data.order === 'number' ? data.order : undefined,
             includesDiving: Boolean(data.includesDiving),
             isVip: Boolean(data.isVip),
             urgencyText: data.urgencyText || '',
@@ -444,7 +451,9 @@ export function subscribeToTours(callback: (tours: TourPackage[]) => void): () =
             highlights: Array.isArray(data.highlights) ? data.highlights : [],
             included: Array.isArray(data.included) ? data.included : [],
             imageUrl: data.imageUrl || '',
+            imageAlt: data.imageAlt || undefined,
             galleryImages: Array.isArray(data.galleryImages) ? data.galleryImages : [],
+            galleryAlts: Array.isArray(data.galleryAlts) ? data.galleryAlts : undefined,
             remainingSlots: typeof data.remainingSlots === 'number' ? data.remainingSlots : undefined,
             category: data.category || undefined,
             active: data.active !== false,
@@ -503,13 +512,21 @@ export async function saveTourToFirestore(tour: TourPackage): Promise<TourMutati
       reviewsCount: Number(tour.reviewsCount) || 1,
       priceOriginal: Number(tour.priceOriginal) || 0,
       priceDiscounted: Number(tour.priceDiscounted) || 0,
+      childPrice: typeof tour.childPrice === 'number' ? tour.childPrice : Number(tour.priceDiscounted) || 0,
+      pricingType: tour.pricingType || 'per_person',
+      maxCapacity: typeof tour.maxCapacity === 'number' ? tour.maxCapacity : 15,
       duration: (tour.duration || 'Dia inteiro').trim(),
+      departures: (tour.departures || 'Saídas diárias').trim(),
+      type: tour.type || (tour.isVip ? 'premium' : 'compartilhado'),
+      order: typeof tour.order === 'number' ? tour.order : 0,
       includesDiving: Boolean(tour.includesDiving),
       isVip: Boolean(tour.isVip),
       urgencyText: (tour.urgencyText || '').trim(),
       description: (tour.description || '').trim(),
       imageUrl: (tour.imageUrl || '').trim(),
+      imageAlt: (tour.imageAlt || tour.title || '').trim(),
       galleryImages: Array.isArray(tour.galleryImages) ? tour.galleryImages : [],
+      galleryAlts: Array.isArray(tour.galleryAlts) ? tour.galleryAlts : [],
       remainingSlots: typeof tour.remainingSlots === 'number' ? tour.remainingSlots : 3,
       category: (tour.category || '').trim(),
       highlights: Array.isArray(tour.highlights) ? tour.highlights : [],
@@ -779,3 +796,180 @@ export async function saveLeadManualAdmin(
 
   return newId;
 }
+
+// ==========================================
+// ADMINISTRATORS (RBAC: owner | editor)
+// ==========================================
+
+export async function isUserAuthorizedAdmin(user: User | null): Promise<{ authorized: boolean; role: 'owner' | 'editor'; email: string }> {
+  if (!user || !user.email) {
+    return { authorized: false, role: 'editor', email: '' };
+  }
+  const email = user.email.trim().toLowerCase();
+
+  // Super admin principal (Owner) always authorized
+  if (email === ADMIN_OWNER_EMAIL.toLowerCase()) {
+    return { authorized: true, role: 'owner', email };
+  }
+
+  // Check admins collection in Firestore
+  try {
+    const colRef = collection(db, 'admins');
+    const q = query(colRef, where('ativo', '==', true));
+    const snap = await getDocs(q);
+    for (const docSnap of snap.docs) {
+      const data = docSnap.data();
+      if ((data.email || '').trim().toLowerCase() === email) {
+        return { authorized: true, role: data.role === 'owner' ? 'owner' : 'editor', email };
+      }
+    }
+  } catch (err) {
+    console.warn('Erro ao consultar tabela admins no Firestore:', err);
+  }
+
+  // Fallback to static array
+  if (ADMIN_EMAILS.some((e) => e.toLowerCase() === email)) {
+    return { authorized: true, role: 'editor', email };
+  }
+
+  return { authorized: false, role: 'editor', email };
+}
+
+export function subscribeAdmins(callback: (admins: AdminUser[]) => void): () => void {
+  const defaultSuperAdmin: AdminUser = {
+    id: 'admin-super-owner',
+    email: ADMIN_OWNER_EMAIL,
+    role: 'owner',
+    ativo: true,
+    criado_em: new Date('2026-01-01').toISOString(),
+    nome: 'Marcelo (Super Admin / Proprietário)',
+  };
+
+  try {
+    const colRef = collection(db, 'admins');
+    return onSnapshot(
+      colRef,
+      (snapshot) => {
+        const list: AdminUser[] = [];
+        let hasOwner = false;
+
+        snapshot.forEach((docSnap) => {
+          const d = docSnap.data();
+          const email = (d.email || '').trim().toLowerCase();
+          if (email === ADMIN_OWNER_EMAIL.toLowerCase()) {
+            hasOwner = true;
+          }
+          list.push({
+            id: docSnap.id,
+            email: d.email || '',
+            role: d.role === 'owner' ? 'owner' : 'editor',
+            ativo: d.ativo !== false,
+            criado_em: d.criado_em || new Date().toISOString(),
+            nome: d.nome || undefined,
+          });
+        });
+
+        if (!hasOwner) {
+          list.unshift(defaultSuperAdmin);
+        }
+
+        callback(list);
+      },
+      (error) => {
+        console.warn('Admins listener notice (using seed super admin):', error);
+        callback([defaultSuperAdmin]);
+      }
+    );
+  } catch (err) {
+    console.warn('Admins listener exception:', err);
+    callback([defaultSuperAdmin]);
+    return () => {};
+  }
+}
+
+export async function saveAdminToFirestore(admin: Omit<AdminUser, 'id'> & { id?: string }): Promise<void> {
+  const email = (admin.email || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    throw new Error('E-mail inválido para administrador.');
+  }
+
+  const id = admin.id || `admin-${email.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const docRef = doc(db, 'admins', id);
+  await setDoc(
+    docRef,
+    {
+      id,
+      email,
+      role: email === ADMIN_OWNER_EMAIL.toLowerCase() ? 'owner' : (admin.role || 'editor'),
+      ativo: admin.ativo !== false,
+      criado_em: admin.criado_em || new Date().toISOString(),
+      nome: admin.nome || email.split('@')[0],
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+}
+
+export async function deleteAdminFromFirestore(adminId: string, email: string): Promise<void> {
+  if (email.trim().toLowerCase() === ADMIN_OWNER_EMAIL.toLowerCase()) {
+    throw new Error('O proprietário principal (marceloparticular5@gmail.com) não pode ser removido.');
+  }
+  const docRef = doc(db, 'admins', adminId);
+  await deleteDoc(docRef);
+}
+
+// ==========================================
+// PRICE HISTORY AUDIT TRAIL
+// ==========================================
+
+export async function recordPriceChange(item: Omit<PriceHistoryItem, 'id' | 'data_alteracao'>): Promise<void> {
+  try {
+    const id = `price-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const fullItem: PriceHistoryItem = {
+      ...item,
+      id,
+      data_alteracao: new Date().toISOString(),
+    };
+    await setDoc(doc(db, 'price_history', id), fullItem);
+  } catch (err) {
+    console.warn('Não foi possível gravar histórico de preços no Firestore:', err);
+  }
+}
+
+export function subscribePriceHistory(callback: (history: PriceHistoryItem[]) => void): () => void {
+  try {
+    const colRef = collection(db, 'price_history');
+    return onSnapshot(
+      colRef,
+      (snapshot) => {
+        const list: PriceHistoryItem[] = [];
+        snapshot.forEach((docSnap) => {
+          const d = docSnap.data();
+          list.push({
+            id: docSnap.id,
+            tourId: d.tourId || '',
+            tourTitle: d.tourTitle || '',
+            alterado_por: d.alterado_por || '',
+            data_alteracao: d.data_alteracao || '',
+            preco_adulto_anterior: Number(d.preco_adulto_anterior) || 0,
+            preco_adulto_novo: Number(d.preco_adulto_novo) || 0,
+            preco_infantil_anterior: d.preco_infantil_anterior !== undefined ? Number(d.preco_infantil_anterior) : undefined,
+            preco_infantil_novo: d.preco_infantil_novo !== undefined ? Number(d.preco_infantil_novo) : undefined,
+            observacao: d.observacao || undefined,
+          });
+        });
+        list.sort((a, b) => (b.data_alteracao || '').localeCompare(a.data_alteracao || ''));
+        callback(list);
+      },
+      (err) => {
+        console.warn('Price history snapshot warning:', err);
+        callback([]);
+      }
+    );
+  } catch (err) {
+    console.warn('Price history exception:', err);
+    callback([]);
+    return () => {};
+  }
+}
+

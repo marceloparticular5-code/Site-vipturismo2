@@ -37,11 +37,38 @@ export interface TourPackage {
   highlights: string[];
   included: string[];
   imageUrl: string;
+  imageAlt?: string; // Texto alternativo da foto principal
   galleryImages?: string[];
+  galleryAlts?: string[]; // Textos alternativos das fotos da galeria
   remainingSlots?: number;
   category?: 'combo' | 'aventura' | 'mergulho' | 'cultural' | 'transfer' | string;
+  type?: 'compartilhado' | 'privativo' | 'premium'; // Tipo de serviço
+  departures?: string; // Saídas e dias da semana
+  order?: number; // Ordem de exibição dos roteiros
   active?: boolean;
   updatedAt?: string;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  role: 'owner' | 'editor';
+  ativo: boolean;
+  criado_em: string;
+  nome?: string;
+}
+
+export interface PriceHistoryItem {
+  id: string;
+  tourId: string;
+  tourTitle: string;
+  alterado_por: string;
+  data_alteracao: string;
+  preco_adulto_anterior: number;
+  preco_adulto_novo: number;
+  preco_infantil_anterior?: number;
+  preco_infantil_novo?: number;
+  observacao?: string;
 }
 
 export interface BookingAddon {

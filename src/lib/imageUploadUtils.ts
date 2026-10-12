@@ -46,7 +46,7 @@ export interface MediaItem {
 
 const MAX_IMAGE_FILE_SIZE = 10 * 1024 * 1024; // 10 MB input
 const MAX_VIDEO_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
-const MAX_IMAGE_DIMENSION_PX = 1200; // max 1200px width/height
+const MAX_IMAGE_DIMENSION_PX = 1920; // max 1920px width/height
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
@@ -118,8 +118,8 @@ export function validateVideoFile(file: File): MediaValidationResult {
  */
 export async function compressAndResizeImage(
   file: File,
-  maxWidth = MAX_IMAGE_DIMENSION_PX,
-  quality = 0.85
+  maxWidth = 1920,
+  quality = 0.8
 ): Promise<ProcessedImage> {
   const validation = validateImageFile(file);
   if (!validation.valid) {
@@ -156,13 +156,25 @@ export async function compressAndResizeImage(
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
 
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        const head = 'data:image/jpeg;base64,';
-        const compressedSize = Math.round(((dataUrl.length - head.length) * 3) / 4);
+        // Try webp first, fallback to jpeg if unsupported
+        let dataUrl = canvas.toDataURL('image/webp', quality);
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+
+        const headMatch = dataUrl.match(/^data:image\/[a-z]+;base64,/);
+        const headLength = headMatch ? headMatch[0].length : 23;
+        const compressedSize = Math.round(((dataUrl.length - headLength) * 3) / 4);
+
+        // Adjust filename extension to .webp if converted
+        let outName = file.name;
+        if (dataUrl.startsWith('data:image/webp')) {
+          outName = outName.replace(/\.(jpe?g|png)$/i, '') + '.webp';
+        }
 
         resolve({
           id: `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-          name: file.name,
+          name: outName,
           originalSize: file.size,
           compressedSize,
           dataUrl,

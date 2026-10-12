@@ -97,6 +97,14 @@ service cloud.firestore {
              (!('highlights' in data) || (data.highlights is list && data.highlights.size() <= 30)) &&
              (!('included' in data) || (data.included is list && data.included.size() <= 30)) &&
              (!('galleryImages' in data) || (data.galleryImages is list && data.galleryImages.size() <= 30)) &&
+             (!('galleryAlts' in data) || (data.galleryAlts is list && data.galleryAlts.size() <= 30)) &&
+             (!('imageAlt' in data) || (data.imageAlt is string && data.imageAlt.size() <= 300)) &&
+             (!('type' in data) || (data.type is string && data.type.size() <= 50)) &&
+             (!('departures' in data) || (data.departures is string && data.departures.size() <= 200)) &&
+             (!('order' in data) || (data.order is number)) &&
+             (!('childPrice' in data) || (data.childPrice is number)) &&
+             (!('pricingType' in data) || (data.pricingType is string && data.pricingType.size() <= 50)) &&
+             (!('maxCapacity' in data) || (data.maxCapacity is number)) &&
              (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 100));
     }
 
@@ -109,6 +117,11 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
+    }
+
+    // Price History Collection
+    match /price_history/{historyId} {
+      allow read, write: if isAdmin();
     }
 
     // Tours Collection (Public read, admin write)
