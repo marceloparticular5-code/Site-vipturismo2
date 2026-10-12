@@ -214,7 +214,7 @@ export function trackCheckoutLinkGenerated(orderNsu: string, tourTitle: string, 
   window.dataLayer = window.dataLayer || [];
   // @ts-ignore
   window.dataLayer.push({
-    event: 'stripe_checkout_initiated',
+    event: 'checkout_link_generated',
     order_nsu: orderNsu,
     tour_name: tourTitle,
     value: totalAmount,

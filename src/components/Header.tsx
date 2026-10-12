@@ -252,6 +252,13 @@ export const Header: React.FC<HeaderProps> = ({
               <span>❤️</span>
             </button>
             <button
+              onClick={() => handleNavClick('servicos-privativos')}
+              className="w-full text-left py-2 font-bold hover:text-[#FBBF24] border-b border-[#1E3A5F]/50 flex items-center justify-between"
+            >
+              <span>Serviços Privados Premium (Veículo Exclusivo)</span>
+              <span>👑</span>
+            </button>
+            <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 onOpenBooking('transfer-vip-aeroporto');

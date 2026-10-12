@@ -1,5 +1,72 @@
 [
   {
+    "id": "NVT-2026-5141",
+    "order_nsu": "NVT-2026-5141",
+    "tourId": "buggy-litoral-norte-sunset",
+    "tourName": "Litoral Norte Buggy VIP Premium + Pôr do Sol",
+    "date": "25/10/2026",
+    "timeWindow": "08:00 às 16:30 (Pôr do Sol)",
+    "adults": 4,
+    "children": 0,
+    "addons": [],
+    "totalAmount": 1300,
+    "priceInCents": 130000,
+    "customer": {
+      "name": "Carlos Silva",
+      "email": "carlos@email.com",
+      "phone": "84999998888",
+      "cpf": "123.456.789-00"
+    },
+    "hotelPickup": "Hotel em Ponta Negra / Via Costeira",
+    "status": "recusada",
+    "checkoutUrl": "https://checkout.infinitepay.io/natalvipturismo?lenc=G30BYGTimnuy90WEVetH5HDNA84Gm--mT7zBczzGqUa-khK70C9wvbYr-suLNHY78RAlXOzH6E7WUPr5LNqky_AmsmHr3bE6rVBCZLUzqg5hja_uaDQRSWaQMJ_YGtTTGRI149IY9LzzceaNBiPBrWTPm4joCG8y8p5C25BOlpO9tB6wIfj6dQH_34lN6XhrjO7m-HaBZ8mgqCE4KLceehbu9PV5qyAugV2J34piPcaFLdtIhn5WzbWADJV3kksSNhySJk6FA9Hwu0CHYIiUJwRnf3YWgdKSxI1Whso7P9uABUASx6lwIDR-RGb8DUvNz4ikRxeEjAwB.v1.c3a3c753722ca799",
+    "payment_method": "cartao",
+    "installments": 3,
+    "installmentAmount": 433.33,
+    "installmentAmountFormatted": "433,33",
+    "createdAt": "2026-10-12T12:05:37.840Z",
+    "expiresAt": "2026-10-12T13:05:37.840Z",
+    "log": [
+      {
+        "timestamp": "2026-10-12T12:05:37.840Z",
+        "action": "reservation_created",
+        "details": {
+          "priceInCents": 130000,
+          "totalAmount": 1300,
+          "adults": 4,
+          "children": 0,
+          "isMockFallback": false
+        }
+      },
+      {
+        "timestamp": "2026-10-12T12:05:43.828Z",
+        "action": "simulated_pix",
+        "details": {
+          "isPix": true,
+          "installments": 1
+        }
+      },
+      {
+        "timestamp": "2026-10-12T12:05:51.112Z",
+        "action": "simulated_card_3x",
+        "details": {
+          "isPix": false,
+          "installments": 3
+        }
+      },
+      {
+        "timestamp": "2026-10-12T12:05:55.431Z",
+        "action": "payment_declined_simulation",
+        "details": "Transação recusada no teste"
+      }
+    ],
+    "confirmedAt": "2026-10-12T12:05:51.112Z",
+    "transaction_nsu": "tx_sim_1791806751112",
+    "capture_method": "credit_card",
+    "receipt_url": "https://comprovante.infinitepay.io/comprovante/tx_sim_1791806751112",
+    "paymentErrorMessage": "Transação não autorizada pela emissora do cartão."
+  },
+  {
     "id": "NVT-2026-1626",
     "order_nsu": "NVT-2026-1626",
     "tourId": "pipa-by-night-vip-premium",

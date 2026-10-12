@@ -53,6 +53,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 
+    <!-- Pre-carregamento Otimizado de Rede: DNS-Prefetch, Preconnect & Preload para Google Tag Manager & Meta Pixel -->
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+    <link rel="dns-prefetch" href="https://connect.facebook.net">
+    <link rel="preconnect" href="https://connect.facebook.net" crossorigin>
+    <link rel="preload" as="script" href="https://www.googletagmanager.com/gtm.js?id=GTM-NVTURISMO" fetchpriority="high">
+    <link rel="preload" as="script" href="https://connect.facebook.net/en_US/fbevents.js" fetchpriority="high">
+
     <!-- Google Consent Mode v2 (Default: Denied until user consents) -->
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -65,6 +73,29 @@
         'wait_for_update': 500
       });
       gtag('set', 'ads_data_redaction', true);
+    </script>
+
+    <!-- Google Tag Manager Snippet Assíncrono Otimizado -->
+    <script>
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-NVTURISMO');
+    </script>
+
+    <!-- Meta Pixel Code (Facebook Pixel) Assíncrono Otimizado -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1359876543210987');
+      fbq('track', 'PageView');
     </script>
 
     <!-- Schema.org Rich Structured Data (JSON-LD) - LocalBusiness, TravelAgency, FAQPage & Product -->
@@ -257,6 +288,15 @@
     </script>
   </head>
   <body class="bg-[#060D17] text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] antialiased selection:bg-[#FBBF24] selection:text-[#0A192F]">
+    <!-- Google Tag Manager (noscript) Fallback -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NVTURISMO"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+    <!-- Meta Pixel (noscript) Fallback -->
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1359876543210987&ev=PageView&noscript=1"
+    /></noscript>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

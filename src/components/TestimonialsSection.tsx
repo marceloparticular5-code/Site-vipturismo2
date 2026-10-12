@@ -71,6 +71,10 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ onOpen
                 <img
                   src={testimonial.photoUrl}
                   alt={testimonial.authorName}
+                  width="48"
+                  height="48"
+                  loading="lazy"
+                  decoding="async"
                   referrerPolicy="no-referrer"
                   className="w-12 h-12 rounded-full object-cover border-2 border-amber-400/40 shrink-0 shadow-md"
                 />

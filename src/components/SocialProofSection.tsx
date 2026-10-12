@@ -1,14 +1,25 @@
 import React from 'react';
-import { Star, ShieldCheck, CheckCircle2, MessageCircle, Award, Sparkles } from 'lucide-react';
+import { Star, ShieldCheck, CheckCircle2, MessageCircle, Award, Sparkles, Users } from 'lucide-react';
 import { TestimonialsCarousel } from './TestimonialsCarousel';
+import { useInViewLazy } from '../hooks/useInViewLazy';
 
 interface SocialProofSectionProps {
   onOpenBooking: () => void;
 }
 
 export const SocialProofSection: React.FC<SocialProofSectionProps> = ({ onOpenBooking }) => {
+  // Intersection Observer para carregar a seção de depoimentos e carrossel sob demanda
+  const [containerRef, isSectionInView] = useInViewLazy<HTMLElement>({
+    rootMargin: '250px',
+    triggerOnce: true,
+  });
+
   return (
-    <section id="avaliacoes-clientes" className="py-14 sm:py-20 bg-white text-[#0F172A]">
+    <section
+      ref={containerRef}
+      id="avaliacoes-clientes"
+      className="py-14 sm:py-20 bg-white text-[#0F172A] min-h-[500px]"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -63,8 +74,17 @@ export const SocialProofSection: React.FC<SocialProofSectionProps> = ({ onOpenBo
           </div>
         </div>
 
-        {/* Carrossel de Depoimentos com Framer-Motion, Selos Google & TripAdvisor */}
-        <TestimonialsCarousel onOpenBooking={onOpenBooking} />
+        {/* Carrossel de Depoimentos com Lazy Loading sob aproximação do viewport */}
+        {isSectionInView ? (
+          <TestimonialsCarousel onOpenBooking={onOpenBooking} />
+        ) : (
+          <div className="w-full h-72 rounded-3xl bg-slate-100/70 border border-slate-200 animate-pulse flex flex-col items-center justify-center gap-3 text-slate-400">
+            <Users className="w-8 h-8 opacity-40 text-amber-500" />
+            <span className="text-xs font-semibold text-slate-500">
+              Carregando avaliações sociais e depoimentos dos clientes...
+            </span>
+          </div>
+        )}
 
         {/* Rodapé de Confiança Social */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-200 text-center">
@@ -89,4 +109,4 @@ export const SocialProofSection: React.FC<SocialProofSectionProps> = ({ onOpenBo
     </section>
   );
 };
-
+export default SocialProofSection;

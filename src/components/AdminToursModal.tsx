@@ -74,7 +74,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
 
   const [tours, setTours] = useState<TourPackage[]>(VIP_TOURS);
   const [bookings, setBookings] = useState<FirebaseBooking[]>([]);
-  const [stripeReservations, setStripeReservations] = useState<any[]>([]);
+  const [infinitePayReservations, setInfinitePayReservations] = useState<any[]>([]);
   const [simulationResult, setSimulationResult] = useState<any | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [leads, setLeads] = useState<LeadFollowUp[]>([]);
@@ -168,7 +168,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
       if (res.ok) {
         const data = await res.json();
         if (data?.reservations) {
-          setStripeReservations(data.reservations);
+          setInfinitePayReservations(data.reservations);
         }
       }
     } catch (err) {
@@ -1531,7 +1531,7 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                     <div className="flex items-center justify-between">
                       <h3 className="text-base font-bold text-white flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-amber-400" />
-                        <span>Reservas InfinitePay no Servidor ({stripeReservations.length})</span>
+                        <span>Reservas InfinitePay no Servidor ({infinitePayReservations.length})</span>
                       </h3>
                       <span className="text-[11px] text-slate-400">
                         Status em tempo real: aguardando pagamento, CONFIRMADA, recusada e expirada
@@ -1548,11 +1548,11 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                             <th className="p-3.5">Data / Hora</th>
                             <th className="p-3.5">Valor (BRL)</th>
                             <th className="p-3.5">Status</th>
-                            <th className="p-3.5">Comprovante Stripe</th>
+                            <th className="p-3.5">Comprovante InfinitePay</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60">
-                          {stripeReservations.map((r) => {
+                          {infinitePayReservations.map((r) => {
                             const isApproved = r.status === 'CONFIRMADA' || r.status === 'Aprovada';
                             const isExpired = r.status === 'expirada' || r.status === 'Expirada';
                             const isDeclined = r.status === 'recusada';
@@ -1611,9 +1611,9 @@ export const AdminToursModal: React.FC<AdminToursModalProps> = ({ isOpen, onClos
                         </tbody>
                       </table>
 
-                      {stripeReservations.length === 0 && (
+                      {infinitePayReservations.length === 0 && (
                         <div className="p-8 text-center text-slate-400 text-xs">
-                          Nenhuma reserva Stripe registrada ainda. Inicie uma reserva no site ou execute um teste acima.
+                          Nenhuma reserva InfinitePay registrada ainda. Inicie uma reserva no site ou execute um teste acima.
                         </div>
                       )}
                     </div>
